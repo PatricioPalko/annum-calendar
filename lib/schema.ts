@@ -19,6 +19,17 @@ export const orderSchema = z
   .object({
     firstName: z.string().min(1, "Zadajte meno"),
     lastName: z.string().min(1, "Zadajte priezvisko"),
+    email: z.email("Zadajte platnú e-mailovu adresu"),
+    phone: z
+      .string()
+      .min(9, { message: "Zadajte telefónne číslo v tvare +421 9xx xxx xxx." })
+      .regex(/^(\+421|0)?9\d{8}$/, {
+        message: "Zadajte platné slovenské telefónne číslo.",
+      }),
+    note: z
+      .string()
+      .max(500, "Poznámka môže mať maximálne 500 znakov")
+      .optional(),
 
     types: z.enum(calendarTypesValues),
     quantityOption: z.union([

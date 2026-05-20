@@ -5,13 +5,16 @@ import { Input } from "@/components/ui/input";
 
 import type { OrderFormValues } from "@/lib/schema";
 
-type TextInputName = "firstName" | "lastName";
+type TextInputName = "firstName" | "lastName" | "email" | "phone";
+type Type = "text" | "email" | "tel";
 
 type InputFieldProps = {
   control: Control<OrderFormValues>;
   name: TextInputName;
   label: string;
   autoComplete?: string;
+  type: Type;
+  placeholder?: string;
 };
 
 export function FormInput({
@@ -19,6 +22,8 @@ export function FormInput({
   name,
   label,
   autoComplete,
+  type,
+  placeholder,
 }: InputFieldProps) {
   return (
     <Controller
@@ -33,6 +38,8 @@ export function FormInput({
             id={`form-${name}`}
             aria-invalid={fieldState.invalid}
             autoComplete={autoComplete}
+            type={type}
+            placeholder={placeholder}
           />
 
           {fieldState.invalid && <FieldError errors={[fieldState.error]} />}

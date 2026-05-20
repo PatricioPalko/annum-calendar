@@ -20,6 +20,7 @@ import { PhotoDropzone } from "../order-form-components/form-photo-dropzone";
 import { PriceSummary } from "../order-form-components/form-price-summary";
 import { FormQuantity } from "../order-form-components/form-quantity";
 import { FormRadioGroup } from "../order-form-components/form-radiogroup";
+import { FormTextarea } from "../order-form-components/form-textarea";
 import OrderSection from "../order-section";
 
 export default function OrderForm() {
@@ -30,6 +31,9 @@ export default function OrderForm() {
     defaultValues: {
       firstName: "",
       lastName: "",
+      email: "",
+      phone: "",
+      note: "",
       types: "premium",
       quantityOption: 3,
       customQuantity: undefined,
@@ -43,8 +47,12 @@ export default function OrderForm() {
     const quantity = getFinalQuantity(values);
 
     const payload = {
+      id: crypto.randomUUID(),
       firstName: values.firstName,
       lastName: values.lastName,
+      email: values.email,
+      phone: values.phone,
+      note: values.note,
       type: values.types,
       photos: values.photos,
       birthdays: values.birthdays,
@@ -94,21 +102,6 @@ export default function OrderForm() {
         <div className="space-y-8">
           <OrderSection
             step="1"
-            title="Kontaktné údaje"
-            description="Tieto údaje použijeme len na spracovanie objednávky."
-          >
-            <FieldGroup className="grid gap-4 md:grid-cols-2">
-              <FormInput control={form.control} name="firstName" label="Meno" />
-              <FormInput
-                control={form.control}
-                name="lastName"
-                label="Priezvisko"
-              />
-            </FieldGroup>
-          </OrderSection>
-
-          <OrderSection
-            step="2"
             title="Typ kalendára"
             description="Vyberte, či chcete jednoduchý fotokalendár alebo kalendár aj s meninami a narodeninami."
           >
@@ -121,7 +114,7 @@ export default function OrderForm() {
           </OrderSection>
 
           <OrderSection
-            step="3"
+            step="2"
             title="Počet kusov"
             description="Pri viacerých rovnakých kusoch sa automaticky použije výhodnejšia cena za kus."
           >
@@ -134,7 +127,7 @@ export default function OrderForm() {
           </OrderSection>
 
           <OrderSection
-            step="4"
+            step="3"
             title="Fotky"
             description="Nahrajte minimálne 14 fotiek. Ideálne vyberte viac záberov, aby bolo z čoho skladať jednotlivé mesiace."
           >
@@ -166,7 +159,7 @@ export default function OrderForm() {
           {selectedCalendarType === "premium" && (
             <>
               <OrderSection
-                step="5"
+                step="4"
                 title="Dôležité narodeniny"
                 description="Doplňte narodeniny a meniny, ktoré chcete mať v kalendári zvýraznené."
               >
@@ -175,7 +168,7 @@ export default function OrderForm() {
                 </div>
               </OrderSection>
               <OrderSection
-                step="6"
+                step="5"
                 title="Dôležité meniny"
                 description="Doplňte narodeniny a meniny, ktoré chcete mať v kalendári zvýraznené."
               >
@@ -185,6 +178,51 @@ export default function OrderForm() {
               </OrderSection>
             </>
           )}
+          <OrderSection
+            step={selectedCalendarType === "premium" ? "6" : "4"}
+            title="Kontaktné údaje"
+            description="Tieto údaje použijeme len na spracovanie objednávky."
+          >
+            <FieldGroup className="grid gap-4 md:grid-cols-2">
+              <FormInput
+                control={form.control}
+                name="firstName"
+                label="Meno"
+                type="text"
+                placeholder="Ján"
+              />
+              <FormInput
+                control={form.control}
+                name="lastName"
+                label="Priezvisko"
+                type="text"
+                placeholder="Novák"
+              />
+              <FormInput
+                control={form.control}
+                name="email"
+                label="E-mail"
+                autoComplete="email"
+                type="email"
+                placeholder="jan.novak@gmail.com"
+              />
+              <FormInput
+                control={form.control}
+                name="phone"
+                label="Telefónne číslo"
+                autoComplete="phone"
+                type="tel"
+                placeholder="+421 9xx xxx xxx"
+              />
+            </FieldGroup>
+          </OrderSection>
+          <OrderSection
+            step={selectedCalendarType === "premium" ? "7" : "5"}
+            title="Poznámka"
+            description="Poznámka k objednávke"
+          >
+            <FormTextarea control={form.control} name="note" label="Poznámka" />
+          </OrderSection>
         </div>
 
         <aside className="lg:sticky lg:top-8 lg:self-start">
