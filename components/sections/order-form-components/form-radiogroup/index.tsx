@@ -9,7 +9,6 @@ import {
   FieldContent,
   FieldDescription,
   FieldError,
-  FieldLabel,
   FieldSet,
   FieldTitle,
 } from "@/components/ui/field";
@@ -42,15 +41,6 @@ export function FormRadioGroup({
       control={control}
       render={({ field, fieldState }) => (
         <FieldSet data-invalid={fieldState.invalid} className="space-y-4">
-          <div className="space-y-1">
-            <FieldLabel>{label}</FieldLabel>
-
-            <p className="text-sm leading-6 text-muted-foreground">
-              Vyberte variant kalendára. Cenu môžete upraviť v ďalšom kroku
-              podľa počtu kusov.
-            </p>
-          </div>
-
           <RadioGroup
             name={field.name}
             value={field.value}

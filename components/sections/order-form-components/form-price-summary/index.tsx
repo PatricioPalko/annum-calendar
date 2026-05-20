@@ -5,7 +5,7 @@ import {
   type QuantityOption,
 } from "@/app/types/types";
 import { Button } from "@/components/ui/button";
-import { Heading } from "@/components/ui/typography";
+import { Heading, Text } from "@/components/ui/typography";
 
 type PriceSummaryProps = {
   type: CalendarTypes;
@@ -84,9 +84,9 @@ export function PriceSummary({
   return (
     <aside className="overflow-hidden rounded-lg border border-soft bg-white shadow-xl shadow-primary/5">
       <div className="border-b border-border px-5 py-5 text-center">
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-secondary">
+        <Text variant="caption" as="span" className="text-xs">
           Súhrn objednávky
-        </p>
+        </Text>
 
         <Heading
           as="h3"

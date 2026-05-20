@@ -6,7 +6,7 @@ import {
   type FixedPriceQuantity,
   quantityItems,
 } from "@/app/types/types";
-import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Field, FieldError } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { OrderFormValues } from "@/lib/schema";
 import { cn } from "@/lib/utils";
@@ -44,13 +44,13 @@ export function FormQuantity({
       control={control}
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
-          <div className="space-y-1">
-            <FieldLabel>{label}</FieldLabel>
+          {/* <div className="space-y-1"> */}
+          {/* <FieldLabel>{label}</FieldLabel>
             <p className="text-sm leading-6 text-muted-foreground">
               Vyberte počet rovnakých kusov. Pri väčšom množstve sa cena za kus
               automaticky zníži.
-            </p>
-          </div>
+            </p> */}
+          {/* </div> */}
 
           <RadioGroup
             value={String(field.value)}
@@ -137,7 +137,7 @@ export function FormQuantity({
                       <div className="space-y-3">
                         {pricePerPiece !== undefined && (
                           <div>
-                            <p className="text-xs font-semibold text-muted-foreground">
+                            <p className="text-xs font-medium text-muted-foreground">
                               Cena za 1 kalendár
                             </p>
 

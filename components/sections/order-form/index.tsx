@@ -7,7 +7,7 @@ import {
   FieldError,
   FieldGroup,
 } from "@/components/ui/field";
-import { Heading } from "@/components/ui/typography";
+import { Heading, Text } from "@/components/ui/typography";
 import { getFinalQuantity } from "@/helpers/form";
 import { OrderFormValues, orderSchema } from "@/lib/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -72,18 +72,18 @@ export default function OrderForm() {
   return (
     <div className="mx-auto mt-8 max-w-7xl rounded-xl border border-[#EAD6DE] bg-white px-4 py-10 text-primary shadow-2xl shadow-[#3E0F28]/10 md:px-6">
       <div className="my-8 text-center">
-        <span className="text-md font-extrabold uppercase tracking-[0.2em] text-secondary">
+        <Text variant="caption" as="span">
           Konfigurátor
-        </span>
+        </Text>
 
         <Heading as="h2" className="mt-2">
           Nástenný A3 kalendár
         </Heading>
 
-        <p className="mx-auto mt-3 max-w-2xl text-md leading-6 text-muted-foreground">
+        <Text>
           Vyberte variant, počet kusov, nahrajte fotky a doplňte dôležité
           dátumy.
-        </p>
+        </Text>
       </div>
 
       <form

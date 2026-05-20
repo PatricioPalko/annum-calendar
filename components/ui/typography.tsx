@@ -26,23 +26,61 @@ export function Heading({
   );
 }
 
-type TextProps = React.HTMLAttributes<HTMLParagraphElement> & {
-  variant?: "body" | "lead" | "small" | "muted";
+type TextVariant = "body" | "lead" | "small" | "muted" | "caption";
+
+type TextProps = React.ComponentProps<"p"> & {
+  variant?: TextVariant;
+  as?: "p" | "span";
 };
 
-export function Text({ variant = "body", className, ...props }: TextProps) {
-  return (
-    <p
-      className={cn(
-        {
-          body: "text-base leading-7 text-primary",
-          lead: "text-lg leading-8 text-muted",
-          small: "text-sm leading-6 text-muted",
-          muted: "text-sm leading-6 text-muted/80",
-        }[variant],
-        className,
-      )}
-      {...props}
-    />
-  );
+const textVariants: Record<TextVariant, string> = {
+  body: [
+    "text-base",
+    "font-medium",
+    "leading-7",
+    "tracking-normal",
+    "text-[#3E0F28]/75",
+  ].join(" "),
+
+  lead: [
+    "text-lg",
+    "font-medium",
+    "leading-8",
+    "tracking-normal",
+    "text-[#3E0F28]/75",
+  ].join(" "),
+
+  small: [
+    "text-sm",
+    "font-medium",
+    "leading-6",
+    "tracking-normal",
+    "text-[#3E0F28]/50",
+  ].join(" "),
+
+  muted: [
+    "text-md",
+    "font-medium",
+    "leading-6",
+    "tracking-normal",
+    "text-[#3E0F28]/55",
+  ].join(" "),
+
+  caption: [
+    "text-md",
+    "font-extrabold",
+    "leading-5",
+    "tracking-[0.15em]",
+    "uppercase",
+    "text-secondary",
+  ].join(" "),
+};
+
+export function Text({
+  variant = "body",
+  className,
+  as: Comp = "p",
+  ...props
+}: TextProps) {
+  return <Comp className={cn(textVariants[variant], className)} {...props} />;
 }

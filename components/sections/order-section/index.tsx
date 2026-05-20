@@ -1,4 +1,4 @@
-import { Heading } from "@/components/ui/typography";
+import { Heading, Text } from "@/components/ui/typography";
 
 type OrderSectionProps = {
   step: string;
@@ -28,11 +28,7 @@ export default function OrderSection({
             {title}
           </Heading>
 
-          {description && (
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-muted-foreground">
-              {description}
-            </p>
-          )}
+          {description && <Text>{description}</Text>}
         </div>
       </div>
 

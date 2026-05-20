@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import { Fraunces, Geist, Manrope } from "next/font/google";
+import { Fraunces, Manrope } from "next/font/google";
 
 import { cn } from "@/lib/utils";
 import "./globals.css";
-
-const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 const fraunces = Fraunces({
   subsets: ["latin"],
@@ -37,7 +35,6 @@ export default function RootLayout({
         fraunces.variable,
         manrope.variable,
         "font-sans",
-        geist.variable,
       )}
     >
       <body className="min-h-full flex flex-col">{children}</body>
