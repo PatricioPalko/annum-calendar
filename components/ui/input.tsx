@@ -8,7 +8,17 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
       type={type}
       data-slot="input"
       className={cn(
-        "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30 dark:disabled:bg-input/80 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40",
+        [
+          "h-11 w-full min-w-0 rounded-md border border-[#EAD6DE] bg-white px-4 py-2.5",
+          "text-sm font-semibold text-[#3E0F28] shadow-sm transition-all duration-200",
+          "placeholder:text-[#3E0F28]/40",
+          "outline-none",
+          "hover:border-[#FC5A61]/50 hover:bg-[#FFF7F4]",
+          "focus-visible:border-[#FC5A61] focus-visible:bg-white focus-visible:ring-4 focus-visible:ring-[#FC5A61]/15",
+          "disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-[#FFF7F4] disabled:text-[#3E0F28]/40 disabled:opacity-70",
+          "aria-invalid:border-[#FC5A61] aria-invalid:bg-[#FFF7F4] aria-invalid:ring-4 aria-invalid:ring-[#FC5A61]/15",
+          "file:mr-4 file:border-0 file:bg-transparent file:text-sm file:font-bold file:text-[#3E0F28]",
+        ].join(" "),
         className,
       )}
       {...props}

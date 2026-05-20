@@ -1,7 +1,7 @@
 import { cn } from "@/lib/utils";
 
 type HeadingProps = React.HTMLAttributes<HTMLHeadingElement> & {
-  as?: "h1" | "h2" | "h3";
+  as?: "h1" | "h2" | "h3" | "h4";
 };
 
 export function Heading({
@@ -17,6 +17,7 @@ export function Heading({
           h1: "text-5xl leading-[0.95] md:text-7xl ",
           h2: "text-3xl leading-tight md:text-5xl",
           h3: "text-2xl leading-tight md:text-3xl",
+          h4: "text-xl leading-tight md:text-2xl",
         }[Comp],
         className,
       )}

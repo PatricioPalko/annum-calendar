@@ -5,24 +5,33 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl text-sm font-bold whitespace-nowrap transition-all outline-none select-none focus-visible:ring-3 focus-visible:ring-[#FC5A61]/30 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+  "inline-flex shrink-0 items-center uppercase tracking-wider hover:cursor-pointer justify-center gap-2 rounded-md text-sm font-bold whitespace-nowrap transition-all outline-none select-none focus-visible:ring-3 focus-visible:ring-[#FC5A61]/30 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
   {
     variants: {
       variant: {
-        default: "bg-[#FC5A61] text-white shadow-sm hover:bg-[#E94D54]",
+        default:
+          "border border-[#E94D54] bg-[#FC5A61] text-white shadow-sm hover:border-[#E94D54] hover:bg-[#E94D54] shadow-md",
+
         secondary:
-          "border border-[#EAD6DE] bg-[#FFF7F4] text-[#3E0F28] hover:bg-white",
-        lime: "bg-[#C8FF3D] text-[#3E0F28] shadow-sm hover:bg-[#B7F02F]",
-        dark: "bg-[#3E0F28] text-[#FFF7F4] hover:bg-[#521536]",
+          "border border-[#EAD6DE] bg-[#FFF7F4] text-[#3E0F28] shadow-sm hover:border-[#FC5A61]/40 hover:bg-white",
+
+        lime: "border border-[#B7F02F] bg-[#C8FF3D] text-[#3E0F28] shadow-sm hover:border-[#B7F02F] hover:bg-[#B7F02F]",
+
+        dark: "border border-[#3E0F28] bg-[#3E0F28] text-[#FFF7F4] shadow-sm hover:border-[#521536] hover:bg-[#521536]",
+
         outline:
-          "border border-[#EAD6DE] bg-white text-[#3E0F28] hover:bg-[#FFF7F4]",
-        ghost: "text-[#3E0F28] hover:bg-[#FFF7F4]",
-        link: "text-[#FC5A61] underline-offset-4 hover:underline",
-        destructive: "bg-red-50 text-red-700 hover:bg-red-100",
+          "border border-[#EAD6DE] bg-white text-[#3E0F28] hover:border-[#FC5A61]/40 hover:bg-[#FFF7F4]",
+
+        ghost: "border border-transparent text-[#3E0F28] hover:bg-[#FFF7F4]",
+
+        link: "border border-transparent text-[#FC5A61] underline-offset-4 hover:underline",
+
+        destructive:
+          "border border-red-100 bg-red-50 text-red-700 hover:bg-red-100",
       },
       size: {
         default: "h-11 px-5 py-2.5",
-        sm: "h-9 rounded-xl px-4 text-sm",
+        sm: "h-9 rounded-md px-4 text-sm",
         lg: "h-12 px-6 py-3 text-base",
         icon: "size-11",
       },

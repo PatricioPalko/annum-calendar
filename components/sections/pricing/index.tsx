@@ -60,7 +60,7 @@ export function PricingSection() {
   return (
     <section
       id="pricing"
-      className="mx-auto mt-8 max-w-6xl overflow-hidden rounded-4xl bg-white px-2 py-12 text-primary shadow-2xl shadow-[#3E0F28]/20 border-[#EAD6DE] border-2"
+      className="mx-auto mt-8 max-w-6xl overflow-hidden rounded-xl bg-white px-2 py-12 text-primary shadow-2xl shadow-[#3E0F28]/20 border-[#EAD6DE] border-2"
     >
       <div className="mb-12 text-center">
         <p className="text-sm font-extrabold uppercase tracking-[0.2em] text-secondary">
@@ -101,11 +101,11 @@ export function PricingSection() {
             <p className="mt-3 font-medium">{plan.subtitle}</p>
 
             <Button asChild size="lg" className="mt-10 w-full">
-              <Link href="/order">{plan.button.label}</Link>
+              <Link href="/objednavka">{plan.button.label}</Link>
             </Button>
 
             <div className="mt-12">
-              <p className=" font-extrabold leading-8">{plan.description}</p>
+              <p className="font-extrabold leading-8">{plan.description}</p>
 
               <ul className="mt-8 space-y-3">
                 {plan.features.map((feature) => (
@@ -123,7 +123,7 @@ export function PricingSection() {
         ))}
       </div>
 
-      <div className="mt-10 rounded-2xl border border-[#FFF7F4]/15 bg-white/5 p-5 text-sm leading-6 text-[#D8C2CF]">
+      <div className="mt-10 rounded-md border border-[#FFF7F4]/15 bg-white/5 p-5 text-sm leading-6 text-[#D8C2CF]">
         Ceny sú pre 1 kus. Pri 3 ks, 5 ks alebo inom počte rovnakých kalendárov
         sa cena zvýhodní podľa počtu výtlačkov.
       </div>

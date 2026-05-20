@@ -4,7 +4,7 @@ import { Heading } from "@/components/ui/typography";
 export default function KalendarPage() {
   return (
     <main className={`font-body min-h-screen bg-[#FFF7F4] p-6 text-[#3E0F28]`}>
-      <section className="mx-auto max-w-6xl px-6 py-16">
+      <section className="mx-auto max-w-7xl px-6 py-16">
         <div className="grid gap-10 md:grid-cols-[2fr_0.85fr] md:items-center">
           <div>
             <Heading as="h1">

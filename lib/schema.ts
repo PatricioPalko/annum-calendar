@@ -1,6 +1,20 @@
 import { calendarTypesValues, CUSTOM_QUANTITY_VALUE } from "@/app/types/types";
 import { z } from "zod";
 
+const MIN_PHOTOS = 14;
+const MAX_FILES = 50;
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
+
+const birthdaySchema = z.object({
+  day: z.number().int().min(1, "Deň je povinný").max(31),
+  month: z.number().int().min(1, "Mesiac je povinný").max(12),
+  name: z.string().min(1, "Zadajte meno"),
+});
+
+const namedaySchema = z.object({
+  name: z.string().min(1, "Zadajte meno"),
+});
+
 export const orderSchema = z
   .object({
     firstName: z.string().min(1, "Zadajte meno"),
@@ -18,15 +32,43 @@ export const orderSchema = z
       .number()
       .int("Zadajte celé číslo")
       .min(1, "Minimálne 1 kus")
-      .max(100, "Maximálne 100 kusov")
+      .max(200, "Maximálne 200 kusov")
       .optional(),
+
+    photos: z
+      .array(z.instanceof(File))
+      .min(MIN_PHOTOS, `Nahrajte aspoň ${MIN_PHOTOS} fotiek`)
+      .max(MAX_FILES, `Nahrajte maximálne ${MAX_FILES} fotiek`)
+      .refine(
+        (files) => files.every((file) => file.size <= MAX_FILE_SIZE),
+        "Jedna fotka môže mať maximálne 10 MB",
+      ),
+
+    birthdays: z.array(birthdaySchema),
+    namedays: z.array(namedaySchema),
   })
   .superRefine((data, ctx) => {
-    if (data.quantityOption === CUSTOM_QUANTITY_VALUE && !data.customQuantity) {
+    if (
+      data.quantityOption === CUSTOM_QUANTITY_VALUE &&
+      data.customQuantity === undefined
+    ) {
       ctx.addIssue({
         code: "custom",
         path: ["customQuantity"],
         message: "Zadajte vlastný počet kusov",
+      });
+    }
+
+    if (
+      data.types === "business" &&
+      data.quantityOption === CUSTOM_QUANTITY_VALUE &&
+      data.customQuantity !== undefined &&
+      data.customQuantity < 10
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["customQuantity"],
+        message: "Business objednávka je dostupná od 10 kusov",
       });
     }
   });

@@ -1,17 +1,25 @@
-import { Control, Controller, FieldPath } from "react-hook-form";
+import { Control, Controller } from "react-hook-form";
 
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
 import type { OrderFormValues } from "@/lib/schema";
 
+type TextInputName = "firstName" | "lastName";
+
 type InputFieldProps = {
   control: Control<OrderFormValues>;
-  name: FieldPath<OrderFormValues>;
+  name: TextInputName;
   label: string;
+  autoComplete?: string;
 };
 
-export function FormInput({ control, name, label }: InputFieldProps) {
+export function FormInput({
+  control,
+  name,
+  label,
+  autoComplete,
+}: InputFieldProps) {
   return (
     <Controller
       name={name}
@@ -24,7 +32,7 @@ export function FormInput({ control, name, label }: InputFieldProps) {
             {...field}
             id={`form-${name}`}
             aria-invalid={fieldState.invalid}
-            autoComplete="on"
+            autoComplete={autoComplete}
           />
 
           {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
