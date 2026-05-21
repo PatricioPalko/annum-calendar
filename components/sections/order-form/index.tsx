@@ -13,7 +13,7 @@ import { OrderFormValues, orderSchema } from "@/lib/schema";
 import { uploadOrderPhotos } from "@/lib/upload-order-photos";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { BirthdaysFieldArray } from "../order-form-components/form-birthdays";
 import { FormInput } from "../order-form-components/form-input";
@@ -23,6 +23,7 @@ import { PriceSummary } from "../order-form-components/form-price-summary";
 import { FormQuantity } from "../order-form-components/form-quantity";
 import { FormRadioGroup } from "../order-form-components/form-radiogroup";
 import { FormTextarea } from "../order-form-components/form-textarea";
+import { OrderSuccessDialog } from "../order-form-components/order-success-dialog";
 import OrderSection from "../order-section";
 
 const orderFormDefaultValues: OrderFormValues = {
@@ -40,6 +41,10 @@ const orderFormDefaultValues: OrderFormValues = {
 };
 
 export default function OrderForm() {
+  const [createdOrder, setCreatedOrder] = useState<{
+    orderCode: string;
+  } | null>(null);
+
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
     mode: "onTouched",
@@ -90,6 +95,10 @@ export default function OrderForm() {
     const result = await response.json();
 
     console.log("ORDER CREATED:", result);
+
+    setCreatedOrder({
+      orderCode: result.orderCode,
+    });
 
     form.reset(orderFormDefaultValues);
   }
@@ -310,6 +319,15 @@ export default function OrderForm() {
           </div>
         </aside>
       </form>
+      <OrderSuccessDialog
+        open={createdOrder !== null}
+        orderCode={createdOrder?.orderCode}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCreatedOrder(null);
+          }
+        }}
+      />
     </div>
   );
 }

@@ -104,7 +104,7 @@ export function NamedayPicker({
           </span>
         </div>
 
-        <ul className="grid max-h-105 grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-4 lg:grid-cols-6">
+        <ul className="grid max-h-67 grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-4 lg:grid-cols-6">
           {names.map((name) => {
             const isSelected = selectedNameIndex.has(name);
 

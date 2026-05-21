@@ -4,7 +4,20 @@ import { Fragment } from "react";
 
 import { AdminBulkDownloadButton } from "@/components/admin/admin-bulk-download-button";
 import { AdminDownloadButton } from "@/components/admin/admin-download-button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { formatPrice, getAdminOrderPrice } from "@/helpers/admin-order-price";
+import {
+  getCalendarTypeBadgeClass,
+  getCalendarTypeDotClass,
+  getCalendarTypeLabel,
+  getSortHref,
+  sortOrders,
+} from "@/helpers/admin-table";
 import {
   formatDate,
   formatDateOnly,
@@ -14,13 +27,6 @@ import { requireAdmin } from "@/lib/auth/admin";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { cn } from "@/lib/utils";
 import { OrderRow, SearchParams, SortKey } from "../types/types";
-import {
-  getSortHref,
-  sortOrders,
-  getCalendarTypeBadgeClass,
-  getCalendarTypeDotClass,
-  getCalendarTypeLabel,
-} from "@/helpers/admin-table";
 
 function SortLink({
   sort,
@@ -268,7 +274,7 @@ export default async function AdminOrdersPage({
                         </td>
 
                         <td className="px-4 py-3 font-bold text-center">
-                          {order.quantity}
+                          {order.quantity}ks
                         </td>
 
                         <td className="px-4 py-3 font-bold text-center">
@@ -281,10 +287,32 @@ export default async function AdminOrdersPage({
                           {order.photos?.length ?? 0}
                         </td>
 
-                        <td className="max-w-60 px-4 py-3 ">
-                          <p className="line-clamp-2 text-xs leading-5 text-[#3E0F28]/70">
-                            {order.note?.trim() ? order.note : "—"}
-                          </p>
+                        <td className="w-60 max-w-60 px-4 py-3 align-middle">
+                          {order.note ? (
+                            <TooltipProvider delayDuration={150}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <p className="line-clamp-2 cursor-help break-words text-xs leading-5 text-[#3E0F28]/70">
+                                    {order.note}
+                                  </p>
+                                </TooltipTrigger>
+
+                                <TooltipContent
+                                  side="top"
+                                  align="start"
+                                  className="max-w-sm whitespace-pre-wrap break-words rounded-md border border-[#EAD6DE] bg-white p-3 text-xs leading-5 text-[#3E0F28] shadow-xl"
+                                >
+                                  {order.note}
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ) : (
+                            <div className="flex justify-center">
+                              <span className="text-xs font-semibold text-[#3E0F28]/35">
+                                —
+                              </span>
+                            </div>
+                          )}
                         </td>
 
                         <td className="px-4 py-3">

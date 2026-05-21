@@ -54,7 +54,7 @@ export function NamedaysFieldArray({ control }: NamedaysFieldArrayProps) {
             </span>
           </div>
 
-          <ul className="grid gap-x-6 gap-y-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+          <ul className="grid gap-x-6 gap-y-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
             {sortedSelectedNames.map((name) => (
               <li key={name} className="text-sm font-medium text-foreground">
                 {name}
