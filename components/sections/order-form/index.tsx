@@ -10,7 +10,9 @@ import {
 import { Heading, Text } from "@/components/ui/typography";
 import { getFinalQuantity } from "@/helpers/form";
 import { OrderFormValues, orderSchema } from "@/lib/schema";
+import { uploadOrderPhotos } from "@/lib/upload-order-photos";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { BirthdaysFieldArray } from "../order-form-components/form-birthdays";
@@ -23,50 +25,80 @@ import { FormRadioGroup } from "../order-form-components/form-radiogroup";
 import { FormTextarea } from "../order-form-components/form-textarea";
 import OrderSection from "../order-section";
 
+const orderFormDefaultValues: OrderFormValues = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  note: "",
+  types: "premium",
+  quantityOption: 3,
+  customQuantity: undefined,
+  photos: [],
+  birthdays: [],
+  namedays: [],
+};
+
 export default function OrderForm() {
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
     mode: "onTouched",
     reValidateMode: "onChange",
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      note: "",
-      types: "premium",
-      quantityOption: 3,
-      customQuantity: undefined,
-      photos: [],
-      birthdays: [],
-      namedays: [],
-    },
+    defaultValues: orderFormDefaultValues,
   });
 
-  function onSubmit(values: OrderFormValues) {
+  async function onSubmit(values: OrderFormValues) {
     const quantity = getFinalQuantity(values);
 
+    const uploaded = await uploadOrderPhotos({
+      firstName: values.firstName,
+      lastName: values.lastName,
+      files: values.photos,
+    });
+
     const payload = {
-      id: crypto.randomUUID(),
+      orderNumber: uploaded.orderNumber,
+      orderCode: uploaded.orderCode,
+      storageFolder: uploaded.storageFolder,
+
       firstName: values.firstName,
       lastName: values.lastName,
       email: values.email,
       phone: values.phone,
       note: values.note,
+
       type: values.types,
-      photos: values.photos,
+      quantity,
+
+      photos: uploaded.photos,
       birthdays: values.birthdays,
       namedays: values.namedays,
-      quantity,
     };
 
-    console.log(payload);
+    const response = await fetch("/api/orders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error("Objednávku sa nepodarilo odoslať.");
+    }
+
+    const result = await response.json();
+
+    console.log("ORDER CREATED:", result);
+
+    form.reset(orderFormDefaultValues);
   }
 
   const selectedQuantityOption = form.watch("quantityOption");
   const selectedCalendarType = form.watch("types");
   const customQuantity = form.watch("customQuantity");
   const selectedPhotosQuantity = form.watch("photos")?.length ?? 0;
+  const isSubmitting = form.formState.isSubmitting;
 
   useEffect(() => {
     if (selectedCalendarType === "business") {
@@ -99,7 +131,10 @@ export default function OrderForm() {
         id="order-form"
         className="grid gap-4 lg:grid-cols-[1fr_360px] mt-20"
       >
-        <div className="space-y-8">
+        <fieldset
+          disabled={isSubmitting}
+          className="space-y-8 disabled:pointer-events-none disabled:opacity-60"
+        >
           <OrderSection
             step="1"
             title="Typ kalendára"
@@ -146,6 +181,7 @@ export default function OrderForm() {
                   <PhotoDropzone
                     value={field.value ?? []}
                     onChange={field.onChange}
+                    disabled={isSubmitting}
                   />
 
                   {fieldState.invalid && (
@@ -223,7 +259,7 @@ export default function OrderForm() {
           >
             <FormTextarea control={form.control} name="note" label="Poznámka" />
           </OrderSection>
-        </div>
+        </fieldset>
 
         <aside className="lg:sticky lg:top-8 lg:self-start">
           <div className="space-y-4">
@@ -232,19 +268,23 @@ export default function OrderForm() {
               quantityOption={selectedQuantityOption}
               customQuantity={customQuantity}
               selectedPhotosQuantity={selectedPhotosQuantity}
-              onQuantityChange={(quantity) => {
-                form.setValue("quantityOption", quantity, {
-                  shouldValidate: true,
-                  shouldDirty: true,
-                  shouldTouch: true,
-                });
+              onQuantityChange={
+                isSubmitting
+                  ? undefined
+                  : (quantity) => {
+                      form.setValue("quantityOption", quantity, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                        shouldTouch: true,
+                      });
 
-                form.setValue("customQuantity", undefined, {
-                  shouldValidate: true,
-                  shouldDirty: true,
-                  shouldTouch: true,
-                });
-              }}
+                      form.setValue("customQuantity", undefined, {
+                        shouldValidate: true,
+                        shouldDirty: true,
+                        shouldTouch: true,
+                      });
+                    }
+              }
             />
 
             <Button
@@ -252,8 +292,16 @@ export default function OrderForm() {
               form="order-form"
               size="lg"
               className="w-full"
+              disabled={form.formState.isSubmitting}
             >
-              Odoslať objednávku
+              {form.formState.isSubmitting ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Odosielam objednávku...
+                </>
+              ) : (
+                "Odoslať objednávku"
+              )}
             </Button>
 
             <p className="text-center text-xs leading-5 text-muted-foreground">

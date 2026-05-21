@@ -2,7 +2,7 @@
 
 import { UploadCloud, X } from "lucide-react";
 import Image from "next/image";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useDropzone } from "react-dropzone";
 
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,14 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024;
 type PhotoDropzoneProps = {
   value: File[];
   onChange: (files: File[]) => void;
+  disabled?: boolean;
 };
 
-export function PhotoDropzone({ value, onChange }: PhotoDropzoneProps) {
+export function PhotoDropzone({
+  value,
+  onChange,
+  disabled,
+}: PhotoDropzoneProps) {
   const remainingSlots = MAX_FILES - value.length;
   const missingFiles = Math.max(0, MIN_FILES - value.length);
   const hasMinimumFiles = value.length >= MIN_FILES;
@@ -31,6 +36,12 @@ export function PhotoDropzone({ value, onChange }: PhotoDropzoneProps) {
     [value],
   );
 
+  useEffect(() => {
+    return () => {
+      previewUrls.forEach((preview) => URL.revokeObjectURL(preview.url));
+    };
+  }, [previewUrls]);
+
   const { getRootProps, getInputProps, isDragActive, fileRejections } =
     useDropzone({
       accept: {
@@ -40,7 +51,7 @@ export function PhotoDropzone({ value, onChange }: PhotoDropzoneProps) {
       },
       maxFiles: remainingSlots,
       maxSize: MAX_FILE_SIZE,
-      disabled: remainingSlots <= 0,
+      disabled: disabled || remainingSlots <= 0,
       onDrop: (acceptedFiles) => {
         const nextFiles = [...value, ...acceptedFiles].slice(0, MAX_FILES);
         onChange(nextFiles);
@@ -58,7 +69,7 @@ export function PhotoDropzone({ value, onChange }: PhotoDropzoneProps) {
         className={cn(
           "cursor-pointer rounded-md border-2 border-dashed border-soft bg-surface p-8 text-center transition hover:border-secondary hover:bg-soft/20",
           isDragActive && "border-primary bg-surface-soft",
-          remainingSlots <= 0 && "cursor-not-allowed opacity-60",
+          (disabled || remainingSlots <= 0) && "cursor-not-allowed opacity-60",
         )}
       >
         <input {...getInputProps()} />
