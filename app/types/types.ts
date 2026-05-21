@@ -166,3 +166,46 @@ export function getLowestUnitPrice(plan: CalendarTypesOption): number | null {
 
   return fivePiecesPrice / 5;
 }
+
+export type SortKey =
+  | "created_at"
+  | "order_code"
+  | "customer"
+  | "calendar_type"
+  | "quantity"
+  | "photos"
+  | "downloaded";
+
+export type SearchParams = Promise<{
+  sort?: SortKey;
+  dir?: "asc" | "desc";
+}>;
+
+export type OrderRow = {
+  id: string;
+  created_at: string;
+  order_code: string | null;
+  storage_folder: string | null;
+
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string | null;
+  note: string | null;
+
+  calendar_type: CalendarTypes;
+  quantity: number;
+
+  photos: Array<{
+    name: string;
+    type: string;
+    size: number;
+    path: string;
+  }>;
+
+  birthdays: unknown[];
+  namedays: unknown[];
+
+  status: string;
+  downloaded_at: string | null;
+};
