@@ -16,6 +16,7 @@ import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { BirthdaysFieldArray } from "../order-form-components/form-birthdays";
+import { FormConsentCheckbox } from "../order-form-components/form-consent-checkbox";
 import { FormInput } from "../order-form-components/form-input";
 import { NamedaysFieldArray } from "../order-form-components/form-namedays";
 import { PhotoDropzone } from "../order-form-components/form-photo-dropzone";
@@ -38,12 +39,14 @@ const orderFormDefaultValues: OrderFormValues = {
   photos: [],
   birthdays: [],
   namedays: [],
+  termsAccepted: false,
 };
 
 export default function OrderForm() {
   const [createdOrder, setCreatedOrder] = useState<{
     orderCode: string;
   } | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
@@ -53,54 +56,61 @@ export default function OrderForm() {
   });
 
   async function onSubmit(values: OrderFormValues) {
-    const quantity = getFinalQuantity(values);
+    try {
+      setSubmitError(null);
+      const quantity = getFinalQuantity(values);
 
-    const uploaded = await uploadOrderPhotos({
-      firstName: values.firstName,
-      lastName: values.lastName,
-      files: values.photos,
-    });
+      const uploaded = await uploadOrderPhotos({
+        firstName: values.firstName,
+        lastName: values.lastName,
+        files: values.photos,
+      });
 
-    const payload = {
-      orderNumber: uploaded.orderNumber,
-      orderCode: uploaded.orderCode,
-      storageFolder: uploaded.storageFolder,
+      const payload = {
+        orderNumber: uploaded.orderNumber,
+        orderCode: uploaded.orderCode,
+        storageFolder: uploaded.storageFolder,
 
-      firstName: values.firstName,
-      lastName: values.lastName,
-      email: values.email,
-      phone: values.phone,
-      note: values.note,
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        phone: values.phone,
+        note: values.note,
 
-      type: values.types,
-      quantity,
+        type: values.types,
+        quantity,
 
-      photos: uploaded.photos,
-      birthdays: values.birthdays,
-      namedays: values.namedays,
-    };
+        photos: uploaded.photos,
+        birthdays: values.birthdays,
+        namedays: values.namedays,
+      };
 
-    const response = await fetch("/api/orders", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
-    if (!response.ok) {
-      throw new Error("Objednávku sa nepodarilo odoslať.");
+      if (!response.ok) {
+        throw new Error("Objednávku sa nepodarilo odoslať.");
+      }
+
+      const result = await response.json();
+
+      console.log("ORDER CREATED:", result);
+
+      setCreatedOrder({
+        orderCode: result.orderCode,
+      });
+
+      form.reset(orderFormDefaultValues);
+    } catch {
+      setSubmitError(
+        "Objednávku sa nepodarilo odoslať. Skúste to prosím znova alebo nás kontaktujte.",
+      );
     }
-
-    const result = await response.json();
-
-    console.log("ORDER CREATED:", result);
-
-    setCreatedOrder({
-      orderCode: result.orderCode,
-    });
-
-    form.reset(orderFormDefaultValues);
   }
 
   const selectedQuantityOption = form.watch("quantityOption");
@@ -295,6 +305,7 @@ export default function OrderForm() {
                     }
               }
             />
+            <FormConsentCheckbox control={form.control} />
 
             <Button
               type="submit"
@@ -312,6 +323,11 @@ export default function OrderForm() {
                 "Odoslať objednávku"
               )}
             </Button>
+            {submitError && (
+              <p className="rounded-md border border-[#FC5A61]/30 bg-[#FFF7F4] p-3 text-sm font-semibold text-[#FC5A61]">
+                {submitError}
+              </p>
+            )}
 
             <p className="text-center text-xs leading-5 text-muted-foreground">
               Po odoslaní objednávky vám potvrdím cenu a ďalší postup.

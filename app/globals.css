@@ -23,6 +23,7 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   --color-soft: var(--soft);
+  --color-destructive: var(--destructive);
 
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);

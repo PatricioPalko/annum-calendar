@@ -57,6 +57,9 @@ export const orderSchema = z
 
     birthdays: z.array(birthdaySchema),
     namedays: z.array(namedaySchema),
+    termsAccepted: z.boolean().refine((value) => value === true, {
+      message: "Pre odoslanie objednávky je potrebné potvrdiť súhlas.",
+    }),
   })
   .superRefine((data, ctx) => {
     if (

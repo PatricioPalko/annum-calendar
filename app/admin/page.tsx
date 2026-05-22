@@ -4,12 +4,6 @@ import { Fragment } from "react";
 
 import { AdminBulkDownloadButton } from "@/components/admin/admin-bulk-download-button";
 import { AdminDownloadButton } from "@/components/admin/admin-download-button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { formatPrice, getAdminOrderPrice } from "@/helpers/admin-order-price";
 import {
   getCalendarTypeBadgeClass,
@@ -27,6 +21,7 @@ import { requireAdmin } from "@/lib/auth/admin";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { cn } from "@/lib/utils";
 import { OrderRow, SearchParams, SortKey } from "../types/types";
+import { AdminDeleteOrderButton } from "@/components/admin/admin-delete-order-button";
 
 function SortLink({
   sort,
@@ -52,6 +47,14 @@ function SortLink({
       </span>
     </Link>
   );
+}
+
+function truncateText(value: string, maxLength = 80) {
+  if (value.length <= maxLength) {
+    return value;
+  }
+
+  return `${value.slice(0, maxLength).trimEnd()}...`;
 }
 
 export default async function AdminOrdersPage({
@@ -289,23 +292,15 @@ export default async function AdminOrdersPage({
 
                         <td className="w-60 max-w-60 px-4 py-3 align-middle">
                           {order.note ? (
-                            <TooltipProvider delayDuration={150}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <p className="line-clamp-2 cursor-help break-words text-xs leading-5 text-[#3E0F28]/70">
-                                    {order.note}
-                                  </p>
-                                </TooltipTrigger>
+                            <div className="group relative">
+                              <span className="block cursor-help wrap-break-word text-xs leading-5 text-[#3E0F28]/70">
+                                {truncateText(order.note, 30)}
+                              </span>
 
-                                <TooltipContent
-                                  side="top"
-                                  align="start"
-                                  className="max-w-sm whitespace-pre-wrap break-words rounded-md border border-[#EAD6DE] bg-white p-3 text-xs leading-5 text-[#3E0F28] shadow-xl"
-                                >
-                                  {order.note}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
+                              <div className="pointer-events-none absolute left-0 top-full z-50 mt-2 hidden max-h-64 w-80 overflow-y-auto whitespace-pre-wrap wrap-break-word rounded-md border border-[#EAD6DE] bg-white p-3 text-xs leading-5 text-[#3E0F28] shadow-xl group-hover:block">
+                                {order.note}
+                              </div>
+                            </div>
                           ) : (
                             <div className="flex justify-center">
                               <span className="text-xs font-semibold text-[#3E0F28]/35">
@@ -329,10 +324,17 @@ export default async function AdminOrdersPage({
                         </td>
 
                         <td className="px-4 py-3 text-right">
-                          <AdminDownloadButton
-                            orderId={order.id}
-                            fileName={order.order_code ?? order.id}
-                          />
+                          <div className="flex justify-end gap-2">
+                            <AdminDownloadButton
+                              orderId={order.id}
+                              fileName={order.order_code ?? order.id}
+                            />
+
+                            <AdminDeleteOrderButton
+                              orderId={order.id}
+                              orderCode={order.order_code ?? order.id}
+                            />
+                          </div>
                         </td>
                       </tr>
                     </Fragment>
