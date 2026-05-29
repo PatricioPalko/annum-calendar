@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Heading, Text } from "@/components/ui/typography";
 import Link from "next/link";
 
 export function CTASection() {
@@ -10,30 +11,45 @@ export function CTASection() {
 
         <div className="relative flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
-            <p className="text-sm font-extrabold uppercase tracking-[0.15em] text-[#C8FF3D]">
+            <Text variant="caption" className="text-sm text-lime">
               Jednoduché objednanie
-            </p>
+            </Text>
 
-            <h2 className="mt-3 font-heading text-3xl font-bold leading-tight tracking-tight md:text-4xl">
+            <Heading
+              as="h2"
+              className="mt-3 text-3xl font-bold leading-tight tracking-tight md:text-4xl text-white"
+            >
               Nahrajte fotky,{" "}
               <span className="text-lime">o zvyšok sa postaráme.</span>
-            </h2>
+            </Heading>
 
-            <p className="mt-4 max-w-xl text-sm font-medium leading-6 text-[#FFF7F4]/75 md:text-base">
+            <Text
+              variant="lead"
+              className="mt-4 max-w-xl text-sm font-medium leading-6 text-[#FFF7F4]/75 md:text-base"
+            >
               Vyberiete variant, počet kusov a nahráte fotky. Kalendár
               pripravíme tak, aby bol rovno pripravený na tlač.
-            </p>
+            </Text>
 
             <div className="mt-6 flex flex-wrap gap-2 text-sm font-bold text-[#FFF7F4]/80">
-              <span className="rounded-md border border-secondary/30 bg-secondary/10 px-3 py-1">
+              <Text
+                variant="caption"
+                className="rounded-md border border-secondary/30 bg-secondary/10 px-3 py-1 tracking-wide"
+              >
                 Bez zložitého editora
-              </span>
-              <span className="rounded-md border border-secondary/30 bg-secondary/10 px-3 py-1">
+              </Text>
+              <Text
+                variant="caption"
+                className="rounded-md border border-secondary/30 bg-secondary/10 px-3 py-1 tracking-wide"
+              >
                 Vyznačené dátumy
-              </span>
-              <span className="rounded-md border border-secondary/30 bg-secondary/10 px-3 py-1">
+              </Text>
+              <Text
+                variant="caption"
+                className="rounded-md border border-secondary/30 bg-secondary/10 px-3 py-1 tracking-wide"
+              >
                 Výhodné ponuky
-              </span>
+              </Text>
             </div>
           </div>
 

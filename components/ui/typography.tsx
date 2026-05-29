@@ -34,46 +34,12 @@ type TextProps = React.ComponentProps<"p"> & {
 };
 
 const textVariants: Record<TextVariant, string> = {
-  body: [
-    "text-base",
-    "font-medium",
-    "leading-7",
-    "tracking-normal",
-    "text-[#3E0F28]/75",
-  ].join(" "),
-
-  lead: [
-    "text-lg",
-    "font-medium",
-    "leading-8",
-    "tracking-normal",
-    "text-[#3E0F28]/75",
-  ].join(" "),
-
-  small: [
-    "text-sm",
-    "font-medium",
-    "leading-6",
-    "tracking-normal",
-    "text-[#3E0F28]/50",
-  ].join(" "),
-
-  muted: [
-    "text-md",
-    "font-medium",
-    "leading-6",
-    "tracking-normal",
-    "text-[#3E0F28]/55",
-  ].join(" "),
-
-  caption: [
-    "text-md",
-    "font-extrabold",
-    "leading-5",
-    "tracking-[0.15em]",
-    "uppercase",
-    "text-secondary",
-  ].join(" "),
+  body: "text-base font-medium leading-7 tracking-normal text-[#3E0F28]/72",
+  lead: "text-base md:text-[17px] font-semibold leading-7 md:leading-8 tracking-normal text-primary/70",
+  small: "text-sm font-medium leading-6 tracking-normal text-[#3E0F28]/68",
+  muted: "text-sm font-medium leading-6 tracking-normal text-[#3E0F28]/55",
+  caption:
+    "text-md font-extrabold uppercase leading-5 tracking-[0.16em] text-secondary",
 };
 
 export function Text({

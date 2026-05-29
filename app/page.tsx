@@ -1,16 +1,18 @@
+import { AboutSection } from "@/components/sections/about-section";
 import CTASection from "@/components/sections/cta-section";
 import FaqSection from "@/components/sections/faq-section";
-import { PricingSection } from "@/components/sections/pricing";
+import { GallerySection } from "@/components/sections/gallery-section";
+import { PricingSection } from "@/components/sections/pricing-section";
 import { Button } from "@/components/ui/button";
-import { Heading } from "@/components/ui/typography";
+import { Heading, Text } from "@/components/ui/typography";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function Home() {
   return (
     <main className={`font-body min-h-screen bg-[#FFF7F4] p-6 text-[#3E0F28]`}>
-      <section className="mx-auto max-w-6xl px-6 py-16">
-        <div className="grid gap-10 md:grid-cols-[1.15fr_0.85fr] md:items-center">
+      <section className="mx-auto max-w-6xl px-6 py-8">
+        <div className="grid gap-6 md:grid-cols-[1fr_1fr] md:items-center">
           <div>
             {/* <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#EAD6DE] bg-[#FFF7F4] px-4 py-2 text-sm font-semibold text-[#7B5A6B]">
               <span className="size-2 rounded-full bg-[#C8FF3D]" />
@@ -28,10 +30,13 @@ export default function Home() {
               <span className="block text-secondary">po celý rok.</span>
             </Heading>
 
-            <p className="mt-6 max-w-xl text-lg leading-8 text-primary">
+            <Text
+              variant="lead"
+              className="mt-6 max-w-xl text-lg leading-8 text-primary"
+            >
               Personalizovaný kalendár z vašich fotiek, narodenín a menín —
               pripravený jednoducho, bez zložitého editora.
-            </p>
+            </Text>
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Button size="lg" asChild>
@@ -46,12 +51,12 @@ export default function Home() {
 
           <div className="relative ">
             <Image
-              src="/f10.png"
+              src="/calendar5.png"
               alt="Ukážka personalizovaného A3 kalendára"
-              width={700}
-              height={900}
+              width={800}
+              height={1000}
               priority
-              className="aspect-4/5 w-full rounded-[1.1rem] object-contain object-center"
+              className="aspect-4/5 w-full object-contain object-center"
             />
 
             {/* <div className="absolute right-6 bottom-6 rounded-full bg-[#C8FF3D] px-4 py-2 text-sm font-extrabold text-[#3E0F28] shadow-sm">
@@ -64,6 +69,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+      <AboutSection />
+      <GallerySection />
       <PricingSection />
       <FaqSection />
       <CTASection />

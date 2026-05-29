@@ -1,7 +1,7 @@
+import Navigation from "@/components/sections/navigation";
+import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Fraunces, Manrope } from "next/font/google";
-
-import { cn } from "@/lib/utils";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -12,7 +12,7 @@ const fraunces = Fraunces({
 
 const manrope = Manrope({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-manrope",
 });
 
@@ -37,7 +37,10 @@ export default function RootLayout({
         "font-sans",
       )}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <Navigation />
+        {children}
+      </body>
     </html>
   );
 }

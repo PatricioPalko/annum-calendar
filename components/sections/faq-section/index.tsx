@@ -51,7 +51,7 @@ const faqItems = [
 
 export function FaqSection() {
   return (
-    <section className="mx-auto my-16 max-w-4xl px-4">
+    <section className="mx-auto my-16 max-w-4xl px-4" id="faq">
       <div className="mb-8 text-center">
         <Text variant="caption" as="span">
           FAQ
@@ -61,7 +61,7 @@ export function FaqSection() {
           Časté otázky
         </Heading>
 
-        <Text className="mx-auto mt-3 max-w-2xl">
+        <Text variant="lead" className="mx-auto mt-3 max-w-2xl">
           Tu nájdete odpovede na najčastejšie otázky k objednávke kalendára.
         </Text>
       </div>
@@ -73,11 +73,11 @@ export function FaqSection() {
             value={`item-${index}`}
             className="rounded-xl border border-soft bg-white px-4 shadow-sm"
           >
-            <AccordionTrigger className="text-left text-sm font-bold text-primary hover:no-underline hover:cursor-pointer">
+            <AccordionTrigger className="text-left text-md font-bold text-primary hover:no-underline hover:cursor-pointer">
               {item.question}
             </AccordionTrigger>
 
-            <AccordionContent className="text-sm font-medium leading-6 text-[#3E0F28]/70 pr-8">
+            <AccordionContent className="text-sm font-semibold leading-6 tracking-wide text-[#3E0F28]/70 pr-8">
               {item.answer}
             </AccordionContent>
           </AccordionItem>
