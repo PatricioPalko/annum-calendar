@@ -1,3 +1,4 @@
+import { Footer } from "@/components/sections/footer";
 import Navigation from "@/components/sections/navigation";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
@@ -40,6 +41,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <Navigation />
         {children}
+        <Footer />
       </body>
     </html>
   );
