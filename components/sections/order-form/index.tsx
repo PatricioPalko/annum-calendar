@@ -83,6 +83,8 @@ export default function OrderForm() {
         photos: uploaded.photos,
         birthdays: values.birthdays,
         namedays: values.namedays,
+
+        termsAccepted: values.termsAccepted,
       };
 
       const response = await fetch("/api/orders", {
@@ -98,8 +100,6 @@ export default function OrderForm() {
       }
 
       const result = await response.json();
-
-      console.log("ORDER CREATED:", result);
 
       setCreatedOrder({
         orderCode: result.orderCode,

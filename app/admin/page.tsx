@@ -3,8 +3,9 @@ import Link from "next/link";
 import { Fragment } from "react";
 
 import { AdminBulkDownloadButton } from "@/components/admin/admin-bulk-download-button";
+import { AdminDeleteOrderButton } from "@/components/admin/admin-delete-order-button";
 import { AdminDownloadButton } from "@/components/admin/admin-download-button";
-import { formatPrice, getAdminOrderPrice } from "@/helpers/admin-order-price";
+import { formatPrice } from "@/helpers/admin-order-price";
 import {
   getCalendarTypeBadgeClass,
   getCalendarTypeDotClass,
@@ -21,7 +22,6 @@ import { requireAdmin } from "@/lib/auth/admin";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { cn } from "@/lib/utils";
 import { OrderRow, SearchParams, SortKey } from "../types/types";
-import { AdminDeleteOrderButton } from "@/components/admin/admin-delete-order-button";
 
 function SortLink({
   sort,
@@ -189,13 +189,6 @@ export default async function AdminOrdersPage({
                   const shouldRenderDateSeparator = orderDate !== previousDate;
                   previousDate = orderDate;
 
-                  const price = getAdminOrderPrice({
-                    type: order.calendar_type,
-                    quantity: order.quantity,
-                  });
-
-                  const totalPrice = price.totalPrice;
-
                   return (
                     <Fragment key={order.id}>
                       {shouldRenderDateSeparator && (
@@ -281,8 +274,8 @@ export default async function AdminOrdersPage({
                         </td>
 
                         <td className="px-4 py-3 font-bold text-center">
-                          {totalPrice !== null
-                            ? formatPrice(totalPrice)
+                          {order.total_price !== null
+                            ? formatPrice(Number(order.total_price))
                             : "Na mieru"}
                         </td>
 

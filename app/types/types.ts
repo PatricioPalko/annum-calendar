@@ -206,6 +206,18 @@ export type OrderRow = {
   birthdays: unknown[];
   namedays: unknown[];
 
+  total_price: number | null;
+
   status: string;
   downloaded_at: string | null;
 };
+
+export function getQuantityOptionFromQuantity(
+  quantity: number,
+): QuantityOption {
+  if (quantity === 1 || quantity === 3 || quantity === 5) {
+    return quantity;
+  }
+
+  return CUSTOM_QUANTITY_VALUE;
+}

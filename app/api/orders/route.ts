@@ -1,7 +1,12 @@
+import {
+  CUSTOM_QUANTITY_VALUE,
+  getCalendarPrice,
+  getQuantityOptionFromQuantity,
+} from "@/app/types/types";
+import { sendOrderEmails } from "@/lib/order-emails";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { z } from "zod";
-
-import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const uploadedPhotoSchema = z.object({
   name: z.string(),
@@ -24,7 +29,7 @@ const orderBodySchema = z.object({
   type: z.enum(["basic", "premium", "business"]),
   quantity: z.number().int().min(1).max(200),
 
-  photos: z.array(uploadedPhotoSchema).min(1).max(50),
+  photos: z.array(uploadedPhotoSchema).min(2).max(50),
 
   birthdays: z.array(
     z.object({
@@ -39,6 +44,8 @@ const orderBodySchema = z.object({
       name: z.string(),
     }),
   ),
+
+  termsAccepted: z.literal(true),
 });
 
 export async function POST(request: Request) {
@@ -57,6 +64,15 @@ export async function POST(request: Request) {
 
   const values = parsed.data;
 
+  const quantityOption = getQuantityOptionFromQuantity(values.quantity);
+
+  const price = getCalendarPrice({
+    type: values.type,
+    quantityOption,
+    customQuantity:
+      quantityOption === CUSTOM_QUANTITY_VALUE ? values.quantity : undefined,
+  });
+
   const { data, error } = await supabaseAdmin
     .from("orders")
     .insert({
@@ -68,14 +84,17 @@ export async function POST(request: Request) {
       last_name: values.lastName,
       email: values.email,
       phone: values.phone ?? null,
-      note: values.note ?? null,
+      note: values.note?.trim() || null,
 
       calendar_type: values.type,
       quantity: values.quantity,
+      total_price: price.totalPrice,
 
       photos: values.photos,
       birthdays: values.birthdays,
       namedays: values.namedays,
+
+      terms_accepted_at: new Date().toISOString(),
     })
     .select("id, order_code, storage_folder")
     .single();
@@ -90,6 +109,24 @@ export async function POST(request: Request) {
       },
       { status: 500 },
     );
+  }
+
+  try {
+    await sendOrderEmails({
+      orderId: data.id,
+      orderCode: data.order_code,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      email: values.email,
+      phone: values.phone,
+      type: values.type,
+      quantity: values.quantity,
+      photos: values.photos,
+      note: values.note?.trim() || null,
+      totalPrice: price.totalPrice,
+    });
+  } catch (emailError) {
+    console.error("ORDER_EMAIL_ERROR:", emailError);
   }
 
   return NextResponse.json({
