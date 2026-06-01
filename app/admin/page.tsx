@@ -136,29 +136,22 @@ export default async function AdminOrdersPage({
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-[#EAD6DE] bg-white shadow-xl shadow-[#3E0F28]/10">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-350 border-collapse text-sm">
+          <div>
+            <table className="w-full border-collapse text-sm">
               <thead className="bg-[#FFF7F4] text-left text-[#3E0F28]">
                 <tr>
-                  <th className="px-4 py-3 font-bold">#</th>
+                  <th className="w-12 px-4 py-3 font-bold">#</th>
+
                   <th className="px-4 py-3">
                     <SortLink
                       sort="order_code"
                       currentSort={currentSort}
                       currentDir={currentDir}
                     >
-                      Kód
+                      Objednávka
                     </SortLink>
                   </th>
-                  <th className="px-4 py-3">
-                    <SortLink
-                      sort="created_at"
-                      currentSort={currentSort}
-                      currentDir={currentDir}
-                    >
-                      Dátum
-                    </SortLink>
-                  </th>
+
                   <th className="px-4 py-3">
                     <SortLink
                       sort="customer"
@@ -168,36 +161,17 @@ export default async function AdminOrdersPage({
                       Zákazník
                     </SortLink>
                   </th>
-                  <th className="px-4 py-3 font-bold">Kontakt</th>
+
                   <th className="px-4 py-3">
                     <SortLink
                       sort="calendar_type"
                       currentSort={currentSort}
                       currentDir={currentDir}
                     >
-                      Typ
+                      Kalendár
                     </SortLink>
                   </th>
-                  <th className="px-4 py-3">
-                    <SortLink
-                      sort="quantity"
-                      currentSort={currentSort}
-                      currentDir={currentDir}
-                    >
-                      Ks
-                    </SortLink>
-                  </th>
-                  <th className="px-4 py-3 font-bold">Cena</th>
-                  <th className="px-4 py-3">
-                    <SortLink
-                      sort="photos"
-                      currentSort={currentSort}
-                      currentDir={currentDir}
-                    >
-                      Fotky
-                    </SortLink>
-                  </th>
-                  <th className="px-4 py-3 font-bold">Poznámka</th>
+
                   <th className="px-4 py-3">
                     <SortLink
                       sort="downloaded"
@@ -207,7 +181,8 @@ export default async function AdminOrdersPage({
                       Stav
                     </SortLink>
                   </th>
-                  <th className="px-4 py-3 text-right font-bold">Export</th>
+
+                  <th className="px-4 py-3 text-right font-bold">Akcie</th>
                 </tr>
               </thead>
 
@@ -222,7 +197,7 @@ export default async function AdminOrdersPage({
                       {shouldRenderDateSeparator && (
                         <tr>
                           <td
-                            colSpan={12}
+                            colSpan={6}
                             className="bg-[#3E0F28] px-4 py-2 text-xs font-extrabold uppercase tracking-tighter text-[#FFF7F4]"
                           >
                             {orderDate}
@@ -231,128 +206,112 @@ export default async function AdminOrdersPage({
                       )}
 
                       <tr
-                        className={`text-[#3E0F28] ${index % 2 === 0 ? "bg-[#FFF7F4]" : "bg-white"}`}
+                        className={cn(
+                          "text-[#3E0F28]",
+                          index % 2 === 0 ? "bg-[#FFF7F4]" : "bg-white",
+                        )}
                       >
-                        <td className="px-4 py-3 font-bold text-[#3E0F28]/50">
+                        <td className="px-3 py-3 align-top font-bold text-[#3E0F28]/50">
                           {index + 1}
                         </td>
 
-                        <td className="w-40 px-4 py-3">
-                          <div className="leading-tight">
+                        <td className="px-3 py-3 align-top">
+                          <div className="space-y-1">
                             <p
-                              className="truncate font-bold text-[#3E0F28]"
+                              className="font-bold text-[#3E0F28]"
                               title={order.order_code ?? order.id}
                             >
-                              {order.order_code
-                                ?.split("-")
-                                .slice(0, 2)
-                                .join("-") ?? order.id}
+                              {order.order_code ?? order.id}
                             </p>
 
-                            {order.order_code && (
-                              <p className="mt-1 text-xs font-semibold text-[#3E0F28]/55">
-                                {order.order_code.split("-").slice(2).join("-")}
-                              </p>
-                            )}
-                          </div>
-                        </td>
-
-                        <td className="w-28 px-4 py-3">
-                          <div className="leading-tight">
-                            <p className="font-semibold text-[#3E0F28]">
-                              {formatDateOnly(order.created_at)}
-                            </p>
-
-                            <p className="mt-1 text-xs font-medium text-[#3E0F28]/55">
+                            <p className="text-xs font-medium text-[#3E0F28]/55">
+                              {formatDateOnly(order.created_at)} ·{" "}
                               {formatTimeOnly(order.created_at)}
                             </p>
                           </div>
                         </td>
 
-                        <td className="px-4 py-3">
-                          <div className="font-bold">
-                            {order.first_name} {order.last_name}
+                        <td className="px-3 py-3 align-top">
+                          <div className="space-y-1">
+                            <p className="font-bold">
+                              {order.first_name} {order.last_name}
+                            </p>
+
+                            <p className="text-xs font-medium text-[#3E0F28]/65">
+                              {order.email}
+                            </p>
+
+                            <p className="text-xs font-medium text-[#3E0F28]/55">
+                              {order.phone ?? "Bez telefónu"}
+                            </p>
                           </div>
                         </td>
 
-                        <td className="px-4 py-3">
-                          <div>{order.email}</div>
-                          <div className="text-xs text-[#3E0F28]/60">
-                            {order.phone ?? "—"}
-                          </div>
-                        </td>
-
-                        <td className="px-4 py-3">
-                          <span
-                            className={cn(
-                              "inline-flex items-center gap-2 rounded-md px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide",
-                              getCalendarTypeBadgeClass(order.calendar_type),
-                            )}
-                          >
+                        <td className="w-70 max-w-70 px-3 py-3 align-top">
+                          <div className="space-y-3">
                             <span
                               className={cn(
-                                "size-2 rounded-md",
-                                getCalendarTypeDotClass(order.calendar_type),
+                                "inline-flex items-center gap-2 rounded-md py-1 text-xs font-extrabold uppercase tracking-wide",
+                                getCalendarTypeBadgeClass(order.calendar_type),
                               )}
-                            />
-                            {getCalendarTypeLabel(order.calendar_type)}
-                          </span>
-                        </td>
+                            >
+                              <span
+                                className={cn(
+                                  "size-2 rounded-md",
+                                  getCalendarTypeDotClass(order.calendar_type),
+                                )}
+                              />
+                              {getCalendarTypeLabel(order.calendar_type)}
+                            </span>
 
-                        <td className="px-4 py-3 font-medium text-center">
-                          {order.quantity}ks
-                        </td>
+                            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-[#3E0F28]/65">
+                              <span>{order.quantity} ks</span>
 
-                        <td className="px-4 py-3 font-medium text-center">
-                          {order.total_price !== null
-                            ? formatPrice(Number(order.total_price))
-                            : "Na mieru"}
-                        </td>
-
-                        <td className="px-4 py-3 font-medium text-center">
-                          {order.photos?.length ?? 0}
-                        </td>
-
-                        <td className="w-60 max-w-60 px-4 py-3 align-middle">
-                          {order.note ? (
-                            <div className="group relative">
-                              <span className="block cursor-help wrap-break-word text-xs leading-5 text-[#3E0F28]/70">
-                                {truncateText(order.note, 30)}
+                              <span>
+                                {order.total_price !== null
+                                  ? formatPrice(Number(order.total_price))
+                                  : "Cena na mieru"}
                               </span>
 
-                              <div className="pointer-events-none absolute left-0 top-full z-50 mt-2 hidden max-h-64 w-80 overflow-y-auto whitespace-pre-wrap wrap-break-word rounded-md border border-[#EAD6DE] bg-white p-3 text-xs leading-5 text-[#3E0F28] shadow-xl group-hover:block">
-                                {order.note}
+                              <span>{order.photos?.length ?? 0} fotiek</span>
+                            </div>
+
+                            {order.note && (
+                              <div className="max-w-[260px] rounded-md border border-[#FC5A61]/20 bg-white px-3 py-2">
+                                <p className="text-[10px] font-extrabold uppercase text-[#FC5A61]">
+                                  Poznámka
+                                </p>
+
+                                <div className="mt-1 max-h-20 overflow-y-auto pr-2 text-xs font-semibold leading-5 text-[#3E0F28]/80">
+                                  <p className="whitespace-pre-wrap break-words">
+                                    {order.note}
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                          ) : (
-                            <div className="flex justify-center">
-                              <span className="text-xs font-semibold text-[#3E0F28]/35">
-                                —
-                              </span>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </td>
 
-                        <td className="px-4 py-3">
+                        <td className="px-3 py-3 align-top">
                           {order.status === "completed" ? (
-                            <span className="inline-flex items-center gap-1 rounded-md bg-[#C8FF3D]/70 px-2.5 py-1 text-xs font-bold text-[#3E0F28] border border-[#3E0F28]/80">
+                            <span className="inline-flex items-center gap-1 rounded-md border border-[#3E0F28]/80 bg-[#C8FF3D]/70 px-2.5 py-1 text-xs font-bold text-[#3E0F28]">
                               <CheckCircle2 className="size-4" />
                               Vybavené
                             </span>
                           ) : order.downloaded_at ? (
-                            <span className="inline-flex items-center gap-1 rounded-md bg-[#FFF7F4] px-2.5 py-1 text-xs font-bold text-secondary border border-secondary">
+                            <span className="inline-flex items-center gap-1 rounded-md border border-secondary bg-[#FFF7F4] px-2.5 py-1 text-xs font-bold text-secondary">
                               <DownloadIcon className="size-4" />
                               Stiahnuté
                             </span>
                           ) : (
-                            <span className="inline-flex rounded-md gap-1 bg-[#FFF7F4] px-2.5 py-1 text-xs font-bold text-[#3E0F28]/80 border border-[#3E0F28]/80">
+                            <span className="inline-flex items-center gap-1 rounded-md border border-[#3E0F28]/80 bg-[#FFF7F4] px-2.5 py-1 text-xs font-bold text-[#3E0F28]/80">
                               <Inbox className="size-4" />
                               Nové
                             </span>
                           )}
                         </td>
 
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-3 py-3 align-top text-right">
                           <div className="flex justify-end gap-2">
                             <AdminDownloadButton
                               orderId={order.id}
@@ -373,7 +332,7 @@ export default async function AdminOrdersPage({
                 {orders.length === 0 && (
                   <tr>
                     <td
-                      colSpan={12}
+                      colSpan={6}
                       className="px-4 py-10 text-center text-[#3E0F28]/60"
                     >
                       Zatiaľ nemáte žiadne objednávky.
