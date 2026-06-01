@@ -1,10 +1,11 @@
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, DownloadIcon, Inbox } from "lucide-react";
 import Link from "next/link";
 import { Fragment } from "react";
 
 import { AdminBulkDownloadButton } from "@/components/admin/admin-bulk-download-button";
 import { AdminDeleteOrderButton } from "@/components/admin/admin-delete-order-button";
 import { AdminDownloadButton } from "@/components/admin/admin-download-button";
+import { AdminMarkDownloadedCompletedButton } from "@/components/admin/admin-mark-downloaded-completed-button";
 import { formatPrice } from "@/helpers/admin-order-price";
 import {
   getCalendarTypeBadgeClass,
@@ -84,6 +85,27 @@ export default async function AdminOrdersPage({
     (order) => !order.downloaded_at,
   ).length;
 
+  const downloadedNotCompletedCount = orders.filter(
+    (order) => order.downloaded_at && order.status !== "completed",
+  ).length;
+
+  const totalQuantity = orders.reduce(
+    (sum, order) => sum + Number(order.quantity ?? 0),
+    0,
+  );
+
+  const totalPrice = orders.reduce((sum, order) => {
+    if (order.total_price === null || order.total_price === undefined) {
+      return sum;
+    }
+
+    return sum + Number(order.total_price);
+  }, 0);
+
+  const customPriceCount = orders.filter(
+    (order) => order.total_price === null || order.total_price === undefined,
+  ).length;
+
   let previousDate: string | null = null;
 
   return (
@@ -104,7 +126,13 @@ export default async function AdminOrdersPage({
             </p>
           </div>
 
-          <AdminBulkDownloadButton disabled={undownloadedCount === 0} />
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <AdminBulkDownloadButton disabled={undownloadedCount === 0} />
+
+            <AdminMarkDownloadedCompletedButton
+              disabled={downloadedNotCompletedCount === 0}
+            />
+          </div>
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-[#EAD6DE] bg-white shadow-xl shadow-[#3E0F28]/10">
@@ -202,7 +230,9 @@ export default async function AdminOrdersPage({
                         </tr>
                       )}
 
-                      <tr className="text-[#3E0F28] hover:bg-[#FFF7F4]/60">
+                      <tr
+                        className={`text-[#3E0F28] ${index % 2 === 0 ? "bg-[#FFF7F4]" : "bg-white"}`}
+                      >
                         <td className="px-4 py-3 font-bold text-[#3E0F28]/50">
                           {index + 1}
                         </td>
@@ -255,13 +285,13 @@ export default async function AdminOrdersPage({
                         <td className="px-4 py-3">
                           <span
                             className={cn(
-                              "inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide",
+                              "inline-flex items-center gap-2 rounded-md px-2.5 py-1 text-xs font-extrabold uppercase tracking-wide",
                               getCalendarTypeBadgeClass(order.calendar_type),
                             )}
                           >
                             <span
                               className={cn(
-                                "size-2 rounded-full",
+                                "size-2 rounded-md",
                                 getCalendarTypeDotClass(order.calendar_type),
                               )}
                             />
@@ -269,17 +299,17 @@ export default async function AdminOrdersPage({
                           </span>
                         </td>
 
-                        <td className="px-4 py-3 font-bold text-center">
+                        <td className="px-4 py-3 font-medium text-center">
                           {order.quantity}ks
                         </td>
 
-                        <td className="px-4 py-3 font-bold text-center">
+                        <td className="px-4 py-3 font-medium text-center">
                           {order.total_price !== null
                             ? formatPrice(Number(order.total_price))
                             : "Na mieru"}
                         </td>
 
-                        <td className="px-4 py-3 font-semibold text-center">
+                        <td className="px-4 py-3 font-medium text-center">
                           {order.photos?.length ?? 0}
                         </td>
 
@@ -304,13 +334,19 @@ export default async function AdminOrdersPage({
                         </td>
 
                         <td className="px-4 py-3">
-                          {order.downloaded_at ? (
-                            <span className="inline-flex items-center gap-1 rounded-full bg-[#C8FF3D]/40 px-2.5 py-1 text-xs font-bold text-[#3E0F28]">
+                          {order.status === "completed" ? (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-[#C8FF3D]/70 px-2.5 py-1 text-xs font-bold text-[#3E0F28] border border-[#3E0F28]/80">
                               <CheckCircle2 className="size-4" />
+                              Vybavené
+                            </span>
+                          ) : order.downloaded_at ? (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-[#FFF7F4] px-2.5 py-1 text-xs font-bold text-secondary border border-secondary">
+                              <DownloadIcon className="size-4" />
                               Stiahnuté
                             </span>
                           ) : (
-                            <span className="inline-flex rounded-full bg-[#FFF7F4] px-2.5 py-1 text-xs font-bold text-[#3E0F28]/60">
+                            <span className="inline-flex rounded-md gap-1 bg-[#FFF7F4] px-2.5 py-1 text-xs font-bold text-[#3E0F28]/80 border border-[#3E0F28]/80">
+                              <Inbox className="size-4" />
                               Nové
                             </span>
                           )}
@@ -346,6 +382,54 @@ export default async function AdminOrdersPage({
                 )}
               </tbody>
             </table>
+          </div>
+          <div className="mt-12 border-t border-[#EAD6DE] bg-white shadow-lg shadow-[#3E0F28]/5">
+            <div className="grid md:grid-cols-3">
+              <div className="p-5">
+                <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#FC5A61]">
+                  Objednávky
+                </p>
+
+                <p className="mt-2 text-2xl font-bold text-[#3E0F28]">
+                  {orders.length}
+                </p>
+
+                <p className="mt-1 text-sm font-medium text-[#3E0F28]/60">
+                  Celkový počet objednávok
+                </p>
+              </div>
+
+              <div className="border-t border-[#EAD6DE] p-5 md:border-l md:border-t-0">
+                <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#FC5A61]">
+                  Kusy
+                </p>
+
+                <p className="mt-2 text-2xl font-bold text-[#3E0F28]">
+                  {totalQuantity} ks
+                </p>
+
+                <p className="mt-1 text-sm font-medium text-[#3E0F28]/60">
+                  Celkový počet kalendárov
+                </p>
+              </div>
+
+              <div className="border-t border-[#EAD6DE] p-5 md:border-l md:border-t-0">
+                <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#FC5A61]">
+                  Tržba
+                </p>
+
+                <p className="mt-2 text-2xl font-bold text-[#3E0F28]">
+                  {formatPrice(totalPrice)}
+                </p>
+
+                <p className="mt-1 text-sm font-medium text-[#3E0F28]/60">
+                  Súčet objednávok s pevnou cenou
+                  {customPriceCount > 0
+                    ? ` · ${customPriceCount} na mieru`
+                    : ""}
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

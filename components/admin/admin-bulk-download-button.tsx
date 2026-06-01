@@ -3,6 +3,7 @@
 import { Download, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Button } from "../ui/button";
 
 type AdminBulkDownloadButtonProps = {
   disabled?: boolean;
@@ -43,11 +44,12 @@ export function AdminBulkDownloadButton({
   }
 
   return (
-    <button
-      type="button"
+    <Button
+      variant="secondary"
+      size="sm"
       onClick={handleDownload}
       disabled={disabled || isDownloading}
-      className="inline-flex items-center justify-center hover:cursor-pointer gap-2 rounded-md bg-[#3E0F28] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#521536] disabled:pointer-events-none disabled:opacity-50"
+      className="gap-2 tracking-normal px-3"
     >
       {isDownloading ? (
         <Loader2 className="size-4 animate-spin" />
@@ -56,6 +58,6 @@ export function AdminBulkDownloadButton({
       )}
 
       {isDownloading ? "Pripravujem ZIP..." : "Stiahnuť všetky nestiahnuté"}
-    </button>
+    </Button>
   );
 }

@@ -3,29 +3,29 @@ import { OrderRow, SortKey } from "@/app/types/types";
 export function getCalendarTypeBadgeClass(type: string) {
   switch (type) {
     case "basic":
-      return "border-[#EAD6DE] bg-[#FFF7F4] text-[#3E0F28]";
+      return "text-[#3E0F28]/50";
 
     case "premium":
-      return "border-secondary bg-[#FFF7F4] text-secondary";
+      return " text-secondary";
 
     case "business":
-      return "border-[#3E0F28]/20 bg-[#3E0F28] text-white";
+      return " text-primary";
 
     default:
-      return "border-[#EAD6DE] bg-white text-[#3E0F28]";
+      return "text-[#3E0F28]";
   }
 }
 
 export function getCalendarTypeDotClass(type: string) {
   switch (type) {
     case "basic":
-      return "bg-[#EAD6DE]";
+      return "bg-[#3E0F28]/50";
 
     case "premium":
       return "bg-secondary";
 
     case "business":
-      return "bg-white";
+      return "bg-primary";
 
     default:
       return "bg-[#EAD6DE]";

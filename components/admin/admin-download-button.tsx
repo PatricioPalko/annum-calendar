@@ -3,6 +3,7 @@
 import { Download, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Button } from "../ui/button";
 
 type AdminDownloadButtonProps = {
   orderId: string;
@@ -45,11 +46,13 @@ export function AdminDownloadButton({
   }
 
   return (
-    <button
+    <Button
       type="button"
+      variant="secondary"
+      size="sm"
       onClick={handleDownload}
       disabled={isDownloading}
-      className="inline-flex items-center justify-center gap-2 hover:cursor-pointer rounded-md bg-[#3E0F28] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#521536] disabled:pointer-events-none disabled:opacity-60"
+      className=" px-2 h-8 text-xs"
     >
       {isDownloading ? (
         <Loader2 className="size-3.5 animate-spin" />
@@ -57,6 +60,6 @@ export function AdminDownloadButton({
         <Download className="size-3.5" />
       )}
       ZIP
-    </button>
+    </Button>
   );
 }
