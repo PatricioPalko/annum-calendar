@@ -8,22 +8,41 @@ const BUCKET = "calendar-uploads";
 const MAX_FILES = 50;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
+const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"] as const;
+const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+
+function hasAllowedImageExtension(fileName: string) {
+  const lowerName = fileName.toLowerCase();
+
+  return allowedExtensions.some((extension) => lowerName.endsWith(extension));
+}
+
 const bodySchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   files: z
     .array(
-      z.object({
-        name: z.string().min(1),
-        type: z.enum(["image/jpeg", "image/png", "image/webp"]),
-        size: z.number().max(MAX_FILE_SIZE),
-      }),
+      z
+        .object({
+          name: z.string().min(1),
+          type: z.string(),
+          size: z.number().max(MAX_FILE_SIZE),
+        })
+        .refine(
+          (file) =>
+            allowedMimeTypes.includes(
+              file.type as (typeof allowedMimeTypes)[number],
+            ) || hasAllowedImageExtension(file.name),
+          {
+            message: "Nepodporovaný typ súboru.",
+          },
+        ),
     )
     .min(1)
     .max(MAX_FILES),
 });
 
-function sanitizeFileName(fileName: string) {
+function normalizeFileName(fileName: string) {
   return fileName
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
@@ -78,7 +97,7 @@ export async function POST(request: Request) {
 
   const files = await Promise.all(
     inputFiles.map(async (file, index) => {
-      const safeName = sanitizeFileName(file.name);
+      const safeName = normalizeFileName(file.name);
 
       const path = `${storageFolder}/${index + 1}-${crypto.randomUUID()}-${safeName}`;
 
