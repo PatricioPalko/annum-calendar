@@ -183,7 +183,7 @@ export default function OrderForm() {
           <OrderSection
             step="3"
             title="Fotky"
-            description="Nahrajte minimálne 14 fotiek. Ideálne vyberte viac záberov, aby bolo z čoho skladať jednotlivé mesiace."
+            description="Nahrajte minimálne 14 fotiek, ideálne aspoň 30. Vďaka väčšiemu počtu fotiek budú jednotlivé mesiace pestrejšie."
           >
             <Controller
               name="photos"
@@ -193,7 +193,7 @@ export default function OrderForm() {
                   {/* <FieldLabel>Fotky do kalendára</FieldLabel> */}
 
                   <FieldDescription>
-                    JPG, PNG alebo WEBP · minimálne 14 fotiek · maximálne 50
+                    JPG, PNG alebo WEBP · minimálne 14 fotiek · maximálne 52
                     fotiek · max. 10 MB / fotka
                   </FieldDescription>
 
@@ -328,10 +328,6 @@ export default function OrderForm() {
                 {submitError}
               </p>
             )}
-
-            <p className="text-center text-xs leading-5 text-muted-foreground">
-              Po odoslaní objednávky vám potvrdím cenu a ďalší postup.
-            </p>
           </div>
         </aside>
       </form>

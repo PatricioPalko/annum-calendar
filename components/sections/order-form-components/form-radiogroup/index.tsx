@@ -15,6 +15,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { OrderFormValues } from "@/lib/schema";
 import { cn } from "@/lib/utils";
+import { BadgeCheck } from "lucide-react";
 
 type RadioGroupFieldProps = {
   control: Control<OrderFormValues>;
@@ -86,17 +87,19 @@ export function FormRadioGroup({
                         </FieldContent>
                       </Field>
                     </div>
-
-                    <span
-                      className={cn(
-                        "shrink-0 rounded-full px-2.5 py-1 text-xs font-extrabold",
-                        plan.value === "premium"
-                          ? "bg-lime text-[#3E0F28]"
-                          : "bg-soft/60 text-[#3E0F28]",
-                      )}
-                    >
-                      {plan.badge}
-                    </span>
+                    {plan.value === "premium" && (
+                      <span
+                        className={cn(
+                          "absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#C8FF3D] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-[#3E0F28]",
+                          plan.value === "premium"
+                            ? "bg-lime text-[#3E0F28]"
+                            : "bg-soft/60 text-[#3E0F28]",
+                        )}
+                      >
+                        <BadgeCheck className="size-3.5" />
+                        {plan.badge}
+                      </span>
+                    )}
                   </div>
                   <div className="mt-auto border-t border-[#EAD6DE] pt-4">
                     {isBusiness ? (

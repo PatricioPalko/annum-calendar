@@ -29,7 +29,7 @@ const orderBodySchema = z.object({
   type: z.enum(["basic", "premium", "business"]),
   quantity: z.number().int().min(1).max(200),
 
-  photos: z.array(uploadedPhotoSchema).min(2).max(50),
+  photos: z.array(uploadedPhotoSchema).min(2).max(52),
 
   birthdays: z.array(
     z.object({

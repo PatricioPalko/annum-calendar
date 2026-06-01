@@ -37,16 +37,24 @@ function getExportPhotoFileName(originalName: string, index: number) {
 }
 
 async function convertImageToJpg(input: ArrayBuffer) {
-  return sharp(Buffer.from(input))
+  const outputBuffer = await sharp(Buffer.from(input))
     .rotate()
     .flatten({ background: "#ffffff" })
     .toColorspace("srgb")
     .jpeg({
-      quality: 100,
+      quality: 95,
       progressive: false,
       mozjpeg: true,
     })
     .toBuffer();
+
+  const metadata = await sharp(outputBuffer).metadata();
+
+  return {
+    buffer: outputBuffer,
+    width: metadata.width ?? 0,
+    height: metadata.height ?? 0,
+  };
 }
 
 export async function GET(_request: Request, { params }: RouteParams) {
@@ -79,16 +87,50 @@ export async function GET(_request: Request, { params }: RouteParams) {
   const photos = (order.photos ?? []) as UploadedPhoto[];
   const orderCode = order.order_code ?? order.id;
 
-  const exportPhotos = photos.map((photo, index) => {
-    const fileName = getExportPhotoFileName(photo.name, index);
+  const zip = new JSZip();
+  const photosFolder = zip.folder("photos");
 
-    return {
-      ...photo,
-      type: "image/jpeg",
-      fileName,
-      localPath: `./photos/${fileName}`,
-    };
-  });
+  if (!photosFolder) {
+    return NextResponse.json(
+      { message: "Nepodarilo sa vytvoriť ZIP." },
+      { status: 500 },
+    );
+  }
+
+  const exportPhotos = await Promise.all(
+    photos.map(async (photo, index) => {
+      const fileName = getExportPhotoFileName(photo.name, index);
+
+      const { data, error } = await supabaseAdmin.storage
+        .from(BUCKET)
+        .download(photo.path);
+
+      if (error || !data) {
+        throw new Error(`Nepodarilo sa stiahnuť fotku: ${photo.path}`);
+      }
+
+      const converted = await convertImageToJpg(await data.arrayBuffer());
+
+      photosFolder.file(fileName, converted.buffer);
+
+      const orientation =
+        converted.width >= converted.height ? "landscape" : "portrait";
+
+      return {
+        index: index + 1,
+        name: photo.name,
+        path: photo.path,
+        originalType: photo.type,
+        size: photo.size,
+        type: "image/jpeg",
+        fileName,
+        localPath: `./photos/${fileName}`,
+        width: converted.width,
+        height: converted.height,
+        orientation,
+      };
+    }),
+  );
 
   const exportData = {
     id: order.id,
@@ -110,45 +152,10 @@ export async function GET(_request: Request, { params }: RouteParams) {
     birthdays: order.birthdays ?? [],
     namedays: order.namedays ?? [],
     photoCount: exportPhotos.length,
-    photos: exportPhotos.map((photo, index) => ({
-      index: index + 1,
-      name: photo.name,
-      path: photo.path,
-      size: photo.size,
-      type: "image/jpeg",
-      fileName: photo.fileName,
-      localPath: photo.localPath,
-    })),
+    photos: exportPhotos,
   };
 
-  const zip = new JSZip();
   zip.file("order.json", JSON.stringify(exportData, null, 2));
-
-  const photosFolder = zip.folder("photos");
-
-  if (!photosFolder) {
-    return NextResponse.json(
-      { message: "Nepodarilo sa vytvoriť ZIP." },
-      { status: 500 },
-    );
-  }
-
-  await Promise.all(
-    exportPhotos.map(async (photo) => {
-      const { data, error } = await supabaseAdmin.storage
-        .from(BUCKET)
-        .download(photo.path);
-
-      if (error || !data) {
-        throw new Error(`Nepodarilo sa stiahnuť fotku: ${photo.path}`);
-      }
-
-      const inputArrayBuffer = await data.arrayBuffer();
-      const outputBuffer = await convertImageToJpg(inputArrayBuffer);
-
-      photosFolder.file(photo.fileName, outputBuffer);
-    }),
-  );
 
   const zipBuffer = await zip.generateAsync({
     type: "arraybuffer",

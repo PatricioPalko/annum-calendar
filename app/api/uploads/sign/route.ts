@@ -5,7 +5,7 @@ import { createOrderCode, createStorageFolder } from "@/helpers/order-code";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const BUCKET = "calendar-uploads";
-const MAX_FILES = 50;
+const MAX_FILES = 52;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"] as const;

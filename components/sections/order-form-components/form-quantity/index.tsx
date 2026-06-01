@@ -10,6 +10,7 @@ import { Field, FieldError } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { OrderFormValues } from "@/lib/schema";
 import { cn } from "@/lib/utils";
+import { BadgeCheck } from "lucide-react";
 import { FormNumberInput } from "../form-number-input";
 
 type QuantityFieldProps = {
@@ -81,6 +82,8 @@ export function FormQuantity({
                 item.value > 1 &&
                 pricePerPiece < singlePiecePrice;
 
+              const isRecommended = item.value === 3 && !isBusiness;
+
               return (
                 <label
                   key={item.value}
@@ -93,6 +96,12 @@ export function FormQuantity({
                     "data-[disabled=true]:cursor-not-allowed data-[disabled=true]:opacity-40 data-[disabled=true]:hover:border-[#EAD6DE] data-[disabled=true]:hover:bg-white data-[disabled=true]:hover:shadow-sm",
                   )}
                 >
+                  {isRecommended && (
+                    <div className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#C8FF3D] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-[#3E0F28]">
+                      <BadgeCheck className="size-3.5" />
+                      Obľúbený
+                    </div>
+                  )}
                   <div className="flex items-start gap-3">
                     <RadioGroupItem
                       value={String(item.value)}

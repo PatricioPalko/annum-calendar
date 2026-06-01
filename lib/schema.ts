@@ -2,7 +2,7 @@ import { calendarTypesValues, CUSTOM_QUANTITY_VALUE } from "@/app/types/types";
 import { z } from "zod";
 
 const MIN_PHOTOS = 14;
-const MAX_FILES = 50;
+const MAX_FILES = 52;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 const birthdaySchema = z.object({

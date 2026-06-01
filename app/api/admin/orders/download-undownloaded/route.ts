@@ -1,9 +1,12 @@
 import JSZip from "jszip";
 import { NextResponse } from "next/server";
+import sharp from "sharp";
 
 import { isAdminEmail } from "@/lib/auth/admin";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+
+export const runtime = "nodejs";
 
 const BUCKET = "calendar-uploads";
 
@@ -13,6 +16,40 @@ type UploadedPhoto = {
   size: number;
   path: string;
 };
+
+function getExportPhotoFileName(originalName: string, index: number) {
+  const safeBaseName = originalName
+    .replace(/\.[^/.]+$/, "")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/[^a-zA-Z0-9_-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .toLowerCase();
+
+  return `${String(index + 1).padStart(3, "0")}-${safeBaseName}.jpg`;
+}
+
+async function convertImageToJpg(input: ArrayBuffer) {
+  const outputBuffer = await sharp(Buffer.from(input))
+    .rotate()
+    .flatten({ background: "#ffffff" })
+    .toColorspace("srgb")
+    .jpeg({
+      quality: 95,
+      progressive: false,
+      mozjpeg: true,
+    })
+    .toBuffer();
+
+  const metadata = await sharp(outputBuffer).metadata();
+
+  return {
+    buffer: outputBuffer,
+    width: metadata.width ?? 0,
+    height: metadata.height ?? 0,
+  };
+}
 
 export async function GET() {
   const supabase = await createSupabaseServerClient();
@@ -47,14 +84,63 @@ export async function GET() {
   }
 
   const zip = new JSZip();
+  const successfullyExportedOrderIds: string[] = [];
 
   for (const order of orders) {
     const orderCode = order.order_code ?? order.id;
     const orderFolder = zip.folder(orderCode);
 
-    if (!orderFolder) continue;
+    if (!orderFolder) {
+      continue;
+    }
 
     const photos = (order.photos ?? []) as UploadedPhoto[];
+    const photosFolder = orderFolder.folder("photos");
+
+    if (!photosFolder) {
+      continue;
+    }
+
+    const exportPhotos = [];
+
+    for (const [index, photo] of photos.entries()) {
+      const fileName = getExportPhotoFileName(photo.name, index);
+
+      const { data, error } = await supabaseAdmin.storage
+        .from(BUCKET)
+        .download(photo.path);
+
+      if (error || !data) {
+        console.error("BULK_DOWNLOAD_PHOTO_ERROR:", {
+          orderId: order.id,
+          path: photo.path,
+          error,
+        });
+
+        continue;
+      }
+
+      const converted = await convertImageToJpg(await data.arrayBuffer());
+
+      photosFolder.file(fileName, converted.buffer);
+
+      const orientation =
+        converted.width >= converted.height ? "landscape" : "portrait";
+
+      exportPhotos.push({
+        index: index + 1,
+        name: photo.name,
+        path: photo.path,
+        originalType: photo.type,
+        size: photo.size,
+        type: "image/jpeg",
+        fileName,
+        localPath: `./photos/${fileName}`,
+        width: converted.width,
+        height: converted.height,
+        orientation,
+      });
+    }
 
     const exportData = {
       id: order.id,
@@ -70,35 +156,24 @@ export async function GET() {
       calendar: {
         type: order.calendar_type,
         quantity: order.quantity,
+        totalPrice: order.total_price,
         note: order.note,
       },
       birthdays: order.birthdays ?? [],
       namedays: order.namedays ?? [],
-      photos: photos.map((photo, index) => ({
-        ...photo,
-        localPath: `./photos/${index + 1}-${photo.name}`,
-      })),
+      photoCount: exportPhotos.length,
+      photos: exportPhotos,
     };
 
     orderFolder.file("order.json", JSON.stringify(exportData, null, 2));
+    successfullyExportedOrderIds.push(order.id);
+  }
 
-    const photosFolder = orderFolder.folder("photos");
-
-    if (!photosFolder) continue;
-
-    for (const [index, photo] of photos.entries()) {
-      const { data, error } = await supabaseAdmin.storage
-        .from(BUCKET)
-        .download(photo.path);
-
-      if (error || !data) {
-        continue;
-      }
-
-      const arrayBuffer = await data.arrayBuffer();
-
-      photosFolder.file(`${index + 1}-${photo.name}`, arrayBuffer);
-    }
+  if (successfullyExportedOrderIds.length === 0) {
+    return NextResponse.json(
+      { message: "Nepodarilo sa pripraviť žiadnu objednávku na export." },
+      { status: 500 },
+    );
   }
 
   const zipBuffer = await zip.generateAsync({
@@ -109,15 +184,16 @@ export async function GET() {
     },
   });
 
-  await supabaseAdmin
+  const { error: updateError } = await supabaseAdmin
     .from("orders")
     .update({
       downloaded_at: new Date().toISOString(),
     })
-    .in(
-      "id",
-      orders.map((order) => order.id),
-    );
+    .in("id", successfullyExportedOrderIds);
+
+  if (updateError) {
+    console.error("BULK_MARK_AS_DOWNLOADED_ERROR:", updateError);
+  }
 
   return new Response(zipBuffer, {
     headers: {

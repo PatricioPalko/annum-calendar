@@ -34,7 +34,7 @@ export const calendarTypes = [
   {
     value: "premium",
     label: "Premium",
-    badge: "Najobľúbenejší",
+    badge: "Obľubený",
     description: "Kalendár s fotkami, meninami a narodeninami.",
     prices: {
       1: 32,

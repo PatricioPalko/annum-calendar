@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const MIN_FILES = 14;
-const MAX_FILES = 50;
+const MAX_FILES = 52;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 type PhotoDropzoneProps = {
