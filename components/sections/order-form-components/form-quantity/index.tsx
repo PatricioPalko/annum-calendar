@@ -92,7 +92,7 @@ export function FormQuantity({
                   className={cn(
                     "relative flex min-h-36 cursor-pointer flex-col  rounded-md border border-[#EAD6DE] bg-white p-4 shadow-sm transition-all duration-200",
                     "hover:border-[#FC5A61]/50 hover:bg-[#FFF7F4] hover:shadow-md",
-                    "data-[selected=true]:border-[#FC5A61] data-[selected=true]:bg-[#FFF7F4] data-[selected=true]:ring-4 data-[selected=true]:ring-[#FC5A61]/10",
+                    "data-[selected=true]:border-[#FC5A61] data-[selected=true]:bg-[#FFF7F4]",
                     "data-[disabled=true]:cursor-not-allowed data-[disabled=true]:opacity-40 data-[disabled=true]:hover:border-[#EAD6DE] data-[disabled=true]:hover:bg-white data-[disabled=true]:hover:shadow-sm",
                   )}
                 >

@@ -45,7 +45,7 @@ export function FormNumberInput({
               name={field.name}
               ref={field.ref}
               aria-invalid={fieldState.invalid}
-              className="h-12 pr-14 text-md font-bold"
+              className="h-12 pr-14 text-sm font-bold"
             />
 
             <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-md22 font-bold text-[#3E0F28]/60">

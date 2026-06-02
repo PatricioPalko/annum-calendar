@@ -55,7 +55,7 @@ export function TurnstileWidget({
         callback: onToken,
         "expired-callback": () => onExpired?.(),
         "error-callback": () => onError?.(),
-        theme: "auto",
+        theme: "light",
       });
 
       return true;
@@ -82,4 +82,3 @@ export function TurnstileWidget({
     </div>
   );
 }
-

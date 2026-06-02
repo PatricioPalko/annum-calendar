@@ -14,7 +14,7 @@ import { getFinalQuantity } from "@/helpers/form";
 import { OrderFormValues, orderSchema } from "@/lib/schema";
 import { uploadOrderPhotos } from "@/lib/upload-order-photos";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader2 } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { BirthdaysFieldArray } from "../order-form-components/form-birthdays";
@@ -59,6 +59,19 @@ export default function OrderForm() {
     reValidateMode: "onChange",
     defaultValues: orderFormDefaultValues,
   });
+
+  function scrollToFirstError(errors: unknown) {
+    requestAnimationFrame(() => {
+      const firstInvalidElement = document.querySelector(
+        "[data-error-section='true']",
+      );
+
+      firstInvalidElement?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    });
+  }
 
   async function onSubmit(values: OrderFormValues) {
     try {
@@ -167,6 +180,12 @@ export default function OrderForm() {
     }
   }, [selectedCalendarType, form]);
 
+  const errors = form.formState.errors;
+
+  const hasPhotoError = Boolean(errors.photos);
+  const hasTermsError = Boolean(errors.termsAccepted);
+  const hasTurnstileError = !turnstileToken && form.formState.isSubmitted;
+
   return (
     <div className="mx-auto mt-8 max-w-7xl rounded-xl border border-[#EAD6DE] bg-white px-4 py-10 text-primary shadow-2xl shadow-[#3E0F28]/10 md:px-6">
       <div className="my-8 text-center">
@@ -185,7 +204,7 @@ export default function OrderForm() {
       </div>
 
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={form.handleSubmit(onSubmit, scrollToFirstError)}
         id="order-form"
         className="grid gap-4 lg:grid-cols-[1fr_360px] mt-20"
       >
@@ -219,36 +238,40 @@ export default function OrderForm() {
             />
           </OrderSection>
 
-          <OrderSection
-            step="3"
-            title="Fotky"
-            description="Nahrajte minimálne 14 fotiek, ideálne aspoň 30. Vďaka väčšiemu počtu fotiek budú jednotlivé mesiace pestrejšie."
-          >
-            <Controller
-              name="photos"
-              control={form.control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  {/* <FieldLabel>Fotky do kalendára</FieldLabel> */}
+          <div data-error-section={hasPhotoError ? "true" : undefined}>
+            <OrderSection
+              step="3"
+              title="Fotky"
+              description="Nahrajte minimálne 14 fotiek, ideálne aspoň 30. Vďaka väčšiemu počtu fotiek budú jednotlivé mesiace pestrejšie."
+            >
+              <Controller
+                name="photos"
+                control={form.control}
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <FieldDescription>
+                      JPG, PNG alebo WEBP · minimálne 14 fotiek · maximálne 52
+                      fotiek · max. 10 MB / fotka
+                    </FieldDescription>
 
-                  <FieldDescription>
-                    JPG, PNG alebo WEBP · minimálne 14 fotiek · maximálne 52
-                    fotiek · max. 10 MB / fotka
-                  </FieldDescription>
+                    <PhotoDropzone
+                      value={field.value ?? []}
+                      onChange={field.onChange}
+                      disabled={isSubmitting}
+                      hasPhotoError={hasPhotoError}
+                    />
 
-                  <PhotoDropzone
-                    value={field.value ?? []}
-                    onChange={field.onChange}
-                    disabled={isSubmitting}
-                  />
-
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
-            />
-          </OrderSection>
+                    {hasPhotoError && (
+                      <div className="mb-4 inline-flex items-center gap-2 rounded-md bg-[#FC5A61]/10 px-3 py-1.5 text-sm font-extrabold text-[#FC5A61]">
+                        <AlertCircle className="size-4" />
+                        <FieldError errors={[fieldState.error]} />
+                      </div>
+                    )}
+                  </Field>
+                )}
+              />
+            </OrderSection>
+          </div>
 
           {selectedCalendarType === "premium" && (
             <>
@@ -319,8 +342,8 @@ export default function OrderForm() {
           </OrderSection>
         </fieldset>
 
-        <aside className="lg:sticky lg:top-8 lg:self-start">
-          <div className="space-y-4">
+        <aside className="lg:sticky lg:top-20 lg:self-start overflow-hidden rounded-md bg-white text-primary shadow-xl shadow-primary/10 ring-1 ring-soft">
+          <div className="space-y-2">
             <PriceSummary
               type={selectedCalendarType}
               quantityOption={selectedQuantityOption}
@@ -366,7 +389,7 @@ export default function OrderForm() {
                 });
               }}
             />
-            <FormConsentCheckbox control={form.control} />
+            <FormConsentCheckbox control={form.control} className="px-6" />
 
             {turnstileSiteKey ? (
               <TurnstileWidget
@@ -374,25 +397,28 @@ export default function OrderForm() {
                 onToken={(token) => setTurnstileToken(token)}
                 onExpired={() => setTurnstileToken("")}
                 onError={() => setTurnstileToken("")}
+                className="px-6"
               />
             ) : null}
 
-            <Button
-              type="submit"
-              form="order-form"
-              size="lg"
-              className="w-full"
-              disabled={form.formState.isSubmitting}
-            >
-              {form.formState.isSubmitting ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Odosielam objednávku...
-                </>
-              ) : (
-                "Odoslať objednávku"
-              )}
-            </Button>
+            <div className="px-6 pb-6">
+              <Button
+                type="submit"
+                form="order-form"
+                size="lg"
+                className="w-full"
+                disabled={form.formState.isSubmitting}
+              >
+                {form.formState.isSubmitting ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    Odosielam objednávku...
+                  </>
+                ) : (
+                  "Odoslať objednávku"
+                )}
+              </Button>
+            </div>
             {submitError && (
               <p className="rounded-md border border-[#FC5A61]/30 bg-[#FFF7F4] p-3 text-sm font-semibold text-[#FC5A61]">
                 {submitError}

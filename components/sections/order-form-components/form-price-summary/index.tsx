@@ -111,13 +111,13 @@ export function PriceSummary({
   const isDiscountCodeInvalid = hasDiscountCode && Boolean(discountCodeError);
 
   return (
-    <aside className="overflow-hidden rounded-2xl bg-white text-primary shadow-xl shadow-primary/10 ring-1 ring-soft">
-      <div className="bg-[#FFF7F4] px-5 py-5 text-center">
+    <>
+      <div className="bg-[#FFF7F4] px-5 py-5 text-center border-b border-[#EAD6DE]">
         <Text variant="caption" as="span" className="text-xs">
           Súhrn objednávky
         </Text>
 
-        <Heading as="h2" className="mt-2 ">
+        <Heading as="h3" className="mt-2 ">
           Váš kalendár
         </Heading>
       </div>
@@ -136,8 +136,8 @@ export function PriceSummary({
         ))}
       </div>
 
-      <div className="bg-surface-soft px-5 py-3">
-        <div className="mt-8 flex items-end justify-between gap-4">
+      <div className="bg-surface-soft px-5 py-1">
+        <div className="mt-4 flex items-end justify-between gap-4">
           <div>
             <p className="font-heading text-4xl font-semibold text-secondary">
               Spolu
@@ -168,7 +168,7 @@ export function PriceSummary({
         </div>
 
         {showPricePerPiece && (
-          <div className="mt-4 space-y-2 rounded-lg bg-white/80 px-1 py-3">
+          <div className="mt-2 space-y-2 rounded-lg bg-white/80 px-1 py-1">
             <div className="flex items-center justify-between gap-1">
               <span className="text-sm font-semibold text-primary/70">
                 Cena za 1 kalendár
@@ -321,13 +321,6 @@ export function PriceSummary({
           </div>
         )}
       </div>
-
-      <div className="border-t border-border px-5 py-4">
-        <p className="text-xs leading-5 tracking-wide text-secondary">
-          Cena zahŕňa spracovanie podkladov, prípravu kalendára a tlač podľa
-          zvoleného variantu.
-        </p>
-      </div>
-    </aside>
+    </>
   );
 }

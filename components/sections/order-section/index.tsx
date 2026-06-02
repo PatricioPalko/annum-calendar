@@ -14,7 +14,7 @@ export default function OrderSection({
   children,
 }: OrderSectionProps) {
   return (
-    <section className="rounded-md border border-[#EAD6DE] bg-white p-4 shadow-md">
+    <section className="border-b-2 border-[#EAD6DE]/40 bg-white mx-6 pt-4 pb-8">
       <div className="mb-6 flex gap-4">
         <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-[#FC5A61] text-md font-extrabold text-white">
           {step}

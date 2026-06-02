@@ -16,12 +16,14 @@ type PhotoDropzoneProps = {
   value: File[];
   onChange: (files: File[]) => void;
   disabled?: boolean;
+  hasPhotoError?: boolean;
 };
 
 export function PhotoDropzone({
   value,
   onChange,
   disabled,
+  hasPhotoError = false,
 }: PhotoDropzoneProps) {
   const remainingSlots = MAX_FILES - value.length;
   const missingFiles = Math.max(0, MIN_FILES - value.length);
@@ -69,6 +71,7 @@ export function PhotoDropzone({
         className={cn(
           "cursor-pointer rounded-md border-2 border-dashed border-soft bg-surface p-8 text-center transition hover:border-secondary hover:bg-soft/20",
           isDragActive && "border-primary bg-surface-soft",
+          hasPhotoError && "border-secondary bg-soft/20",
           (disabled || remainingSlots <= 0) && "cursor-not-allowed opacity-60",
         )}
       >

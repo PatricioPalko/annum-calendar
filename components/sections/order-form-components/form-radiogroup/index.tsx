@@ -61,9 +61,9 @@ export function FormRadioGroup({
                   htmlFor={id}
                   data-selected={isSelected ? "true" : "false"}
                   className={cn(
-                    "relative flex min-h-52 cursor-pointer flex-col  rounded-md border border-[#EAD6DE] bg-white p-4 shadow-sm transition-all duration-200",
+                    "relative flex min-h-50 cursor-pointer flex-col  rounded-md border border-[#EAD6DE] bg-white p-4 shadow-sm transition-all duration-200",
                     "hover:border-[#FC5A61]/50 hover:bg-[#FFF7F4] hover:shadow-md",
-                    "data-[selected=true]:border-[#FC5A61] data-[selected=true]:bg-[#FFF7F4] data-[selected=true]:ring-4 data-[selected=true]:ring-[#FC5A61]/10",
+                    "data-[selected=true]:border-secondary  data-[selected=true]:bg-[#FFF7F4] data-[selected=true]:shadow-md",
                   )}
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -101,7 +101,7 @@ export function FormRadioGroup({
                       </span>
                     )}
                   </div>
-                  <div className="mt-auto border-t border-[#EAD6DE] pt-4">
+                  <div className="mt-auto border-t border-[#EAD6DE] pt-2">
                     {isBusiness ? (
                       <p className="font-heading text-xl font-bold text-secondary">
                         {plan.priceNote ?? "Cena na mieru"}
@@ -109,7 +109,7 @@ export function FormRadioGroup({
                     ) : (
                       lowestUnitPrice !== null && (
                         <p className="text-sm font-semibold text-primary">
-                          už od{" "}
+                          od{" "}
                           <span className="font-heading text-2xl font-bold text-secondary">
                             {formatPrice(lowestUnitPrice)}
                           </span>{" "}
