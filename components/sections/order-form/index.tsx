@@ -9,9 +9,10 @@ import {
   FieldGroup,
 } from "@/components/ui/field";
 import { Heading, Text } from "@/components/ui/typography";
+import { getDiscountCode } from "@/helpers/discount-codes";
 import { getFinalQuantity } from "@/helpers/form";
 import { OrderFormValues, orderSchema } from "@/lib/schema";
-import { finalizeUploadedPhotos, uploadOrderPhotos } from "@/lib/upload-order-photos";
+import { uploadOrderPhotos } from "@/lib/upload-order-photos";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -41,6 +42,7 @@ const orderFormDefaultValues: OrderFormValues = {
   birthdays: [],
   namedays: [],
   termsAccepted: false,
+  discountCode: "",
 };
 
 export default function OrderForm() {
@@ -60,18 +62,12 @@ export default function OrderForm() {
 
   async function onSubmit(values: OrderFormValues) {
     try {
+      console.log("SUBMIT_START", values);
+
       setSubmitError(null);
 
-      if (!turnstileSiteKey) {
-        throw new Error("Missing Turnstile site key");
-      }
-
-      if (!turnstileToken) {
-        setSubmitError("Prosím potvrďte, že nie ste robot.");
-        return;
-      }
-
       const quantity = getFinalQuantity(values);
+      console.log("QUANTITY_OK", quantity);
 
       const uploaded = await uploadOrderPhotos({
         firstName: values.firstName,
@@ -80,16 +76,13 @@ export default function OrderForm() {
         turnstileToken,
       });
 
-      const finalized = await finalizeUploadedPhotos({
-        storageFolder: uploaded.storageFolder,
-        photos: uploaded.photos,
-        turnstileToken,
-      });
+      console.log("UPLOAD_OK", uploaded);
 
       const payload = {
         orderNumber: uploaded.orderNumber,
         orderCode: uploaded.orderCode,
         storageFolder: uploaded.storageFolder,
+        finalizeToken: uploaded.finalizeToken,
 
         firstName: values.firstName,
         lastName: values.lastName,
@@ -100,13 +93,15 @@ export default function OrderForm() {
         type: values.types,
         quantity,
 
-        photos: finalized.photos,
-        finalizeToken: finalized.finalizeToken,
+        photos: uploaded.photos,
         birthdays: values.birthdays,
         namedays: values.namedays,
 
         termsAccepted: values.termsAccepted,
+        discountCode: values.discountCode?.trim() || undefined,
       };
+
+      console.log("CREATE_ORDER_PAYLOAD", payload);
 
       const response = await fetch("/api/orders", {
         method: "POST",
@@ -116,19 +111,31 @@ export default function OrderForm() {
         body: JSON.stringify(payload),
       });
 
+      console.log("CREATE_ORDER_STATUS", response.status);
+
       if (!response.ok) {
+        const errorText = await response.text();
+
+        console.error("CREATE_ORDER_RESPONSE_ERROR:", {
+          status: response.status,
+          errorText,
+        });
+
         throw new Error("Objednávku sa nepodarilo odoslať.");
       }
 
       const result = await response.json();
+
+      console.log("CREATE_ORDER_OK", result);
 
       setCreatedOrder({
         orderCode: result.orderCode,
       });
 
       form.reset(orderFormDefaultValues);
-      setTurnstileToken("");
-    } catch {
+    } catch (error) {
+      console.error("ORDER_SUBMIT_ERROR:", error);
+
       setSubmitError(
         "Objednávku sa nepodarilo odoslať. Skúste to prosím znova alebo nás kontaktujte.",
       );
@@ -140,6 +147,16 @@ export default function OrderForm() {
   const customQuantity = form.watch("customQuantity");
   const selectedPhotosQuantity = form.watch("photos")?.length ?? 0;
   const isSubmitting = form.formState.isSubmitting;
+
+  const [discountCodeTouched, setDiscountCodeTouched] = useState(false);
+
+  const discountCode = form.watch("discountCode") ?? "";
+  const normalizedDiscountCode = discountCode.trim().toUpperCase();
+
+  const discountCodeError =
+    normalizedDiscountCode && !getDiscountCode(normalizedDiscountCode)
+      ? "Zľavový kód nie je platný."
+      : undefined;
 
   useEffect(() => {
     if (selectedCalendarType === "business") {
@@ -326,6 +343,28 @@ export default function OrderForm() {
                       });
                     }
               }
+              discountCode={discountCode}
+              discountCodeError={discountCodeError}
+              discountCodeTouched={discountCodeTouched}
+              onDiscountCodeChange={(value) => {
+                setDiscountCodeTouched(false);
+
+                form.setValue("discountCode", value, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                });
+              }}
+              onDiscountCodeApply={() => {
+                setDiscountCodeTouched(true);
+              }}
+              onDiscountCodeClear={() => {
+                setDiscountCodeTouched(false);
+
+                form.setValue("discountCode", "", {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                });
+              }}
             />
             <FormConsentCheckbox control={form.control} />
 

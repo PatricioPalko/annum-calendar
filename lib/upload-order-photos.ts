@@ -41,12 +41,27 @@ type UploadOrderPhotosParams = {
   turnstileToken: string;
 };
 
+type UploadOrderPhotosResult = {
+  orderNumber: number;
+  orderCode: string;
+  storageFolder: string;
+  photos: FinalizedUploadedPhoto[];
+  finalizeToken: string;
+};
+
+type FinalizeUploadsResponse = {
+  storageFolder: string;
+  photos: FinalizedUploadedPhoto[];
+  finalizeToken: string;
+  expiresAt: number;
+};
+
 export async function uploadOrderPhotos({
   firstName,
   lastName,
   files,
   turnstileToken,
-}: UploadOrderPhotosParams) {
+}: UploadOrderPhotosParams): Promise<UploadOrderPhotosResult> {
   const signResponse = await fetch("/api/uploads/sign", {
     method: "POST",
     headers: {
@@ -65,12 +80,15 @@ export async function uploadOrderPhotos({
   });
 
   if (!signResponse.ok) {
+    const errorText = await signResponse.text().catch(() => "");
+    console.error("SIGN_UPLOADS_ERROR:", signResponse.status, errorText);
+
     throw new Error("Nepodarilo sa pripraviť upload fotiek.");
   }
 
   const signedUploads = (await signResponse.json()) as SignUploadsResponse;
 
-  const uploadedPhotos = await Promise.all(
+  const uploadedPhotos: UploadedPhoto[] = await Promise.all(
     signedUploads.files.map(async (signedFile, index) => {
       const file = files[index];
 
@@ -85,6 +103,8 @@ export async function uploadOrderPhotos({
         });
 
       if (error) {
+        console.error("PHOTO_UPLOAD_ERROR:", error);
+
         throw new Error(`Nepodarilo sa nahrať fotku: ${file.name}`);
       }
 
@@ -98,26 +118,24 @@ export async function uploadOrderPhotos({
     }),
   );
 
+  const finalized = await finalizeUploadedPhotos({
+    storageFolder: signedUploads.storageFolder,
+    photos: uploadedPhotos,
+  });
+
   return {
     orderNumber: signedUploads.orderNumber,
     orderCode: signedUploads.orderCode,
-    storageFolder: signedUploads.storageFolder,
-    photos: uploadedPhotos,
+    storageFolder: finalized.storageFolder,
+    photos: finalized.photos,
+    finalizeToken: finalized.finalizeToken,
   };
 }
-
-type FinalizeUploadsResponse = {
-  storageFolder: string;
-  photos: FinalizedUploadedPhoto[];
-  finalizeToken: string;
-  expiresAt: number;
-};
 
 export async function finalizeUploadedPhotos(params: {
   storageFolder: string;
   photos: UploadedPhoto[];
-  turnstileToken: string;
-}) {
+}): Promise<FinalizeUploadsResponse> {
   const response = await fetch("/api/uploads/finalize", {
     method: "POST",
     headers: {
@@ -126,11 +144,13 @@ export async function finalizeUploadedPhotos(params: {
     body: JSON.stringify({
       storageFolder: params.storageFolder,
       photos: params.photos,
-      turnstileToken: params.turnstileToken,
     }),
   });
 
   if (!response.ok) {
+    const errorText = await response.text().catch(() => "");
+    console.error("FINALIZE_UPLOADS_ERROR:", response.status, errorText);
+
     throw new Error("Nepodarilo sa overiť fotky po nahratí.");
   }
 

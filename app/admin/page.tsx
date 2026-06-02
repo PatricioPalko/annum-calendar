@@ -58,6 +58,22 @@ function truncateText(value: string, maxLength = 80) {
   return `${value.slice(0, maxLength).trimEnd()}...`;
 }
 
+function getOrderDiscountAmount(order: OrderRow) {
+  return Number(order.discount_amount ?? 0);
+}
+
+function getOrderOriginalPrice(order: OrderRow) {
+  if (order.total_price === null || order.total_price === undefined) {
+    return null;
+  }
+
+  return Number(order.total_price) + getOrderDiscountAmount(order);
+}
+
+function hasOrderDiscount(order: OrderRow) {
+  return Boolean(order.discount_code) && getOrderDiscountAmount(order) > 0;
+}
+
 export default async function AdminOrdersPage({
   searchParams,
 }: {
@@ -81,6 +97,7 @@ export default async function AdminOrdersPage({
     currentSort,
     currentDir,
   );
+
   const undownloadedCount = orders.filter(
     (order) => !order.downloaded_at,
   ).length;
@@ -101,6 +118,12 @@ export default async function AdminOrdersPage({
 
     return sum + Number(order.total_price);
   }, 0);
+
+  const totalDiscountAmount = orders.reduce((sum, order) => {
+    return sum + getOrderDiscountAmount(order);
+  }, 0);
+
+  const totalOriginalPrice = totalPrice + totalDiscountAmount;
 
   const customPriceCount = orders.filter(
     (order) => order.total_price === null || order.total_price === undefined,
@@ -192,6 +215,10 @@ export default async function AdminOrdersPage({
                   const shouldRenderDateSeparator = orderDate !== previousDate;
                   previousDate = orderDate;
 
+                  const orderHasDiscount = hasOrderDiscount(order);
+                  const discountAmount = getOrderDiscountAmount(order);
+                  const originalPrice = getOrderOriginalPrice(order);
+
                   return (
                     <Fragment key={order.id}>
                       {shouldRenderDateSeparator && (
@@ -261,30 +288,53 @@ export default async function AdminOrdersPage({
                                   getCalendarTypeDotClass(order.calendar_type),
                                 )}
                               />
+
                               {getCalendarTypeLabel(order.calendar_type)}
                             </span>
 
-                            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs font-semibold text-[#3E0F28]/65">
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-[#3E0F28]/65">
                               <span>{order.quantity} ks</span>
 
                               <span>
-                                {order.total_price !== null
-                                  ? formatPrice(Number(order.total_price))
-                                  : "Cena na mieru"}
+                                {order.total_price !== null &&
+                                order.total_price !== undefined ? (
+                                  <span className="inline-flex items-center gap-1.5">
+                                    {orderHasDiscount &&
+                                      originalPrice !== null && (
+                                        <span className="text-[#3E0F28]/40 line-through">
+                                          {formatPrice(originalPrice)}
+                                        </span>
+                                      )}
+
+                                    <span className="font-bold text-[#3E0F28]">
+                                      {formatPrice(Number(order.total_price))}
+                                    </span>
+                                  </span>
+                                ) : (
+                                  "Cena na mieru"
+                                )}
                               </span>
 
                               <span>{order.photos?.length ?? 0} fotiek</span>
                             </div>
 
+                            {orderHasDiscount && (
+                              <div className="inline-flex w-fit items-center gap-1.5 text-xs font-bold text-[#3E0F28]">
+                                <span>{order.discount_code}</span>
+                                <span className="text-[#3E0F28]/45">|</span>
+                                <span>-{formatPrice(discountAmount)}</span>
+                              </div>
+                            )}
+
                             {order.note && (
-                              <div className="max-w-[260px] rounded-md border border-[#FC5A61]/20 bg-white px-3 py-2">
+                              <div className="max-w-65 rounded-md border border-[#FC5A61]/20 bg-white px-3 py-2">
                                 <p className="text-[10px] font-extrabold uppercase text-[#FC5A61]">
                                   Poznámka
                                 </p>
 
                                 <div className="mt-1 max-h-20 overflow-y-auto pr-2 text-xs font-semibold leading-5 text-[#3E0F28]/80">
-                                  <p className="whitespace-pre-wrap break-words">
-                                    {order.note}
+                                  <p className="whitespace-pre-wrap wrap-break-words">
+                                    {truncateText(order.note, 220)}
                                   </p>
                                 </div>
                               </div>
@@ -342,6 +392,7 @@ export default async function AdminOrdersPage({
               </tbody>
             </table>
           </div>
+
           <div className="mt-12 border-t border-[#EAD6DE] bg-white shadow-lg shadow-[#3E0F28]/5">
             <div className="grid md:grid-cols-3">
               <div className="p-5">
@@ -377,12 +428,23 @@ export default async function AdminOrdersPage({
                   Tržba
                 </p>
 
-                <p className="mt-2 text-2xl font-bold text-[#3E0F28]">
-                  {formatPrice(totalPrice)}
-                </p>
+                <div className="mt-2 flex items-baseline gap-2">
+                  {totalDiscountAmount > 0 && (
+                    <span className="text-sm font-bold text-[#3E0F28]/40 line-through">
+                      {formatPrice(totalOriginalPrice)}
+                    </span>
+                  )}
+
+                  <span className="text-2xl font-bold text-[#3E0F28]">
+                    {formatPrice(totalPrice)}
+                  </span>
+                </div>
 
                 <p className="mt-1 text-sm font-medium text-[#3E0F28]/60">
                   Súčet objednávok s pevnou cenou
+                  {totalDiscountAmount > 0
+                    ? ` · zľavy ${formatPrice(totalDiscountAmount)}`
+                    : ""}
                   {customPriceCount > 0
                     ? ` · ${customPriceCount} na mieru`
                     : ""}

@@ -3,11 +3,12 @@ import {
   getCalendarPrice,
   getQuantityOptionFromQuantity,
 } from "@/app/types/types";
+import { getDiscountAmount } from "@/helpers/discount-codes";
 import { sendOrderEmails } from "@/lib/order-emails";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import crypto from "node:crypto";
+import { z } from "zod";
 
 const uploadedPhotoSchema = z.object({
   name: z.string(),
@@ -48,6 +49,7 @@ const orderBodySchema = z.object({
   ),
 
   termsAccepted: z.literal(true),
+  discountCode: z.string().max(40).optional(),
 });
 
 function verifyFinalizeToken(values: {
@@ -79,7 +81,10 @@ function verifyFinalizeToken(values: {
     .digest("base64url");
 
   try {
-    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+    return crypto.timingSafeEqual(
+      Buffer.from(signature),
+      Buffer.from(expected),
+    );
   } catch {
     return false;
   }
@@ -186,6 +191,10 @@ export async function POST(request: Request) {
       quantityOption === CUSTOM_QUANTITY_VALUE ? values.quantity : undefined,
   });
 
+  const discount = getDiscountAmount(price.totalPrice, values.discountCode);
+
+  const finalTotalPrice = discount.finalPrice;
+
   const { data, error } = await supabaseAdmin
     .from("orders")
     .insert({
@@ -201,7 +210,9 @@ export async function POST(request: Request) {
 
       calendar_type: values.type,
       quantity: values.quantity,
-      total_price: price.totalPrice,
+      total_price: finalTotalPrice,
+      discount_code: discount.isValid ? discount.code : null,
+      discount_amount: discount.discountAmount,
 
       photos: values.photos,
       birthdays: values.birthdays,
@@ -236,7 +247,9 @@ export async function POST(request: Request) {
       quantity: values.quantity,
       photos: values.photos,
       note: values.note?.trim() || null,
-      totalPrice: price.totalPrice,
+      totalPrice: finalTotalPrice,
+      discountCode: discount.isValid ? discount.code : null,
+      discountAmount: discount.discountAmount,
     });
   } catch (emailError) {
     console.error("ORDER_EMAIL_ERROR:", emailError);

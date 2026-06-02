@@ -210,6 +210,9 @@ export type OrderRow = {
 
   status: string;
   downloaded_at: string | null;
+
+  discount_code: string | null;
+  discount_amount: number | string | null;
 };
 
 export function getQuantityOptionFromQuantity(

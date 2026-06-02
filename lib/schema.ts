@@ -60,6 +60,11 @@ export const orderSchema = z
     termsAccepted: z.boolean().refine((value) => value === true, {
       message: "Pre odoslanie objednávky je potrebné potvrdiť súhlas.",
     }),
+    discountCode: z
+      .string()
+      .max(40)
+      .transform((value) => value.trim().toUpperCase())
+      .optional(),
   })
   .superRefine((data, ctx) => {
     if (

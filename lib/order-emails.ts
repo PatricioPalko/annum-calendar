@@ -21,6 +21,8 @@ type SendOrderEmailsParams = {
   photos: UploadedPhoto[];
   note?: string | null;
   totalPrice: number | null;
+  discountCode?: string | null;
+  discountAmount?: number | null;
 };
 
 const emailFrom = process.env.EMAIL_FROM!;
@@ -64,6 +66,8 @@ export async function sendOrderEmails({
   photos,
   note,
   totalPrice,
+  discountCode,
+  discountAmount,
 }: SendOrderEmailsParams) {
   const safeOrderCode = escapeHtml(orderCode);
   const safeFirstName = escapeHtml(firstName);
