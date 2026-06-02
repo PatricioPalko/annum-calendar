@@ -9,6 +9,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 
 const BUCKET = "calendar-uploads";
+const CONVERT_CONCURRENCY = 3;
 
 type RouteParams = {
   params: Promise<{
@@ -57,6 +58,27 @@ async function convertImageToJpg(input: ArrayBuffer) {
   };
 }
 
+async function mapWithConcurrencyLimit<T, R>(
+  items: T[],
+  limit: number,
+  mapper: (item: T, index: number) => Promise<R>,
+) {
+  const results: R[] = new Array(items.length);
+  let nextIndex = 0;
+
+  const workers = Array.from({ length: Math.max(1, limit) }, async () => {
+    while (true) {
+      const current = nextIndex;
+      nextIndex += 1;
+      if (current >= items.length) return;
+      results[current] = await mapper(items[current]!, current);
+    }
+  });
+
+  await Promise.all(workers);
+  return results;
+}
+
 export async function GET(_request: Request, { params }: RouteParams) {
   const { orderId } = await params;
 
@@ -97,8 +119,10 @@ export async function GET(_request: Request, { params }: RouteParams) {
     );
   }
 
-  const exportPhotos = await Promise.all(
-    photos.map(async (photo, index) => {
+  const exportPhotos = await mapWithConcurrencyLimit(
+    photos,
+    CONVERT_CONCURRENCY,
+    async (photo, index) => {
       const fileName = getExportPhotoFileName(photo.name, index);
 
       const { data, error } = await supabaseAdmin.storage
@@ -129,7 +153,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
         height: converted.height,
         orientation,
       };
-    }),
+    },
   );
 
   const exportData = {

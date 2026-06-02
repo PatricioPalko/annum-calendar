@@ -58,7 +58,7 @@ export function FormQuantity({
             onValueChange={(value) => {
               field.onChange(Number(value));
             }}
-            className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
+            className="grid gap-x-3 gap-y-6 pt-4 sm:grid-cols-2 xl:grid-cols-4"
           >
             {quantityItems.map((item) => {
               const isCustom = item.value === CUSTOM_QUANTITY_VALUE;
@@ -90,14 +90,14 @@ export function FormQuantity({
                   data-selected={isSelected ? "true" : "false"}
                   data-disabled={isDisabled ? "true" : "false"}
                   className={cn(
-                    "relative flex min-h-36 cursor-pointer flex-col overflow-hidden rounded-md border border-[#EAD6DE] bg-white p-4 shadow-sm transition-all duration-200",
+                    "relative flex min-h-36 cursor-pointer flex-col  rounded-md border border-[#EAD6DE] bg-white p-4 shadow-sm transition-all duration-200",
                     "hover:border-[#FC5A61]/50 hover:bg-[#FFF7F4] hover:shadow-md",
                     "data-[selected=true]:border-[#FC5A61] data-[selected=true]:bg-[#FFF7F4] data-[selected=true]:ring-4 data-[selected=true]:ring-[#FC5A61]/10",
                     "data-[disabled=true]:cursor-not-allowed data-[disabled=true]:opacity-40 data-[disabled=true]:hover:border-[#EAD6DE] data-[disabled=true]:hover:bg-white data-[disabled=true]:hover:shadow-sm",
                   )}
                 >
                   {isRecommended && (
-                    <div className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#C8FF3D] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-[#3E0F28]">
+                    <div className="absolute -top-4 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-[#C8FF3D] px-3 py-1.5 text-xs font-extrabold uppercase tracking-[0.16em] text-[#3E0F28] shadow-sm">
                       <BadgeCheck className="size-3.5" />
                       Obľúbený
                     </div>

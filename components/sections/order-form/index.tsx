@@ -1,5 +1,6 @@
 "use client";
 import { calendarTypes, CUSTOM_QUANTITY_VALUE } from "@/app/types/types";
+import { TurnstileWidget } from "@/components/security/turnstile-widget";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -10,7 +11,7 @@ import {
 import { Heading, Text } from "@/components/ui/typography";
 import { getFinalQuantity } from "@/helpers/form";
 import { OrderFormValues, orderSchema } from "@/lib/schema";
-import { uploadOrderPhotos } from "@/lib/upload-order-photos";
+import { finalizeUploadedPhotos, uploadOrderPhotos } from "@/lib/upload-order-photos";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -47,6 +48,8 @@ export default function OrderForm() {
     orderCode: string;
   } | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string>("");
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
@@ -58,12 +61,29 @@ export default function OrderForm() {
   async function onSubmit(values: OrderFormValues) {
     try {
       setSubmitError(null);
+
+      if (!turnstileSiteKey) {
+        throw new Error("Missing Turnstile site key");
+      }
+
+      if (!turnstileToken) {
+        setSubmitError("Prosím potvrďte, že nie ste robot.");
+        return;
+      }
+
       const quantity = getFinalQuantity(values);
 
       const uploaded = await uploadOrderPhotos({
         firstName: values.firstName,
         lastName: values.lastName,
         files: values.photos,
+        turnstileToken,
+      });
+
+      const finalized = await finalizeUploadedPhotos({
+        storageFolder: uploaded.storageFolder,
+        photos: uploaded.photos,
+        turnstileToken,
       });
 
       const payload = {
@@ -80,7 +100,8 @@ export default function OrderForm() {
         type: values.types,
         quantity,
 
-        photos: uploaded.photos,
+        photos: finalized.photos,
+        finalizeToken: finalized.finalizeToken,
         birthdays: values.birthdays,
         namedays: values.namedays,
 
@@ -106,6 +127,7 @@ export default function OrderForm() {
       });
 
       form.reset(orderFormDefaultValues);
+      setTurnstileToken("");
     } catch {
       setSubmitError(
         "Objednávku sa nepodarilo odoslať. Skúste to prosím znova alebo nás kontaktujte.",
@@ -306,6 +328,15 @@ export default function OrderForm() {
               }
             />
             <FormConsentCheckbox control={form.control} />
+
+            {turnstileSiteKey ? (
+              <TurnstileWidget
+                siteKey={turnstileSiteKey}
+                onToken={(token) => setTurnstileToken(token)}
+                onExpired={() => setTurnstileToken("")}
+                onError={() => setTurnstileToken("")}
+              />
+            ) : null}
 
             <Button
               type="submit"

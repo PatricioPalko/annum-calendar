@@ -26,6 +26,15 @@ type SendOrderEmailsParams = {
 const emailFrom = process.env.EMAIL_FROM!;
 const adminEmail = process.env.ADMIN_EMAIL!;
 
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
 function formatPrice(value: number) {
   return `${value.toFixed(2).replace(".", ",")} €`;
 }
@@ -56,6 +65,14 @@ export async function sendOrderEmails({
   note,
   totalPrice,
 }: SendOrderEmailsParams) {
+  const safeOrderCode = escapeHtml(orderCode);
+  const safeFirstName = escapeHtml(firstName);
+  const safeLastName = escapeHtml(lastName);
+  const safeEmail = escapeHtml(email);
+  const safePhone = escapeHtml(phone || "—");
+  const safeNote = escapeHtml(note || "—");
+  const safeTypeLabel = escapeHtml(getCalendarTypeLabel(type));
+
   await Promise.all([
     resend.emails.send({
       from: emailFrom,
@@ -67,7 +84,7 @@ export async function sendOrderEmails({
       Objednávka bola prijatá
     </h1>
 
-    <p>Dobrý deň, ${firstName},</p>
+    <p>Dobrý deň, ${safeFirstName},</p>
 
     <p>
       ďakujeme za objednávku. Vaše fotky a údaje sme prijali. Podklady teraz spracujeme a ozveme sa Vám, keď bude kalendár pripravený.
@@ -78,7 +95,7 @@ export async function sendOrderEmails({
         Číslo objednávky
       </p>
       <p style="margin: 4px 0 0; font-size: 22px; font-weight: 800;">
-        ${orderCode}
+        ${safeOrderCode}
       </p>
     </div>
 
@@ -92,7 +109,7 @@ export async function sendOrderEmails({
           Typ kalendára
         </p>
         <p style="margin: 2px 0 0; font-weight: 700;">
-          ${getCalendarTypeLabel(type)}
+          ${safeTypeLabel}
         </p>
       </div>
 
@@ -128,17 +145,17 @@ export async function sendOrderEmails({
           Kontaktné údaje
         </p>
         <p style="margin: 2px 0 0; font-weight: 700;">
-          ${firstName} ${lastName}
+          ${safeFirstName} ${safeLastName}
           <br />
-          ${email}
+          ${safeEmail}
           <br />
-          ${phone || "—"}
+          ${safePhone}
         </p>
       </div>
     </div>
 
     <p>
-      Ak budete mať otázky, stačí odpovedať na tento e-mail. Do správy uveďte aj číslo Vašej objednávky <strong>${orderCode}</strong>, aby sme Vás mohli rýchlejšie identifikovať.
+      Ak budete mať otázky, stačí odpovedať na tento e-mail. Do správy uveďte aj číslo Vašej objednávky <strong>${safeOrderCode}</strong>, aby sme Vás mohli rýchlejšie identifikovať.
     </p>
 
     <p style="margin-top: 24px;">
@@ -163,7 +180,7 @@ export async function sendOrderEmails({
         Číslo objednávky
       </p>
       <p style="margin: 4px 0 0; font-size: 22px; font-weight: 800;">
-        ${orderCode}
+        ${safeOrderCode}
       </p>
     </div>
 
@@ -177,7 +194,7 @@ export async function sendOrderEmails({
           Zákazník
         </p>
         <p style="margin: 2px 0 0; font-weight: 700;">
-          ${firstName} ${lastName}
+          ${safeFirstName} ${safeLastName}
         </p>
       </div>
 
@@ -186,7 +203,7 @@ export async function sendOrderEmails({
           E-mail
         </p>
         <p style="margin: 2px 0 0; font-weight: 700;">
-          ${email}
+          ${safeEmail}
         </p>
       </div>
 
@@ -195,7 +212,7 @@ export async function sendOrderEmails({
           Telefón
         </p>
         <p style="margin: 2px 0 0; font-weight: 700;">
-          ${phone || "—"}
+          ${safePhone}
         </p>
       </div>
     </div>
@@ -210,7 +227,7 @@ export async function sendOrderEmails({
           Typ kalendára
         </p>
         <p style="margin: 2px 0 0; font-weight: 700;">
-          ${getCalendarTypeLabel(type)}
+          ${safeTypeLabel}
         </p>
       </div>
 
@@ -237,7 +254,7 @@ export async function sendOrderEmails({
           Poznámka
         </p>
         <p style="margin: 2px 0 0; font-weight: 700;">
-          ${note || "—"}
+          ${safeNote}
         </p>
       </div>
 

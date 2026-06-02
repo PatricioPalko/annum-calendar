@@ -7,6 +7,7 @@ import { sendOrderEmails } from "@/lib/order-emails";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import crypto from "node:crypto";
 
 const uploadedPhotoSchema = z.object({
   name: z.string(),
@@ -19,6 +20,7 @@ const orderBodySchema = z.object({
   orderNumber: z.number().int().positive(),
   orderCode: z.string().min(1),
   storageFolder: z.string().min(1),
+  finalizeToken: z.string().min(1),
 
   firstName: z.string().min(1),
   lastName: z.string().min(1),
@@ -29,24 +31,69 @@ const orderBodySchema = z.object({
   type: z.enum(["basic", "premium", "business"]),
   quantity: z.number().int().min(1).max(200),
 
-  photos: z.array(uploadedPhotoSchema).min(2).max(52),
+  photos: z.array(uploadedPhotoSchema).min(14).max(52),
 
   birthdays: z.array(
     z.object({
-      day: z.number(),
-      month: z.number(),
-      name: z.string(),
+      day: z.number().int().min(1).max(31),
+      month: z.number().int().min(1).max(12),
+      name: z.string().min(1),
     }),
   ),
 
   namedays: z.array(
     z.object({
-      name: z.string(),
+      name: z.string().min(1),
     }),
   ),
 
   termsAccepted: z.literal(true),
 });
+
+function verifyFinalizeToken(values: {
+  storageFolder: string;
+  photoPaths: string[];
+  token: string;
+}) {
+  const secret = process.env.UPLOAD_SIGNING_SECRET;
+  if (!secret) {
+    throw new Error("Missing UPLOAD_SIGNING_SECRET");
+  }
+
+  const [expiresAtStr, signature] = values.token.split(".");
+  const expiresAt = Number(expiresAtStr);
+
+  if (!Number.isFinite(expiresAt) || !signature) {
+    return false;
+  }
+
+  if (Math.floor(Date.now() / 1000) > expiresAt) {
+    return false;
+  }
+
+  const canonicalPaths = [...values.photoPaths].sort();
+  const payload = `${values.storageFolder}|${canonicalPaths.join(",")}|${expiresAt}`;
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(payload)
+    .digest("base64url");
+
+  try {
+    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
+  } catch {
+    return false;
+  }
+}
+
+function isValidCalendarDayMonth(day: number, month: number) {
+  // Use leap-year safe year.
+  const date = new Date(Date.UTC(2024, month - 1, day));
+  return (
+    date.getUTCFullYear() === 2024 &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
+}
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -63,6 +110,72 @@ export async function POST(request: Request) {
   }
 
   const values = parsed.data;
+
+  if (values.type === "business" && values.quantity < 10) {
+    return NextResponse.json(
+      {
+        message: "Invalid order payload",
+        errors: {
+          fieldErrors: {
+            quantity: ["Business objednávka je dostupná od 10 kusov."],
+          },
+        },
+      },
+      { status: 400 },
+    );
+  }
+
+  for (const birthday of values.birthdays) {
+    if (!isValidCalendarDayMonth(birthday.day, birthday.month)) {
+      return NextResponse.json(
+        {
+          message: "Invalid order payload",
+          errors: {
+            fieldErrors: {
+              birthdays: ["Neplatný dátum narodenín."],
+            },
+          },
+        },
+        { status: 400 },
+      );
+    }
+  }
+
+  for (const photo of values.photos) {
+    if (!photo.path.startsWith(`${values.storageFolder}/`)) {
+      return NextResponse.json(
+        {
+          message: "Invalid order payload",
+          errors: {
+            fieldErrors: {
+              photos: ["Neplatná cesta k fotke."],
+            },
+          },
+        },
+        { status: 400 },
+      );
+    }
+  }
+
+  if (
+    !verifyFinalizeToken({
+      storageFolder: values.storageFolder,
+      photoPaths: values.photos.map((p) => p.path),
+      token: values.finalizeToken,
+    })
+  ) {
+    return NextResponse.json(
+      {
+        message: "Invalid order payload",
+        errors: {
+          fieldErrors: {
+            photos: ["Fotky nie je možné overiť. Skúste to prosím znova."],
+          },
+        },
+      },
+      { status: 400 },
+    );
+  }
 
   const quantityOption = getQuantityOptionFromQuantity(values.quantity);
 

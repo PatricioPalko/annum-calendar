@@ -61,7 +61,7 @@ export function FormRadioGroup({
                   htmlFor={id}
                   data-selected={isSelected ? "true" : "false"}
                   className={cn(
-                    "relative flex min-h-52 cursor-pointer flex-col overflow-hidden rounded-md border border-[#EAD6DE] bg-white p-4 shadow-sm transition-all duration-200",
+                    "relative flex min-h-52 cursor-pointer flex-col  rounded-md border border-[#EAD6DE] bg-white p-4 shadow-sm transition-all duration-200",
                     "hover:border-[#FC5A61]/50 hover:bg-[#FFF7F4] hover:shadow-md",
                     "data-[selected=true]:border-[#FC5A61] data-[selected=true]:bg-[#FFF7F4] data-[selected=true]:ring-4 data-[selected=true]:ring-[#FC5A61]/10",
                   )}
@@ -90,7 +90,7 @@ export function FormRadioGroup({
                     {plan.value === "premium" && (
                       <span
                         className={cn(
-                          "absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-[#C8FF3D] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-wide text-[#3E0F28]",
+                          "absolute -top-4 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-[#C8FF3D] px-3 py-1.5 text-xs font-extrabold uppercase tracking-[0.16em] text-[#3E0F28] shadow-sm",
                           plan.value === "premium"
                             ? "bg-lime text-[#3E0F28]"
                             : "bg-soft/60 text-[#3E0F28]",
