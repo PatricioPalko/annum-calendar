@@ -139,11 +139,16 @@ export default function OrderForm() {
 
       const result = await response.json();
 
-      console.log("CREATE_ORDER_OK", result);
+      if (result.checkoutUrl) {
+        window.location.href = result.checkoutUrl;
+        return;
+      }
 
       setCreatedOrder({
         orderCode: result.orderCode,
       });
+
+      console.log("CREATE_ORDER_OK", result);
 
       form.reset(orderFormDefaultValues);
     } catch (error) {

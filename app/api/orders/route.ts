@@ -4,7 +4,7 @@ import {
   getQuantityOptionFromQuantity,
 } from "@/app/types/types";
 import { getDiscountAmount } from "@/helpers/discount-codes";
-import { sendOrderEmails } from "@/lib/order-emails";
+import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
@@ -58,6 +58,7 @@ function verifyFinalizeToken(values: {
   token: string;
 }) {
   const secret = process.env.UPLOAD_SIGNING_SECRET;
+
   if (!secret) {
     throw new Error("Missing UPLOAD_SIGNING_SECRET");
   }
@@ -75,6 +76,7 @@ function verifyFinalizeToken(values: {
 
   const canonicalPaths = [...values.photoPaths].sort();
   const payload = `${values.storageFolder}|${canonicalPaths.join(",")}|${expiresAt}`;
+
   const expected = crypto
     .createHmac("sha256", secret)
     .update(payload)
@@ -91,13 +93,23 @@ function verifyFinalizeToken(values: {
 }
 
 function isValidCalendarDayMonth(day: number, month: number) {
-  // Use leap-year safe year.
   const date = new Date(Date.UTC(2024, month - 1, day));
+
   return (
     date.getUTCFullYear() === 2024 &&
     date.getUTCMonth() === month - 1 &&
     date.getUTCDate() === day
   );
+}
+
+function getCalendarTypeLabel(type: "basic" | "premium" | "business") {
+  const labels = {
+    basic: "Basic",
+    premium: "Premium",
+    business: "Business",
+  } as const;
+
+  return labels[type];
 }
 
 export async function POST(request: Request) {
@@ -165,7 +177,7 @@ export async function POST(request: Request) {
   if (
     !verifyFinalizeToken({
       storageFolder: values.storageFolder,
-      photoPaths: values.photos.map((p) => p.path),
+      photoPaths: values.photos.map((photo) => photo.path),
       token: values.finalizeToken,
     })
   ) {
@@ -192,8 +204,16 @@ export async function POST(request: Request) {
   });
 
   const discount = getDiscountAmount(price.totalPrice, values.discountCode);
-
   const finalTotalPrice = discount.finalPrice;
+
+  if (finalTotalPrice === null || finalTotalPrice <= 0) {
+    return NextResponse.json(
+      {
+        message: "Objednávka nemá platnú cenu pre online platbu.",
+      },
+      { status: 400 },
+    );
+  }
 
   const { data, error } = await supabaseAdmin
     .from("orders")
@@ -213,6 +233,8 @@ export async function POST(request: Request) {
       total_price: finalTotalPrice,
       discount_code: discount.isValid ? discount.code : null,
       discount_amount: discount.discountAmount,
+
+      payment_status: "pending",
 
       photos: values.photos,
       birthdays: values.birthdays,
@@ -235,29 +257,59 @@ export async function POST(request: Request) {
     );
   }
 
-  try {
-    await sendOrderEmails({
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+  if (!appUrl) {
+    throw new Error("Missing NEXT_PUBLIC_APP_URL");
+  }
+
+  const checkoutSession = await stripe.checkout.sessions.create({
+    mode: "payment",
+    customer_email: values.email,
+    client_reference_id: data.id,
+
+    line_items: [
+      {
+        quantity: 1,
+        price_data: {
+          currency: "eur",
+          unit_amount: Math.round(finalTotalPrice * 100),
+          product_data: {
+            name: `Annum A3 kalendár · ${data.order_code}`,
+            description: `${getCalendarTypeLabel(values.type)} · ${values.quantity} ks`,
+          },
+        },
+      },
+    ],
+
+    metadata: {
       orderId: data.id,
       orderCode: data.order_code,
-      firstName: values.firstName,
-      lastName: values.lastName,
-      email: values.email,
-      phone: values.phone,
-      type: values.type,
-      quantity: values.quantity,
-      photos: values.photos,
-      note: values.note?.trim() || null,
-      totalPrice: finalTotalPrice,
-      discountCode: discount.isValid ? discount.code : null,
-      discountAmount: discount.discountAmount,
-    });
-  } catch (emailError) {
-    console.error("ORDER_EMAIL_ERROR:", emailError);
+    },
+
+    success_url: `${appUrl}/objednavka/dakujeme?order=${encodeURIComponent(
+      data.order_code,
+    )}`,
+    cancel_url: `${appUrl}/objednavka?payment=cancelled&order=${encodeURIComponent(
+      data.order_code,
+    )}`,
+  });
+
+  const { error: paymentUpdateError } = await supabaseAdmin
+    .from("orders")
+    .update({
+      stripe_checkout_session_id: checkoutSession.id,
+    })
+    .eq("id", data.id);
+
+  if (paymentUpdateError) {
+    console.error("STRIPE_SESSION_UPDATE_ERROR:", paymentUpdateError);
   }
 
   return NextResponse.json({
     orderId: data.id,
     orderCode: data.order_code,
     storageFolder: data.storage_folder,
+    checkoutUrl: checkoutSession.url,
   });
 }

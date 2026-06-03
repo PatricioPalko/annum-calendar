@@ -1,11 +1,16 @@
-import { CheckCircle2, DownloadIcon, Inbox } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock3,
+  DownloadIcon,
+  Inbox,
+  XCircle,
+} from "lucide-react";
 import Link from "next/link";
 import { Fragment } from "react";
 
 import { AdminBulkDownloadButton } from "@/components/admin/admin-bulk-download-button";
 import { AdminDeleteOrderButton } from "@/components/admin/admin-delete-order-button";
 import { AdminDownloadButton } from "@/components/admin/admin-download-button";
-import { AdminMarkDownloadedCompletedButton } from "@/components/admin/admin-mark-downloaded-completed-button";
 import { formatPrice } from "@/helpers/admin-order-price";
 import {
   getCalendarTypeBadgeClass,
@@ -74,6 +79,48 @@ function hasOrderDiscount(order: OrderRow) {
   return Boolean(order.discount_code) && getOrderDiscountAmount(order) > 0;
 }
 
+function getPaymentStatusLabel(status?: string | null) {
+  switch (status) {
+    case "paid":
+      return "Zaplatené";
+    case "failed":
+      return "Zlyhané";
+    case "refunded":
+      return "Vrátené";
+    case "pending":
+    default:
+      return "Čaká";
+  }
+}
+
+function getPaymentStatusClass(status?: string | null) {
+  switch (status) {
+    case "paid":
+      return "border-[#3E0F28]/70 bg-[#C8FF3D]/70 text-[#3E0F28]";
+    case "failed":
+      return "border-[#FC5A61]/40 bg-[#FFF7F4] text-[#FC5A61]";
+    case "refunded":
+      return "border-[#3E0F28]/20 bg-white text-[#3E0F28]/60";
+    case "pending":
+    default:
+      return "border-[#EAD6DE] bg-white text-[#3E0F28]/60";
+  }
+}
+
+function PaymentStatusIcon({ status }: { status?: string | null }) {
+  switch (status) {
+    case "paid":
+      return <CheckCircle2 className="size-4" />;
+    case "failed":
+      return <XCircle className="size-4" />;
+    case "refunded":
+      return <XCircle className="size-4" />;
+    case "pending":
+    default:
+      return <Clock3 className="size-4" />;
+  }
+}
+
 export default async function AdminOrdersPage({
   searchParams,
 }: {
@@ -106,6 +153,14 @@ export default async function AdminOrdersPage({
     (order) => order.downloaded_at && order.status !== "completed",
   ).length;
 
+  const paidCount = orders.filter(
+    (order) => order.payment_status === "paid",
+  ).length;
+
+  const pendingPaymentCount = orders.filter(
+    (order) => order.payment_status !== "paid",
+  ).length;
+
   const totalQuantity = orders.reduce(
     (sum, order) => sum + Number(order.quantity ?? 0),
     0,
@@ -113,6 +168,18 @@ export default async function AdminOrdersPage({
 
   const totalPrice = orders.reduce((sum, order) => {
     if (order.total_price === null || order.total_price === undefined) {
+      return sum;
+    }
+
+    return sum + Number(order.total_price);
+  }, 0);
+
+  const paidTotalPrice = orders.reduce((sum, order) => {
+    if (
+      order.payment_status !== "paid" ||
+      order.total_price === null ||
+      order.total_price === undefined
+    ) {
       return sum;
     }
 
@@ -145,16 +212,13 @@ export default async function AdminOrdersPage({
             </h1>
 
             <p className="mt-2 text-sm font-medium text-[#3E0F28]/60">
-              Spolu {orders.length} objednávok · nestiahnuté {undownloadedCount}
+              Spolu {orders.length} objednávok · nestiahnuté {undownloadedCount}{" "}
+              · zaplatené {paidCount}
             </p>
           </div>
 
           <div className="flex flex-col gap-2 sm:flex-row">
             <AdminBulkDownloadButton disabled={undownloadedCount === 0} />
-
-            <AdminMarkDownloadedCompletedButton
-              disabled={downloadedNotCompletedCount === 0}
-            />
           </div>
         </div>
 
@@ -195,6 +259,8 @@ export default async function AdminOrdersPage({
                     </SortLink>
                   </th>
 
+                  <th className="px-4 py-3 font-bold">Platba</th>
+
                   <th className="px-4 py-3">
                     <SortLink
                       sort="downloaded"
@@ -224,7 +290,7 @@ export default async function AdminOrdersPage({
                       {shouldRenderDateSeparator && (
                         <tr>
                           <td
-                            colSpan={6}
+                            colSpan={7}
                             className="bg-[#3E0F28] px-4 py-2 text-xs font-extrabold uppercase tracking-tighter text-[#FFF7F4]"
                           >
                             {orderDate}
@@ -343,6 +409,29 @@ export default async function AdminOrdersPage({
                         </td>
 
                         <td className="px-3 py-3 align-top">
+                          <div className="space-y-1.5">
+                            <span
+                              className={cn(
+                                "inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-xs font-bold",
+                                getPaymentStatusClass(order.payment_status),
+                              )}
+                            >
+                              <PaymentStatusIcon
+                                status={order.payment_status}
+                              />
+                              {getPaymentStatusLabel(order.payment_status)}
+                            </span>
+
+                            {order.paid_at && (
+                              <p className="text-xs font-medium text-[#3E0F28]/50">
+                                {formatDateOnly(order.paid_at)} ·{" "}
+                                {formatTimeOnly(order.paid_at)}
+                              </p>
+                            )}
+                          </div>
+                        </td>
+
+                        <td className="px-3 py-3 align-top">
                           {order.status === "completed" ? (
                             <span className="inline-flex items-center gap-1 rounded-md border border-[#3E0F28]/80 bg-[#C8FF3D]/70 px-2.5 py-1 text-xs font-bold text-[#3E0F28]">
                               <CheckCircle2 className="size-4" />
@@ -366,6 +455,7 @@ export default async function AdminOrdersPage({
                             <AdminDownloadButton
                               orderId={order.id}
                               fileName={order.order_code ?? order.id}
+                              disabled={order.payment_status !== "paid"}
                             />
 
                             <AdminDeleteOrderButton
@@ -382,7 +472,7 @@ export default async function AdminOrdersPage({
                 {orders.length === 0 && (
                   <tr>
                     <td
-                      colSpan={6}
+                      colSpan={7}
                       className="px-4 py-10 text-center text-[#3E0F28]/60"
                     >
                       Zatiaľ nemáte žiadne objednávky.
@@ -394,7 +484,7 @@ export default async function AdminOrdersPage({
           </div>
 
           <div className="mt-12 border-t border-[#EAD6DE] bg-white shadow-lg shadow-[#3E0F28]/5">
-            <div className="grid md:grid-cols-3">
+            <div className="grid md:grid-cols-4">
               <div className="p-5">
                 <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#FC5A61]">
                   Objednávky
@@ -406,6 +496,23 @@ export default async function AdminOrdersPage({
 
                 <p className="mt-1 text-sm font-medium text-[#3E0F28]/60">
                   Celkový počet objednávok
+                </p>
+              </div>
+
+              <div className="border-t border-[#EAD6DE] p-5 md:border-l md:border-t-0">
+                <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#FC5A61]">
+                  Platby
+                </p>
+
+                <p className="mt-2 text-2xl font-bold text-[#3E0F28]">
+                  {paidCount} / {orders.length}
+                </p>
+
+                <p className="mt-1 text-sm font-medium text-[#3E0F28]/60">
+                  Zaplatené
+                  {pendingPaymentCount > 0
+                    ? ` · čaká ${pendingPaymentCount}`
+                    : ""}
                 </p>
               </div>
 
@@ -441,7 +548,7 @@ export default async function AdminOrdersPage({
                 </div>
 
                 <p className="mt-1 text-sm font-medium text-[#3E0F28]/60">
-                  Súčet objednávok s pevnou cenou
+                  Zaplatené {formatPrice(paidTotalPrice)}
                   {totalDiscountAmount > 0
                     ? ` · zľavy ${formatPrice(totalDiscountAmount)}`
                     : ""}

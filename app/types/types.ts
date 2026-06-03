@@ -213,6 +213,11 @@ export type OrderRow = {
 
   discount_code: string | null;
   discount_amount: number | string | null;
+
+  payment_status: string | null;
+  paid_at: string | null;
+  stripe_checkout_session_id: string | null;
+  stripe_payment_intent_id: string | null;
 };
 
 export function getQuantityOptionFromQuantity(

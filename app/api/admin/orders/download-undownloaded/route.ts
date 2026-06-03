@@ -31,7 +31,10 @@ function getExportPhotoFileName(originalName: string, index: number) {
 }
 
 async function convertImageToJpg(input: ArrayBuffer) {
-  const outputBuffer = await sharp(Buffer.from(input))
+  const outputBuffer = await sharp(Buffer.from(input), {
+    failOn: "none",
+    limitInputPixels: 80_000_000,
+  })
     .rotate()
     .flatten({ background: "#ffffff" })
     .toColorspace("srgb")
@@ -66,10 +69,13 @@ export async function GET() {
   const { data: orders, error: ordersError } = await supabaseAdmin
     .from("orders")
     .select("*")
-    .is("downloaded_at", null)
+    .eq("payment_status", "paid")
+    .neq("status", "completed")
     .order("created_at", { ascending: true });
 
   if (ordersError) {
+    console.error("BULK_DOWNLOAD_ORDERS_ERROR:", ordersError);
+
     return NextResponse.json(
       { message: "Nepodarilo sa načítať objednávky." },
       { status: 500 },
@@ -78,7 +84,7 @@ export async function GET() {
 
   if (!orders || orders.length === 0) {
     return NextResponse.json(
-      { message: "Nie sú žiadne nestiahnuté objednávky." },
+      { message: "Nie sú žiadne zaplatené nestiahnuté objednávky." },
       { status: 404 },
     );
   }
@@ -132,13 +138,18 @@ export async function GET() {
         name: photo.name,
         path: photo.path,
         originalType: photo.type,
-        size: photo.size,
+        originalSize: photo.size,
+
         type: "image/jpeg",
+        size: converted.buffer.length,
         fileName,
         localPath: `./photos/${fileName}`,
+
         width: converted.width,
         height: converted.height,
         orientation,
+
+        processed: true,
       });
     }
 
@@ -147,18 +158,30 @@ export async function GET() {
       orderCode: order.order_code,
       storageFolder: order.storage_folder,
       createdAt: order.created_at,
+
+      payment: {
+        status: order.payment_status,
+        paidAt: order.paid_at,
+        stripeCheckoutSessionId: order.stripe_checkout_session_id,
+        stripePaymentIntentId: order.stripe_payment_intent_id,
+      },
+
       customer: {
         firstName: order.first_name,
         lastName: order.last_name,
         email: order.email,
         phone: order.phone,
       },
+
       calendar: {
         type: order.calendar_type,
         quantity: order.quantity,
         totalPrice: order.total_price,
+        discountCode: order.discount_code,
+        discountAmount: order.discount_amount,
         note: order.note,
       },
+
       birthdays: order.birthdays ?? [],
       namedays: order.namedays ?? [],
       photoCount: exportPhotos.length,
@@ -198,7 +221,7 @@ export async function GET() {
   return new Response(zipBuffer, {
     headers: {
       "Content-Type": "application/zip",
-      "Content-Disposition": `attachment; filename="nestiahnute-objednavky.zip"`,
+      "Content-Disposition": `attachment; filename="zaplatene-nestiahnute-objednavky.zip"`,
     },
   });
 }
