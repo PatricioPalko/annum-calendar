@@ -1,5 +1,6 @@
 "use client";
 import { calendarTypes, CUSTOM_QUANTITY_VALUE } from "@/app/types/types";
+import { PacketaPicker } from "@/components/delivery/packeta-picker";
 import { TurnstileWidget } from "@/components/security/turnstile-widget";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +20,7 @@ import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { BirthdaysFieldArray } from "../order-form-components/form-birthdays";
 import { FormConsentCheckbox } from "../order-form-components/form-consent-checkbox";
+import { FormDeliveryMethod } from "../order-form-components/form-delivery-method";
 import { FormInput } from "../order-form-components/form-input";
 import { NamedaysFieldArray } from "../order-form-components/form-namedays";
 import { PhotoDropzone } from "../order-form-components/form-photo-dropzone";
@@ -42,6 +44,8 @@ const orderFormDefaultValues: OrderFormValues = {
   namedays: [],
   termsAccepted: false,
   discountCode: "",
+  deliveryMethod: "pickup",
+  packetaPoint: undefined,
 };
 
 export default function OrderForm() {
@@ -107,6 +111,10 @@ export default function OrderForm() {
         photos: uploaded.photos,
         birthdays: values.birthdays,
         namedays: values.namedays,
+
+        deliveryMethod: values.deliveryMethod,
+        packetaPoint:
+          values.deliveryMethod === "packeta" ? values.packetaPoint : undefined,
 
         termsAccepted: values.termsAccepted,
         discountCode: values.discountCode?.trim() || undefined,
@@ -184,6 +192,7 @@ export default function OrderForm() {
   const hasPhotoError = Boolean(errors.photos);
   const hasTermsError = Boolean(errors.termsAccepted);
   const hasTurnstileError = !turnstileToken && form.formState.isSubmitted;
+  const selectedDeliveryMethod = form.watch("deliveryMethod");
 
   return (
     <div className="mx-auto mt-8 max-w-7xl rounded-xl border border-[#EAD6DE] bg-white px-4 py-10 text-primary shadow-2xl shadow-[#3E0F28]/10 md:px-6">
@@ -296,6 +305,33 @@ export default function OrderForm() {
           )}
           <OrderSection
             step={selectedCalendarType === "premium" ? "6" : "4"}
+            title="Doručenie"
+            description="Vyberte, či si kalendár prevezmete osobne v Košiciach alebo cez Packetu."
+          >
+            <FormDeliveryMethod control={form.control} />
+
+            {form.watch("deliveryMethod") === "packeta" && (
+              <Controller
+                control={form.control}
+                name="packetaPoint"
+                render={({ field, fieldState }) => (
+                  <Field data-invalid={fieldState.invalid}>
+                    <PacketaPicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      disabled={isSubmitting}
+                    />
+
+                    {fieldState.error && (
+                      <FieldError errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                )}
+              />
+            )}
+          </OrderSection>
+          <OrderSection
+            step={selectedCalendarType === "premium" ? "7" : "5"}
             title="Kontaktné údaje"
             description="Tieto údaje použijeme len na spracovanie objednávky."
           >
@@ -332,8 +368,9 @@ export default function OrderForm() {
               />
             </FieldGroup>
           </OrderSection>
+
           <OrderSection
-            step={selectedCalendarType === "premium" ? "7" : "5"}
+            step={selectedCalendarType === "premium" ? "8" : "6"}
             title="Poznámka"
             description="Poznámka k objednávke"
           >
@@ -387,6 +424,7 @@ export default function OrderForm() {
                   shouldValidate: true,
                 });
               }}
+              deliveryMethod={selectedDeliveryMethod}
             />
             <FormConsentCheckbox control={form.control} className="px-6" />
 

@@ -60,6 +60,14 @@ export const orderSchema = z
     termsAccepted: z.boolean().refine((value) => value === true, {
       message: "Pre odoslanie objednávky je potrebné potvrdiť súhlas.",
     }),
+    deliveryMethod: z.enum(["pickup", "packeta"]),
+    packetaPoint: z
+      .object({
+        id: z.string().min(1),
+        name: z.string().min(1),
+        address: z.string().min(1),
+      })
+      .optional(),
     discountCode: z
       .string()
       .max(40)
@@ -88,6 +96,14 @@ export const orderSchema = z
         code: "custom",
         path: ["customQuantity"],
         message: "Business objednávka je dostupná od 10 kusov",
+      });
+    }
+
+    if (data.deliveryMethod === "packeta" && !data.packetaPoint) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["packetaPoint"],
+        message: "Vyberte výdajné miesto alebo Z-BOX Packety.",
       });
     }
   });

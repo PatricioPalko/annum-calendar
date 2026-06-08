@@ -166,6 +166,24 @@ export async function GET() {
         stripePaymentIntentId: order.stripe_payment_intent_id,
       },
 
+      delivery: {
+        method: order.delivery_method ?? "pickup",
+        label:
+          order.delivery_method === "packeta"
+            ? "Packeta"
+            : "Osobný odber v Košiciach",
+        price: Number(order.delivery_price ?? 0),
+        packetaPoint: order.packeta_point_id
+          ? {
+              id: order.packeta_point_id,
+              name: order.packeta_point_name,
+              address: order.packeta_point_address,
+            }
+          : null,
+        trackingNumber: order.tracking_number ?? null,
+        shippedAt: order.shipped_at ?? null,
+      },
+
       customer: {
         firstName: order.first_name,
         lastName: order.last_name,

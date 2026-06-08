@@ -3,6 +3,7 @@ import {
   getCalendarPrice,
   getQuantityOptionFromQuantity,
 } from "@/app/types/types";
+import { getDeliveryPrice } from "@/helpers/delivery";
 import { getDiscountAmount } from "@/helpers/discount-codes";
 import { sendPendingPaymentEmail } from "@/lib/order-emails";
 import { stripe } from "@/lib/stripe";
@@ -16,6 +17,12 @@ const uploadedPhotoSchema = z.object({
   type: z.string(),
   size: z.number(),
   path: z.string(),
+});
+
+const packetaPointSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  address: z.string().min(1),
 });
 
 const orderBodySchema = z.object({
@@ -48,6 +55,9 @@ const orderBodySchema = z.object({
       name: z.string().min(1),
     }),
   ),
+
+  deliveryMethod: z.enum(["pickup", "packeta"]),
+  packetaPoint: packetaPointSchema.optional(),
 
   termsAccepted: z.literal(true),
   discountCode: z.string().max(40).optional(),
@@ -175,6 +185,20 @@ export async function POST(request: Request) {
     }
   }
 
+  if (values.deliveryMethod === "packeta" && !values.packetaPoint) {
+    return NextResponse.json(
+      {
+        message: "Invalid order payload",
+        errors: {
+          fieldErrors: {
+            packetaPoint: ["Vyberte výdajné miesto alebo Z-BOX Packety."],
+          },
+        },
+      },
+      { status: 400 },
+    );
+  }
+
   if (
     !verifyFinalizeToken({
       storageFolder: values.storageFolder,
@@ -204,8 +228,12 @@ export async function POST(request: Request) {
       quantityOption === CUSTOM_QUANTITY_VALUE ? values.quantity : undefined,
   });
 
+  const deliveryPrice = getDeliveryPrice(values.deliveryMethod);
+
   const discount = getDiscountAmount(price.totalPrice, values.discountCode);
-  const finalTotalPrice = discount.finalPrice;
+
+  const finalTotalPrice =
+    discount.finalPrice === null ? null : discount.finalPrice + deliveryPrice;
 
   if (finalTotalPrice === null || finalTotalPrice <= 0) {
     return NextResponse.json(
@@ -240,6 +268,12 @@ export async function POST(request: Request) {
       photos: values.photos,
       birthdays: values.birthdays,
       namedays: values.namedays,
+
+      delivery_method: values.deliveryMethod,
+      delivery_price: deliveryPrice,
+      packeta_point_id: values.packetaPoint?.id ?? null,
+      packeta_point_name: values.packetaPoint?.name ?? null,
+      packeta_point_address: values.packetaPoint?.address ?? null,
 
       terms_accepted_at: new Date().toISOString(),
     })
@@ -279,7 +313,9 @@ export async function POST(request: Request) {
             name: "Personalizovaný A3 nástenný kalendár",
             description: `${getCalendarTypeLabel(values.type)} · ${
               values.quantity
-            } ks · ${data.order_code}`,
+            } ks · ${values.deliveryMethod === "packeta" ? "Packeta" : "Osobný odber KE"} · ${
+              data.order_code
+            }`,
           },
         },
       },
@@ -325,6 +361,18 @@ export async function POST(request: Request) {
       email: values.email,
       totalPrice: finalTotalPrice,
       paymentUrl,
+      delivery: {
+        method: values.deliveryMethod,
+        price: deliveryPrice,
+        packetaPoint:
+          values.deliveryMethod === "packeta" && values.packetaPoint
+            ? {
+                id: values.packetaPoint.id,
+                name: values.packetaPoint.name,
+                address: values.packetaPoint.address,
+              }
+            : null,
+      },
     });
   } catch (emailError) {
     console.error("PENDING_PAYMENT_EMAIL_ERROR:", emailError);

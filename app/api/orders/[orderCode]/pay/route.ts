@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import { getDeliveryLabel } from "@/helpers/delivery";
 
 type RouteParams = {
   params: Promise<{
@@ -28,7 +29,7 @@ export async function GET(request: Request, { params }: RouteParams) {
   const { data: order, error } = await supabaseAdmin
     .from("orders")
     .select(
-      "id, order_code, email, calendar_type, quantity, total_price, payment_status",
+      "id, order_code, email, calendar_type, quantity, total_price, payment_status, delivery_method",
     )
     .eq("order_code", orderCode)
     .single();
@@ -75,7 +76,7 @@ export async function GET(request: Request, { params }: RouteParams) {
             name: "Personalizovaný A3 nástenný kalendár",
             description: `${getCalendarTypeLabel(order.calendar_type)} · ${
               order.quantity
-            } ks · ${order.order_code}`,
+            } ks · ${getDeliveryLabel(order.delivery_method)} · ${order.order_code}`,
           },
         },
       },

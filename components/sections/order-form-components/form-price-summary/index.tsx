@@ -7,14 +7,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Heading, Text } from "@/components/ui/typography";
+import { getDeliveryLabel, getDeliveryPrice } from "@/helpers/delivery";
 import { getDiscountAmount } from "@/helpers/discount-codes";
 import { Check, Tag, X } from "lucide-react";
+
+type DeliveryMethod = "pickup" | "packeta";
 
 type PriceSummaryProps = {
   type: CalendarTypes;
   quantityOption: QuantityOption;
   customQuantity?: number;
   selectedPhotosQuantity?: number;
+  deliveryMethod?: DeliveryMethod;
   onQuantityChange?: (quantity: 3 | 5) => void;
   discountCode?: string;
   discountCodeError?: string;
@@ -33,6 +37,7 @@ export function PriceSummary({
   quantityOption,
   customQuantity,
   selectedPhotosQuantity,
+  deliveryMethod = "pickup",
   onQuantityChange,
   discountCode = "",
   discountCodeError,
@@ -51,15 +56,25 @@ export function PriceSummary({
   const savedAmount = price.savedAmount;
 
   const discount = getDiscountAmount(originalTotalPrice, discountCode);
+  const deliveryPrice = getDeliveryPrice(deliveryMethod);
+  const deliveryLabel = getDeliveryLabel(deliveryMethod);
 
   const hasAppliedDiscount =
     discount.isValid &&
     discount.discountAmount > 0 &&
     discount.finalPrice !== null;
 
-  const totalPrice = discount.finalPrice;
-  const pricePerPiece =
-    totalPrice !== null && quantity !== null ? totalPrice / quantity : null;
+  const productPriceAfterDiscount = discount.finalPrice;
+
+  const totalPrice =
+    productPriceAfterDiscount !== null
+      ? productPriceAfterDiscount + deliveryPrice
+      : null;
+
+  const productPricePerPiece =
+    productPriceAfterDiscount !== null && quantity !== null
+      ? productPriceAfterDiscount / quantity
+      : null;
 
   const hasFixedPrice = totalPrice !== null;
   const hasQuantity = quantity !== null;
@@ -77,15 +92,21 @@ export function PriceSummary({
   //  Single source of truth for what to show as the final price
   const displayTotal = hasFixedPrice
     ? totalPrice
-    : (originalTotalPrice ?? computedTotalPrice);
+    : originalTotalPrice !== null
+      ? originalTotalPrice + deliveryPrice
+      : computedTotalPrice !== null
+        ? computedTotalPrice + deliveryPrice
+        : null;
 
   //  Single source of truth for per-piece price (coupon price first, then bulk)
-  const effectivePricePerPiece = pricePerPiece ?? originalPricePerPiece;
+  const effectivePricePerPiece = productPricePerPiece ?? originalPricePerPiece;
+
   const showPricePerPiece =
     effectivePricePerPiece !== null && quantity !== null && quantity > 1;
 
   //  Show breakdown list only when there are actual savings/discounts to itemise
-  const showBreakdown = hasSavings || hasAppliedDiscount;
+  const hasDeliveryPrice = deliveryPrice > 0;
+  const showBreakdown = hasSavings || hasAppliedDiscount || hasDeliveryPrice;
 
   //  The "before all discounts" reference price used in the breakdown
   const referencePrice = computedTotalPrice ?? originalTotalPrice;
@@ -98,6 +119,13 @@ export function PriceSummary({
     {
       label: "Počet nahraných fotiek",
       value: `${selectedPhotosQuantity ?? 0}`,
+    },
+    {
+      label: "Doručenie",
+      value:
+        deliveryPrice > 0
+          ? `${deliveryLabel} · ${formatPrice(deliveryPrice)} €`
+          : deliveryLabel,
     },
   ];
 
@@ -171,6 +199,18 @@ export function PriceSummary({
                 </span>
                 <span className="text-emerald-700 font-semibold">
                   −{formatPrice(discount.discountAmount)} €
+                </span>
+              </div>
+            )}
+
+            {/* Delivery */}
+            {hasDeliveryPrice && (
+              <div className="flex justify-between text-sm">
+                <span className="text-primary/50 font-medium">
+                  {deliveryLabel}
+                </span>
+                <span className="text-primary/70 font-semibold">
+                  +{formatPrice(deliveryPrice)} €
                 </span>
               </div>
             )}
