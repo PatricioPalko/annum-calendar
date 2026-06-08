@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
+import { sendPaidOrderEmail } from "@/lib/order-emails";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -34,7 +35,6 @@ export async function POST(request: Request) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-
     const orderId = session.metadata?.orderId;
 
     if (!orderId) {
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { error } = await supabaseAdmin
+    const { data: order, error } = await supabaseAdmin
       .from("orders")
       .update({
         payment_status: "paid",
@@ -55,7 +55,9 @@ export async function POST(request: Request) {
             ? session.payment_intent
             : null,
       })
-      .eq("id", orderId);
+      .eq("id", orderId)
+      .select("id, order_code, first_name, last_name, email, total_price")
+      .single();
 
     if (error) {
       console.error("STRIPE_MARK_PAID_ERROR:", error);
@@ -65,6 +67,21 @@ export async function POST(request: Request) {
         { status: 500 },
       );
     }
+
+    try {
+      await sendPaidOrderEmail({
+        orderCode: order.order_code,
+        firstName: order.first_name,
+        lastName: order.last_name,
+        email: order.email,
+        totalPrice:
+          order.total_price === null || order.total_price === undefined
+            ? null
+            : Number(order.total_price),
+      });
+    } catch (emailError) {
+      console.error("PAID_ORDER_EMAIL_ERROR:", emailError);
+    }
   }
 
   if (event.type === "checkout.session.expired") {
@@ -72,12 +89,17 @@ export async function POST(request: Request) {
     const orderId = session.metadata?.orderId;
 
     if (orderId) {
-      await supabaseAdmin
+      const { error } = await supabaseAdmin
         .from("orders")
         .update({
           payment_status: "failed",
         })
-        .eq("id", orderId);
+        .eq("id", orderId)
+        .neq("payment_status", "paid");
+
+      if (error) {
+        console.error("STRIPE_SESSION_EXPIRED_UPDATE_ERROR:", error);
+      }
     }
   }
 

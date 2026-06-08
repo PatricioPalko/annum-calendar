@@ -4,6 +4,7 @@ import {
   getQuantityOptionFromQuantity,
 } from "@/app/types/types";
 import { getDiscountAmount } from "@/helpers/discount-codes";
+import { sendPendingPaymentEmail } from "@/lib/order-emails";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
@@ -275,8 +276,10 @@ export async function POST(request: Request) {
           currency: "eur",
           unit_amount: Math.round(finalTotalPrice * 100),
           product_data: {
-            name: `Annum A3 kalendár · ${data.order_code}`,
-            description: `${getCalendarTypeLabel(values.type)} · ${values.quantity} ks`,
+            name: "Personalizovaný A3 nástenný kalendár",
+            description: `${getCalendarTypeLabel(values.type)} · ${
+              values.quantity
+            } ks · ${data.order_code}`,
           },
         },
       },
@@ -287,12 +290,16 @@ export async function POST(request: Request) {
       orderCode: data.order_code,
     },
 
-    success_url: `${appUrl}/objednavka/dakujeme?order=${encodeURIComponent(
+    success_url: `${appUrl}/objednavka/dakujeme?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${appUrl}/objednavka/platba-zrusena?order=${encodeURIComponent(
       data.order_code,
     )}`,
-    cancel_url: `${appUrl}/objednavka?payment=cancelled&order=${encodeURIComponent(
-      data.order_code,
-    )}`,
+
+    after_expiration: {
+      recovery: {
+        enabled: true,
+      },
+    },
   });
 
   const { error: paymentUpdateError } = await supabaseAdmin
@@ -304,6 +311,23 @@ export async function POST(request: Request) {
 
   if (paymentUpdateError) {
     console.error("STRIPE_SESSION_UPDATE_ERROR:", paymentUpdateError);
+  }
+
+  try {
+    const paymentUrl = `${appUrl}/api/orders/${encodeURIComponent(
+      data.order_code,
+    )}/pay`;
+
+    await sendPendingPaymentEmail({
+      orderCode: data.order_code,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      email: values.email,
+      totalPrice: finalTotalPrice,
+      paymentUrl,
+    });
+  } catch (emailError) {
+    console.error("PENDING_PAYMENT_EMAIL_ERROR:", emailError);
   }
 
   return NextResponse.json({

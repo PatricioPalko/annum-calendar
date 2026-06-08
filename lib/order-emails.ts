@@ -1,29 +1,4 @@
-// src/lib/order-emails.ts
-
 import { resend } from "@/lib/resend";
-
-type UploadedPhoto = {
-  name: string;
-  type: string;
-  size: number;
-  path: string;
-};
-
-type SendOrderEmailsParams = {
-  orderId: string;
-  orderCode: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string | null;
-  type: string;
-  quantity: number;
-  photos: UploadedPhoto[];
-  note?: string | null;
-  totalPrice: number | null;
-  discountCode?: string | null;
-  discountAmount?: number | null;
-};
 
 const emailFrom = process.env.EMAIL_FROM!;
 const adminEmail = process.env.ADMIN_EMAIL!;
@@ -41,242 +16,176 @@ function formatPrice(value: number) {
   return `${value.toFixed(2).replace(".", ",")} €`;
 }
 
-function getCalendarTypeLabel(type: string) {
-  switch (type) {
-    case "basic":
-      return "Basic";
-    case "premium":
-      return "Premium";
-    case "business":
-      return "Business";
-    default:
-      return type;
-  }
-}
+type SendPendingPaymentEmailParams = {
+  orderCode: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  totalPrice: number;
+  paymentUrl: string;
+};
 
-export async function sendOrderEmails({
-  orderId,
+type SendPaidOrderEmailParams = {
+  orderCode: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  totalPrice: number | null;
+};
+
+export async function sendPendingPaymentEmail({
   orderCode,
   firstName,
   lastName,
   email,
-  phone,
-  type,
-  quantity,
-  photos,
-  note,
   totalPrice,
-  discountCode,
-  discountAmount,
-}: SendOrderEmailsParams) {
+  paymentUrl,
+}: SendPendingPaymentEmailParams) {
   const safeOrderCode = escapeHtml(orderCode);
   const safeFirstName = escapeHtml(firstName);
   const safeLastName = escapeHtml(lastName);
   const safeEmail = escapeHtml(email);
-  const safePhone = escapeHtml(phone || "—");
-  const safeNote = escapeHtml(note || "—");
-  const safeTypeLabel = escapeHtml(getCalendarTypeLabel(type));
+  const safePaymentUrl = escapeHtml(paymentUrl);
 
   await Promise.all([
     resend.emails.send({
       from: emailFrom,
       to: email,
-      subject: `Objednávka ${orderCode} bola prijatá`,
+      subject: `Objednávka ${orderCode} čaká na platbu`,
       html: `
-  <div style="font-family: Arial, sans-serif; color: #3E0F28; line-height: 1.6; max-width: 560px; margin: 0 auto;">
-    <h1 style="margin: 0 0 16px;">
-      Objednávka bola prijatá
-    </h1>
+        <div style="font-family: Arial, sans-serif; color: #3E0F28; line-height: 1.6; max-width: 560px; margin: 0 auto;">
+          <h1 style="margin: 0 0 16px;">Objednávka je uložená</h1>
 
-    <p>Dobrý deň, ${safeFirstName},</p>
+          <p>Dobrý deň, ${safeFirstName},</p>
 
-    <p>
-      ďakujeme za objednávku. Vaše fotky a údaje sme prijali. Podklady teraz spracujeme a ozveme sa Vám, keď bude kalendár pripravený.
-    </p>
+          <p>
+            Vašu objednávku sme uložili. Na spracovanie ju zaradíme po úspešnej platbe.
+          </p>
 
-    <div style="margin: 24px 0; padding: 16px; background: #FFF7F4; border: 1px solid #EAD6DE; border-radius: 12px;">
-      <p style="margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: #FC5A61; font-weight: 700;">
-        Číslo objednávky
-      </p>
-      <p style="margin: 4px 0 0; font-size: 22px; font-weight: 800;">
-        ${safeOrderCode}
-      </p>
-    </div>
+          <div style="margin: 24px 0; padding: 16px; background: #FFF7F4; border: 1px solid #EAD6DE; border-radius: 12px;">
+            <p style="margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: #FC5A61; font-weight: 700;">
+              Číslo objednávky
+            </p>
+            <p style="margin: 4px 0 0; font-size: 22px; font-weight: 800;">
+              ${safeOrderCode}
+            </p>
+          </div>
 
-    <h2 style="font-size: 18px; margin: 24px 0 12px;">
-      Súhrn objednávky
-    </h2>
+          <p>
+            Suma na úhradu: <strong>${formatPrice(totalPrice)}</strong>
+          </p>
 
-    <div style="margin: 0 0 24px;">
-      <div style="padding: 10px 0; border-bottom: 1px solid #EAD6DE;">
-        <p style="margin: 0; font-size: 13px; color: rgba(62, 15, 40, 0.6);">
-          Typ kalendára
-        </p>
-        <p style="margin: 2px 0 0; font-weight: 700;">
-          ${safeTypeLabel}
-        </p>
-      </div>
+          <p>
+            Ak ste platbu nedokončili, môžete ju dokončiť cez tento odkaz:
+          </p>
 
-      <div style="padding: 10px 0; border-bottom: 1px solid #EAD6DE;">
-        <p style="margin: 0; font-size: 13px; color: rgba(62, 15, 40, 0.6);">
-          Počet kusov
-        </p>
-        <p style="margin: 2px 0 0; font-weight: 700;">
-          ${quantity} ks
-        </p>
-      </div>
+          <p style="margin: 24px 0;">
+            <a href="${safePaymentUrl}" style="display: inline-block; background: #3E0F28; color: #ffffff; text-decoration: none; padding: 12px 18px; border-radius: 8px; font-weight: 700;">
+              Dokončiť platbu
+            </a>
+          </p>
 
-      <div style="padding: 10px 0; border-bottom: 1px solid #EAD6DE;">
-        <p style="margin: 0; font-size: 13px; color: rgba(62, 15, 40, 0.6);">
-          Počet nahraných fotiek
-        </p>
-        <p style="margin: 2px 0 0; font-weight: 700;">
-          ${photos.length}
-        </p>
-      </div>
+          <p style="font-size: 13px; color: rgba(62, 15, 40, 0.65);">
+            Ak tlačidlo nefunguje, skopírujte tento odkaz do prehliadača:<br />
+            ${safePaymentUrl}
+          </p>
 
-      <div style="padding: 10px 0; border-bottom: 1px solid #EAD6DE;">
-        <p style="margin: 0; font-size: 13px; color: rgba(62, 15, 40, 0.6);">
-          Cena
-        </p>
-        <p style="margin: 2px 0 0; font-weight: 700;">
-            ${totalPrice !== null ? formatPrice(totalPrice) : "Cena na mieru"}
-        </p>
-      </div>
-
-      <div style="padding: 10px 0; border-bottom: 1px solid #EAD6DE;">
-        <p style="margin: 0; font-size: 13px; color: rgba(62, 15, 40, 0.6);">
-          Kontaktné údaje
-        </p>
-        <p style="margin: 2px 0 0; font-weight: 700;">
-          ${safeFirstName} ${safeLastName}
-          <br />
-          ${safeEmail}
-          <br />
-          ${safePhone}
-        </p>
-      </div>
-    </div>
-
-    <p>
-      Ak budete mať otázky, stačí odpovedať na tento e-mail. Do správy uveďte aj číslo Vašej objednávky <strong>${safeOrderCode}</strong>, aby sme Vás mohli rýchlejšie identifikovať.
-    </p>
-
-    <p style="margin-top: 24px;">
-      Annum.
-    </p>
-  </div>
-`,
+          <p style="margin-top: 24px;">Annum</p>
+        </div>
+      `,
     }),
 
     resend.emails.send({
       from: emailFrom,
       to: adminEmail,
-      subject: `Nová objednávka: ${orderCode}`,
+      subject: `Nová objednávka čaká na platbu: ${orderCode}`,
       html: `
-  <div style="font-family: Arial, sans-serif; color: #3E0F28; line-height: 1.6; max-width: 560px; margin: 0 auto;">
-    <h1 style="margin: 0 0 16px;">
-      Nová objednávka
-    </h1>
+        <div style="font-family: Arial, sans-serif; color: #3E0F28; line-height: 1.6; max-width: 560px; margin: 0 auto;">
+          <h1 style="margin: 0 0 16px;">Nová objednávka čaká na platbu</h1>
 
-    <div style="margin: 24px 0; padding: 16px; background: #FFF7F4; border: 1px solid #EAD6DE; border-radius: 12px;">
-      <p style="margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: #FC5A61; font-weight: 700;">
-        Číslo objednávky
-      </p>
-      <p style="margin: 4px 0 0; font-size: 22px; font-weight: 800;">
-        ${safeOrderCode}
-      </p>
-    </div>
+          <p>
+            Objednávka <strong>${safeOrderCode}</strong> bola vytvorená, ale platba zatiaľ nebola potvrdená.
+          </p>
 
-    <h2 style="font-size: 18px; margin: 24px 0 12px;">
-      Údaje zákazníka
-    </h2>
+          <div style="margin: 24px 0; padding: 16px; background: #FFF7F4; border: 1px solid #EAD6DE; border-radius: 12px;">
+            <p style="margin: 0; font-size: 13px; color: rgba(62, 15, 40, 0.6);">Zákazník</p>
+            <p style="margin: 4px 0 0; font-weight: 700;">${safeFirstName} ${safeLastName}</p>
 
-    <div>
-      <div style="padding: 10px 0; border-bottom: 1px solid #EAD6DE;">
-        <p style="margin: 0; font-size: 13px; color: rgba(62, 15, 40, 0.6);">
-          Zákazník
-        </p>
-        <p style="margin: 2px 0 0; font-weight: 700;">
-          ${safeFirstName} ${safeLastName}
-        </p>
-      </div>
+            <p style="margin: 12px 0 0; font-size: 13px; color: rgba(62, 15, 40, 0.6);">E-mail</p>
+            <p style="margin: 4px 0 0; font-weight: 700;">${safeEmail}</p>
 
-      <div style="padding: 10px 0; border-bottom: 1px solid #EAD6DE;">
-        <p style="margin: 0; font-size: 13px; color: rgba(62, 15, 40, 0.6);">
-          E-mail
-        </p>
-        <p style="margin: 2px 0 0; font-weight: 700;">
-          ${safeEmail}
-        </p>
-      </div>
+            <p style="margin: 12px 0 0; font-size: 13px; color: rgba(62, 15, 40, 0.6);">Suma</p>
+            <p style="margin: 4px 0 0; font-weight: 700;">${formatPrice(totalPrice)}</p>
+          </div>
 
-      <div style="padding: 10px 0; border-bottom: 1px solid #EAD6DE;">
-        <p style="margin: 0; font-size: 13px; color: rgba(62, 15, 40, 0.6);">
-          Telefón
-        </p>
-        <p style="margin: 2px 0 0; font-weight: 700;">
-          ${safePhone}
-        </p>
-      </div>
-    </div>
+          <p>Objednávku nájdeš v admin paneli ako čakajúcu na platbu.</p>
+        </div>
+      `,
+    }),
+  ]);
+}
 
-    <h2 style="font-size: 18px; margin: 24px 0 12px;">
-      Súhrn objednávky
-    </h2>
+export async function sendPaidOrderEmail({
+  orderCode,
+  firstName,
+  email,
+  totalPrice,
+}: SendPaidOrderEmailParams) {
+  const safeOrderCode = escapeHtml(orderCode);
+  const safeFirstName = escapeHtml(firstName);
 
-    <div>
-      <div style="padding: 10px 0; border-bottom: 1px solid #EAD6DE;">
-        <p style="margin: 0; font-size: 13px; color: rgba(62, 15, 40, 0.6);">
-          Typ kalendára
-        </p>
-        <p style="margin: 2px 0 0; font-weight: 700;">
-          ${safeTypeLabel}
-        </p>
-      </div>
+  await Promise.all([
+    resend.emails.send({
+      from: emailFrom,
+      to: email,
+      subject: `Platba k objednávke ${orderCode} bola prijatá`,
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #3E0F28; line-height: 1.6; max-width: 560px; margin: 0 auto;">
+          <h1 style="margin: 0 0 16px;">Platba bola prijatá</h1>
 
-      <div style="padding: 10px 0; border-bottom: 1px solid #EAD6DE;">
-        <p style="margin: 0; font-size: 13px; color: rgba(62, 15, 40, 0.6);">
-          Počet kusov
-        </p>
-        <p style="margin: 2px 0 0; font-weight: 700;">
-          ${quantity} ks
-        </p>
-      </div>
+          <p>Dobrý deň, ${safeFirstName},</p>
 
-      <div style="padding: 10px 0; border-bottom: 1px solid #EAD6DE;">
-        <p style="margin: 0; font-size: 13px; color: rgba(62, 15, 40, 0.6);">
-          Počet fotiek
-        </p>
-        <p style="margin: 2px 0 0; font-weight: 700;">
-          ${photos.length}
-        </p>
-      </div>
+          <p>
+            ďakujeme, platbu k objednávke <strong>${safeOrderCode}</strong> sme prijali.
+            Začíname pripravovať váš kalendár.
+          </p>
 
-      <div style="padding: 10px 0; border-bottom: 1px solid #EAD6DE;">
-        <p style="margin: 0; font-size: 13px; color: rgba(62, 15, 40, 0.6);">
-          Poznámka
-        </p>
-        <p style="margin: 2px 0 0; font-weight: 700;">
-          ${safeNote}
-        </p>
-      </div>
+          ${
+            totalPrice !== null
+              ? `<p>Suma: <strong>${formatPrice(totalPrice)}</strong></p>`
+              : ""
+          }
 
-      <div style="padding: 10px 0; border-bottom: 1px solid #EAD6DE;">
-        <p style="margin: 0; font-size: 13px; color: rgba(62, 15, 40, 0.6);">
-          Cena
-        </p>
-        <p style="margin: 2px 0 0; font-weight: 700;">
-            ${totalPrice !== null ? formatPrice(totalPrice) : "Cena na mieru"}
-        </p>
-      </div>
-    </div>
+          <p>
+            Keď bude kalendár pripravený, budeme vás kontaktovať.
+          </p>
 
-    <p style="margin-top: 24px;">
-      Objednávku nájdeš v admin paneli.
-    </p>
-  </div>
-`,
+          <p style="margin-top: 24px;">Annum</p>
+        </div>
+      `,
+    }),
+
+    resend.emails.send({
+      from: emailFrom,
+      to: adminEmail,
+      subject: `Objednávka zaplatená: ${orderCode}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #3E0F28; line-height: 1.6; max-width: 560px; margin: 0 auto;">
+          <h1 style="margin: 0 0 16px;">Objednávka zaplatená</h1>
+
+          <p>
+            Objednávka <strong>${safeOrderCode}</strong> bola zaplatená.
+          </p>
+
+          ${
+            totalPrice !== null
+              ? `<p>Suma: <strong>${formatPrice(totalPrice)}</strong></p>`
+              : ""
+          }
+
+          <p>Objednávku môžeš spracovať v admin paneli.</p>
+        </div>
+      `,
     }),
   ]);
 }

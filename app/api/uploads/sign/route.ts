@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import crypto from "node:crypto";
+import { z } from "zod";
 
 import { createOrderCode, createStorageFolder } from "@/helpers/order-code";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -8,9 +8,9 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 const BUCKET = "calendar-uploads";
 const MAX_FILES = 52;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const TOKEN_TTL_SECONDS = 60 * 60; // 1h
-const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10m
-const RATE_LIMIT_MAX = 10; // per IP per window
+const TOKEN_TTL_SECONDS = 60 * 60;
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
+const RATE_LIMIT_MAX = 10;
 
 const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp"] as const;
 const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
@@ -31,7 +31,12 @@ function hasAllowedImageExtension(fileName: string) {
 const bodySchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
+
+  type: z.enum(["basic", "premium", "business"]),
+  quantity: z.number().int().min(1).max(200),
+
   turnstileToken: z.string().min(1),
+
   files: z
     .array(
       z
@@ -56,9 +61,13 @@ const bodySchema = z.object({
 
 function getIp(request: Request) {
   const xff = request.headers.get("x-forwarded-for");
+
   if (xff) {
     const first = xff.split(",")[0]?.trim();
-    if (first) return first;
+
+    if (first) {
+      return first;
+    }
   }
 
   return request.headers.get("x-real-ip") ?? "unknown";
@@ -69,16 +78,30 @@ function consumeRateLimit(ip: string) {
   const state = rateLimitByIp.get(ip);
 
   if (!state || now - state.windowStartMs > RATE_LIMIT_WINDOW_MS) {
-    rateLimitByIp.set(ip, { windowStartMs: now, count: 1 });
-    return { ok: true as const, remaining: RATE_LIMIT_MAX - 1, retryAfterMs: 0 };
+    rateLimitByIp.set(ip, {
+      windowStartMs: now,
+      count: 1,
+    });
+
+    return {
+      ok: true as const,
+      remaining: RATE_LIMIT_MAX - 1,
+      retryAfterMs: 0,
+    };
   }
 
   if (state.count >= RATE_LIMIT_MAX) {
     const retryAfterMs = RATE_LIMIT_WINDOW_MS - (now - state.windowStartMs);
-    return { ok: false as const, remaining: 0, retryAfterMs };
+
+    return {
+      ok: false as const,
+      remaining: 0,
+      retryAfterMs,
+    };
   }
 
   state.count += 1;
+
   return {
     ok: true as const,
     remaining: Math.max(0, RATE_LIMIT_MAX - state.count),
@@ -91,6 +114,7 @@ async function verifyTurnstileToken(params: {
   ip: string;
 }): Promise<boolean> {
   const secret = process.env.TURNSTILE_SECRET_KEY;
+
   if (!secret) {
     throw new Error("Missing TURNSTILE_SECRET_KEY");
   }
@@ -98,18 +122,27 @@ async function verifyTurnstileToken(params: {
   const form = new FormData();
   form.set("secret", secret);
   form.set("response", params.token);
+
   if (params.ip !== "unknown") {
     form.set("remoteip", params.ip);
   }
 
   const response = await fetch(
     "https://challenges.cloudflare.com/turnstile/v0/siteverify",
-    { method: "POST", body: form },
+    {
+      method: "POST",
+      body: form,
+    },
   );
 
-  if (!response.ok) return false;
+  if (!response.ok) {
+    return false;
+  }
 
-  const data = (await response.json()) as { success?: boolean };
+  const data = (await response.json()) as {
+    success?: boolean;
+  };
+
   return data.success === true;
 }
 
@@ -130,11 +163,13 @@ function createUploadPathToken(values: {
   expiresAt: number;
 }) {
   const secret = process.env.UPLOAD_SIGNING_SECRET;
+
   if (!secret) {
     throw new Error("Missing UPLOAD_SIGNING_SECRET");
   }
 
   const payload = `${values.path}|${values.size}|${values.type}|${values.expiresAt}`;
+
   const signature = crypto
     .createHmac("sha256", secret)
     .update(payload)
@@ -146,9 +181,12 @@ function createUploadPathToken(values: {
 export async function POST(request: Request) {
   const ip = getIp(request);
   const rate = consumeRateLimit(ip);
+
   if (!rate.ok) {
     return NextResponse.json(
-      { message: "Príliš veľa pokusov. Skúste to prosím neskôr." },
+      {
+        message: "Príliš veľa pokusov. Skúste to prosím neskôr.",
+      },
       {
         status: 429,
         headers: {
@@ -171,13 +209,25 @@ export async function POST(request: Request) {
     );
   }
 
-  const { firstName, lastName, files: inputFiles, turnstileToken } =
-    parsed.data;
+  const {
+    firstName,
+    lastName,
+    type,
+    quantity,
+    files: inputFiles,
+    turnstileToken,
+  } = parsed.data;
 
-  const isHuman = await verifyTurnstileToken({ token: turnstileToken, ip });
+  const isHuman = await verifyTurnstileToken({
+    token: turnstileToken,
+    ip,
+  });
+
   if (!isHuman) {
     return NextResponse.json(
-      { message: "Prosím potvrďte, že nie ste robot." },
+      {
+        message: "Prosím potvrďte, že nie ste robot.",
+      },
       { status: 400 },
     );
   }
@@ -189,7 +239,9 @@ export async function POST(request: Request) {
     console.error("ORDER_NUMBER_ERROR:", orderNumberError);
 
     return NextResponse.json(
-      { message: "Nepodarilo sa vytvoriť číslo objednávky." },
+      {
+        message: "Nepodarilo sa vytvoriť číslo objednávky.",
+      },
       { status: 500 },
     );
   }
@@ -201,7 +253,8 @@ export async function POST(request: Request) {
     firstName,
     lastName,
     year,
-    orderNumber,
+    type,
+    quantity,
   });
 
   const storageFolder = createStorageFolder({

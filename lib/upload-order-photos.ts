@@ -37,6 +37,8 @@ export type FinalizedUploadedPhoto = {
 type UploadOrderPhotosParams = {
   firstName: string;
   lastName: string;
+  type: "basic" | "premium" | "business";
+  quantity: number;
   files: File[];
   turnstileToken: string;
 };
@@ -60,6 +62,8 @@ export async function uploadOrderPhotos({
   firstName,
   lastName,
   files,
+  type,
+  quantity,
   turnstileToken,
 }: UploadOrderPhotosParams): Promise<UploadOrderPhotosResult> {
   const signResponse = await fetch("/api/uploads/sign", {
@@ -70,6 +74,8 @@ export async function uploadOrderPhotos({
     body: JSON.stringify({
       firstName,
       lastName,
+      type,
+      quantity,
       turnstileToken,
       files: files.map((file) => ({
         name: file.name,

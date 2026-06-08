@@ -1,31 +1,59 @@
-export function slugify(value: string) {
+const calendarTypeCodes = {
+  basic: "b",
+  premium: "p",
+  business: "u",
+} as const;
+
+type CalendarType = keyof typeof calendarTypeCodes;
+
+function normalizeOrderCodePart(value: string) {
   return value
     .trim()
-    .toLowerCase()
     .normalize("NFD")
     .replace(/\p{Diacritic}/gu, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .toLowerCase();
 }
 
-export function createOrderCode(values: {
+function createRandomOrderSuffix(length = 4) {
+  const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
+
+  return Array.from({ length }, () => {
+    return alphabet[Math.floor(Math.random() * alphabet.length)];
+  }).join("");
+}
+
+export function createOrderCode({
+  firstName,
+  lastName,
+  year,
+  type,
+  quantity,
+}: {
   firstName: string;
   lastName: string;
   year: number;
-  orderNumber: number;
+  type: CalendarType;
+  quantity: number;
 }) {
-  const firstName = slugify(values.firstName);
-  const lastName = slugify(values.lastName);
-  const sequence = String(values.orderNumber).padStart(3, "0");
+  const safeFirstName = normalizeOrderCodePart(firstName);
+  const safeLastName = normalizeOrderCodePart(lastName);
 
-  return `${lastName}-${firstName}-${values.year}-${sequence}`;
+  const typeCode = calendarTypeCodes[type];
+  const variantCode = `${typeCode}${quantity}`;
+  const suffix = createRandomOrderSuffix();
+
+  return `${safeLastName}-${safeFirstName}-${year}-${variantCode}-${suffix}`;
 }
 
-export function createStorageFolder(values: {
+export function createStorageFolder({
+  year,
+  orderNumber,
+}: {
   year: number;
   orderNumber: number;
 }) {
-  const sequence = String(values.orderNumber).padStart(3, "0");
-
-  return `orders/${values.year}-${sequence}`;
+  return `orders/${year}-${String(orderNumber).padStart(3, "0")}`;
 }

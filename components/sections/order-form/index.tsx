@@ -26,7 +26,6 @@ import { PriceSummary } from "../order-form-components/form-price-summary";
 import { FormQuantity } from "../order-form-components/form-quantity";
 import { FormRadioGroup } from "../order-form-components/form-radiogroup";
 import { FormTextarea } from "../order-form-components/form-textarea";
-import { OrderSuccessDialog } from "../order-form-components/order-success-dialog";
 import OrderSection from "../order-section";
 
 const orderFormDefaultValues: OrderFormValues = {
@@ -46,9 +45,6 @@ const orderFormDefaultValues: OrderFormValues = {
 };
 
 export default function OrderForm() {
-  const [createdOrder, setCreatedOrder] = useState<{
-    orderCode: string;
-  } | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string>("");
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
@@ -86,6 +82,8 @@ export default function OrderForm() {
         firstName: values.firstName,
         lastName: values.lastName,
         files: values.photos,
+        type: values.types,
+        quantity,
         turnstileToken,
       });
 
@@ -139,18 +137,14 @@ export default function OrderForm() {
 
       const result = await response.json();
 
+      console.log("CREATE_ORDER_OK", result);
+
       if (result.checkoutUrl) {
         window.location.href = result.checkoutUrl;
         return;
       }
 
-      setCreatedOrder({
-        orderCode: result.orderCode,
-      });
-
-      console.log("CREATE_ORDER_OK", result);
-
-      form.reset(orderFormDefaultValues);
+      throw new Error("Missing checkout URL");
     } catch (error) {
       console.error("ORDER_SUBMIT_ERROR:", error);
 
@@ -432,15 +426,6 @@ export default function OrderForm() {
           </div>
         </aside>
       </form>
-      <OrderSuccessDialog
-        open={createdOrder !== null}
-        orderCode={createdOrder?.orderCode}
-        onOpenChange={(open) => {
-          if (!open) {
-            setCreatedOrder(null);
-          }
-        }}
-      />
     </div>
   );
 }
