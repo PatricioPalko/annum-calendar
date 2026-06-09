@@ -218,6 +218,15 @@ export type OrderRow = {
   paid_at: string | null;
   stripe_checkout_session_id: string | null;
   stripe_payment_intent_id: string | null;
+  delivery_method: "pickup" | "packeta" | string | null;
+  delivery_price: number | string | null;
+
+  packeta_point_id: string | null;
+  packeta_point_name: string | null;
+  packeta_point_address: string | null;
+
+  tracking_number: string | null;
+  shipped_at: string | null;
 };
 
 export function getQuantityOptionFromQuantity(

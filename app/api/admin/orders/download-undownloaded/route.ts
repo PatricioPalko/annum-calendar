@@ -168,10 +168,7 @@ export async function GET() {
 
       delivery: {
         method: order.delivery_method ?? "pickup",
-        label:
-          order.delivery_method === "packeta"
-            ? "Packeta"
-            : "Osobný odber v Košiciach",
+        label: order.delivery_method === "packeta" ? "Packeta" : "Osobný odber",
         price: Number(order.delivery_price ?? 0),
         packetaPoint: order.packeta_point_id
           ? {

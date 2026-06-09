@@ -53,7 +53,7 @@ function getDeliveryLabel(method: DeliveryMethod) {
       return "Packeta";
     case "pickup":
     default:
-      return "Osobný odber v Košiciach";
+      return "Osobný odber";
   }
 }
 

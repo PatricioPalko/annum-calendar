@@ -426,7 +426,7 @@ export default function OrderForm() {
               }}
               deliveryMethod={selectedDeliveryMethod}
             />
-            <FormConsentCheckbox control={form.control} className="px-6" />
+            <FormConsentCheckbox control={form.control} className="px-5" />
 
             {turnstileSiteKey ? (
               <TurnstileWidget
@@ -438,7 +438,7 @@ export default function OrderForm() {
               />
             ) : null}
 
-            <div className="px-6 pb-6">
+            <div className="px-5 pb-6">
               <Button
                 type="submit"
                 form="order-form"

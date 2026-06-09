@@ -20,7 +20,7 @@ type DeliveryMethodFieldProps = {
 const deliveryOptions = [
   {
     value: "pickup",
-    label: "Osobný odber v Košiciach",
+    label: "Osobný odber",
     description: "Kalendár si prevezmete osobne po dohode.",
     price: "0 €",
     icon: MapPin,

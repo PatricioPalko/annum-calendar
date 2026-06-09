@@ -10,7 +10,7 @@ export function getDeliveryPrice(method: "pickup" | "packeta") {
 export function getDeliveryLabel(method: "pickup" | "packeta") {
   switch (method) {
     case "pickup":
-      return "Osobný odber v Košiciach";
+      return "Osobný odber";
     case "packeta":
       return "Packeta";
   }
