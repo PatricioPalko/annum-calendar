@@ -1,5 +1,17 @@
 import Link from "next/link";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Platba nebola dokončená",
+  description:
+    "Platba k objednávke nebola dokončená. Objednávku môžete zaplatiť znova bez opätovného nahrávania fotiek.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 type PageProps = {
   searchParams: Promise<{
     order?: string;

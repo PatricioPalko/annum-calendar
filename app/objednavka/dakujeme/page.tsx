@@ -2,6 +2,17 @@ import Link from "next/link";
 
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Ďakujeme za objednávku",
+  description:
+    "Objednávka bola prijatá. Stav platby a ďalšie informácie k objednávke vám pošleme e-mailom.",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 type PageProps = {
   searchParams: Promise<{

@@ -9,6 +9,16 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { AdminMarkDownloadedCompletedButton } from "@/components/admin/admin-mark-downloaded-completed-button";
 import { OrderRow, SearchParams, SortKey } from "../types/types";
 
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Admin objednávky",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default async function AdminOrdersPage({
   searchParams,
 }: {

@@ -21,12 +21,13 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.annum.sk"),
 
   title: {
-    default: "Annum | Personalizované A3 nástenné kalendáre z vašich fotiek",
+    default: "Annum | Personalizované A3 nástenné kalendáre z fotiek",
     template: "%s | Annum",
   },
 
   description:
-    "Personalizovaný A3 nástenný kalendár s kovovou väzbou z vašich fotiek. Jednoduchá konfigurácia, až 52 fotiek a možnosť vyznačiť meniny či narodeniny.",
+    "Personalizovaný A3 nástenný kalendár s kovovou väzbou z vašich fotiek. Jednoduchá konfigurácia, až 52 fotiek, osobný odber v Košiciach a doručenie cez Packetu.",
+
   keywords: [
     "Annum",
     "A3 kalendár",
@@ -40,14 +41,30 @@ export const metadata: Metadata = {
     "kalendár s kovovou väzbou",
     "darčekový kalendár",
     "vlastný kalendár",
+    "fotokalendár Košice",
+    "A3 kalendár Košice",
   ],
 
   applicationName: "Annum",
   authors: [{ name: "Annum" }],
   creator: "Annum",
+  publisher: "Annum",
 
   alternates: {
     canonical: "/",
+    languages: {
+      sk: "/",
+    },
+  },
+
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
 
   openGraph: {
@@ -55,9 +72,9 @@ export const metadata: Metadata = {
     locale: "sk_SK",
     url: "https://www.annum.sk",
     siteName: "Annum",
-    title: "Annum | Personalizované A3 nástenné kalendáre z vašich fotiek",
+    title: "Annum | Personalizované A3 nástenné kalendáre z fotiek",
     description:
-      "A3 nástenný kalendár s kovovou väzbou z vašich fotiek. Jednoducho nahráte fotky a my pripravíme čistý osobný kalendár aj s vyznačenými meninami alebo narodeninami pri Premium variante.",
+      "A3 nástenný kalendár s kovovou väzbou z vašich fotiek. Jednoduchá konfigurácia, až 52 fotiek, Premium variant s meninami a narodeninami, osobný odber v Košiciach alebo doručenie cez Packetu.",
     images: [
       {
         url: "/og-image.jpg",
@@ -70,7 +87,7 @@ export const metadata: Metadata = {
 
   twitter: {
     card: "summary_large_image",
-    title: "Annum | Personalizované A3 nástenné kalendáre z vašich fotiek",
+    title: "Annum | Personalizované A3 nástenné kalendáre z fotiek",
     description:
       "Vytvorte si A3 nástenný kalendár s kovovou väzbou. Bez zdĺhavého editora, až 52 fotiek a možnosť vyznačiť meniny či narodeniny.",
     images: ["/og-image.jpg"],
@@ -79,7 +96,16 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
+
+  category: "personalizované fotoprodukty",
 };
 
 export default function RootLayout({
@@ -89,7 +115,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="sk"
       className={cn(
         "h-full",
         "antialiased",

@@ -20,14 +20,17 @@ const productJsonLd = {
   description:
     "Personalizovaný A3 nástenný kalendár s kovovou väzbou z vlastných fotiek. Premium variant umožňuje vyznačiť meniny a narodeniny.",
   image: "https://www.annum.sk/og-image.jpg",
+  category: "Personalizované fotoprodukty",
   offers: {
     "@type": "AggregateOffer",
     priceCurrency: "EUR",
     lowPrice: "15",
-    highPrice: "32",
+    highPrice: "78",
     availability: "https://schema.org/InStock",
+    url: "https://www.annum.sk/#cennik",
   },
 };
+
 export default function Home() {
   return (
     <>
