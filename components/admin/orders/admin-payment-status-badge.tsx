@@ -1,47 +1,34 @@
-import { CheckCircle2, Clock3, XCircle } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { CheckCircle2, Clock3, RotateCcw, XCircle } from "lucide-react";
 
-import { cn } from "@/lib/utils";
+type BadgeConfig = {
+  label: string;
+  icon: LucideIcon;
+  className: string;
+};
 
-function getPaymentStatusLabel(status?: string | null) {
-  switch (status) {
-    case "paid":
-      return "Zaplatené";
-    case "failed":
-      return "Zlyhané";
-    case "refunded":
-      return "Vrátené";
-    case "pending":
-    default:
-      return "Čaká";
-  }
-}
-
-function getPaymentStatusClass(status?: string | null) {
-  switch (status) {
-    case "paid":
-      return "border-[#3E0F28]/70 bg-[#C8FF3D]/70 text-[#3E0F28]";
-    case "failed":
-      return "border-[#FC5A61]/40 bg-[#FFF7F4] text-[#FC5A61]";
-    case "refunded":
-      return "border-[#3E0F28]/20 bg-white text-[#3E0F28]/60";
-    case "pending":
-    default:
-      return "border-[#EAD6DE] bg-white text-[#3E0F28]/60";
-  }
-}
-
-function PaymentStatusIcon({ status }: { status?: string | null }) {
-  switch (status) {
-    case "paid":
-      return <CheckCircle2 className="size-4" />;
-    case "failed":
-    case "refunded":
-      return <XCircle className="size-4" />;
-    case "pending":
-    default:
-      return <Clock3 className="size-4" />;
-  }
-}
+const PAYMENT_CONFIG: Record<string, BadgeConfig> = {
+  paid: {
+    label: "Zaplatené",
+    icon: CheckCircle2,
+    className: "border-[#3E0F28]/70 bg-[#C8FF3D]/40 text-[#3E0F28]",
+  },
+  pending: {
+    label: "Čaká",
+    icon: Clock3,
+    className: "border-amber-300 bg-amber-50 text-amber-900",
+  },
+  failed: {
+    label: "Zlyhané",
+    icon: XCircle,
+    className: "border-red-300 bg-red-50 text-red-900",
+  },
+  refunded: {
+    label: "Vrátené",
+    icon: RotateCcw,
+    className: "border-gray-300 bg-gray-100 text-gray-700",
+  },
+};
 
 type AdminPaymentStatusBadgeProps = {
   status?: string | null;
@@ -50,15 +37,15 @@ type AdminPaymentStatusBadgeProps = {
 export function AdminPaymentStatusBadge({
   status,
 }: AdminPaymentStatusBadgeProps) {
+  const config = PAYMENT_CONFIG[status ?? ""] ?? PAYMENT_CONFIG.pending!;
+  const { label, icon: Icon, className } = config;
+
   return (
     <span
-      className={cn(
-        "inline-flex items-center h-8 gap-1 rounded-md border px-2.5 py-1 text-xs font-bold",
-        getPaymentStatusClass(status),
-      )}
+      className={`inline-flex h-7 items-center gap-1.5 rounded-md border px-2.5 text-xs font-bold ${className}`}
     >
-      <PaymentStatusIcon status={status} />
-      {getPaymentStatusLabel(status)}
+      <Icon className="size-3.5 shrink-0" />
+      {label}
     </span>
   );
 }

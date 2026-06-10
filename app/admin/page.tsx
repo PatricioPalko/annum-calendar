@@ -6,6 +6,7 @@ import { sortOrders } from "@/helpers/admin-table";
 import { requireAdmin } from "@/lib/auth/admin";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
+import { AdminMarkDownloadedCompletedButton } from "@/components/admin/admin-mark-downloaded-completed-button";
 import { OrderRow, SearchParams, SortKey } from "../types/types";
 
 export default async function AdminOrdersPage({
@@ -100,6 +101,7 @@ export default async function AdminOrdersPage({
 
           <div className="flex flex-col gap-2 sm:flex-row">
             <AdminBulkDownloadButton disabled={undownloadedCount === 0} />
+            <AdminMarkDownloadedCompletedButton />
           </div>
         </div>
 

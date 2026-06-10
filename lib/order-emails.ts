@@ -34,6 +34,14 @@ type SendPaidOrderEmailParams = {
   delivery: DeliveryInfo;
 };
 
+type SendOrderFulfillmentEmailParams = {
+  orderCode: string;
+  firstName: string;
+  email: string;
+  delivery: DeliveryInfo;
+  trackingNumber?: string | null;
+};
+
 function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -341,4 +349,80 @@ export async function sendPaidOrderEmail({
       `,
     }),
   ]);
+}
+
+export async function sendOrderFulfillmentEmail({
+  orderCode,
+  firstName,
+  email,
+  delivery,
+  trackingNumber,
+}: SendOrderFulfillmentEmailParams) {
+  const safeOrderCode = escapeHtml(orderCode);
+  const safeFirstName = escapeHtml(firstName);
+  const safeTrackingNumber = trackingNumber ? escapeHtml(trackingNumber) : null;
+
+  const isPacketa = delivery.method === "packeta";
+
+  await resend.emails.send({
+    from: emailFrom,
+    to: email,
+    subject: isPacketa
+      ? `Objednávka ${orderCode} bola odoslaná`
+      : `Objednávka ${orderCode} je pripravená na odber`,
+    html: `
+      <div style="font-family: Arial, sans-serif; color: #3E0F28; line-height: 1.6; max-width: 560px; margin: 0 auto;">
+        <h1 style="margin: 0 0 16px;">
+          ${
+            isPacketa
+              ? "Objednávka bola odoslaná"
+              : "Objednávka je pripravená na odber"
+          }
+        </h1>
+
+        <p>Dobrý deň, ${safeFirstName},</p>
+
+        ${
+          isPacketa
+            ? `
+              <p>
+                váš kalendár sme odoslali cez Packetu.
+              </p>
+            `
+            : `
+              <p>
+                váš kalendár je pripravený na osobný odber v Košiciach.
+                Pre presný čas odberu vás budeme kontaktovať alebo sa môžete ozvať odpoveďou na tento e-mail.
+              </p>
+            `
+        }
+
+        <div style="margin: 24px 0; padding: 16px; background: #FFF7F4; border: 1px solid #EAD6DE; border-radius: 12px;">
+          <p style="margin: 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: #FC5A61; font-weight: 700;">
+            Číslo objednávky
+          </p>
+          <p style="margin: 4px 0 0; font-size: 22px; font-weight: 800;">
+            ${safeOrderCode}
+          </p>
+        </div>
+
+        ${renderDeliveryHtml(delivery)}
+
+        ${
+          isPacketa && safeTrackingNumber
+            ? `
+              <p style="margin-top: 20px;">
+                Sledovacie číslo zásielky: <strong>${safeTrackingNumber}</strong>
+              </p>
+            `
+            : ""
+        }
+
+        <p style="margin-top: 24px;">
+          Ďakujeme,<br />
+          Annum
+        </p>
+      </div>
+    `,
+  });
 }

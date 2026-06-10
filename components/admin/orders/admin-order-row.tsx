@@ -16,6 +16,16 @@ import { formatDateOnly, formatTimeOnly } from "@/helpers/format-date-time";
 import { cn } from "@/lib/utils";
 
 import { OrderRow } from "@/app/types/types";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
+import { AdminCompleteOrderButton } from "../admin-complete-order-button";
+import { AdminNotifyFulfillmentButton } from "../admin-notify-fulfillment-button";
 import { AdminOrderDelivery } from "./admin-order-delivery";
 import { AdminOrderJsonPreview } from "./admin-order-json-preview";
 import { AdminOrderStatusBadge } from "./admin-order-status-badge";
@@ -73,7 +83,7 @@ export function AdminOrderRow({ order, index }: AdminOrderRowProps) {
       </td>
 
       <td className="w-70 max-w-50 px-3 py-3 align-top">
-        <div className="space-y-3">
+        <div className="space-y-1">
           <span
             className={cn(
               "inline-flex items-center gap-2 rounded-md py-1 text-xs font-extrabold uppercase tracking-wide",
@@ -159,19 +169,53 @@ export function AdminOrderRow({ order, index }: AdminOrderRowProps) {
       </td>
 
       <td className="px-3 py-3 align-top text-right">
-        <div className="flex justify-end gap-2">
-          <AdminOrderJsonPreview order={order} />
-
+        <div className="flex items-center justify-end gap-1">
           <AdminDownloadButton
             orderId={order.id}
             fileName={order.order_code ?? order.id}
             disabled={order.payment_status !== "paid"}
           />
 
-          <AdminDeleteOrderButton
+          <AdminNotifyFulfillmentButton
             orderId={order.id}
-            orderCode={order.order_code ?? order.id}
+            deliveryMethod={order.delivery_method}
+            disabled={
+              order.payment_status !== "paid" ||
+              order.status === "ready" ||
+              order.status === "shipped" ||
+              order.status === "completed"
+            }
           />
+          <AdminCompleteOrderButton
+            orderId={order.id}
+            disabled={
+              order.payment_status !== "paid" ||
+              order.status === "completed" ||
+              (order.status !== "ready" && order.status !== "shipped")
+            }
+          />
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8 text-primary/50"
+              >
+                <MoreHorizontal className="size-4" />
+                <span className="sr-only">Ďalšie akcie</span>
+              </Button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent align="end" className="w-48 bg-background p-1">
+              <AdminOrderJsonPreview order={order} />
+              <DropdownMenuSeparator />
+              <AdminDeleteOrderButton
+                orderId={order.id}
+                orderCode={order.order_code ?? order.id}
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </td>
     </tr>
