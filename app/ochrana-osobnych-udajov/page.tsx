@@ -1,5 +1,8 @@
 import { Heading, Text } from "@/components/ui/typography";
 
+const CONTACT_EMAIL = "info@annum.sk";
+const BUSINESS_NAME = "Annum";
+
 function LegalSection({
   title,
   children,
@@ -27,29 +30,78 @@ export default function PrivacyPolicyPage() {
         </Heading>
 
         <Text variant="lead" className="mt-5">
-          Nižšie nájdete informácie o tom, aké údaje spracúvame pri vytvorení
-          objednávky a na aký účel ich používame.
+          Nižšie nájdete informácie o tom, aké osobné údaje spracúvame pri
+          vytvorení objednávky, platbe, doručení a komunikácii k objednávke.
         </Text>
 
         <div className="mt-10 space-y-10">
+          <LegalSection title="Prevádzkovateľ">
+            <Text>
+              Prevádzkovateľom osobných údajov je {BUSINESS_NAME}. Ak máte
+              otázky k spracovaniu osobných údajov alebo si chcete uplatniť
+              svoje práva, kontaktujte nás e-mailom.
+            </Text>
+
+            <Text className="font-semibold text-primary">
+              E-mail: {CONTACT_EMAIL}
+            </Text>
+
+            <Text>
+              Doplňte sem identifikačné údaje prevádzkovateľa, napríklad
+              obchodné meno, IČO, sídlo alebo adresu prevádzky, ak ich chcete
+              uvádzať.
+            </Text>
+          </LegalSection>
+
           <LegalSection title="Aké údaje spracúvame">
             <Text>
               Pri vytvorení objednávky spracúvame údaje, ktoré zadáte vo
               formulári: meno, priezvisko, e-mail, telefónne číslo, poznámku k
-              objednávke, zvolený typ kalendára, počet kusov, dôležité dátumy a
-              nahraté fotky.
+              objednávke, zvolený typ kalendára, počet kusov, zvolený spôsob
+              doručenia, údaje o výdajnom mieste Packety, dôležité dátumy,
+              nahraté fotky a technické údaje potrebné na spracovanie
+              objednávky.
+            </Text>
+
+            <Text>
+              Pri online platbe spracúvame aj informácie o stave platby, čísle
+              objednávky, identifikátore platobnej relácie a informáciu o tom,
+              či bola platba úspešná, zrušená alebo čaká na dokončenie.
             </Text>
           </LegalSection>
 
           <LegalSection title="Na čo údaje používame">
             <Text>
-              Údaje používame na spracovanie objednávky, prípravu
-              personalizovaného kalendára a komunikáciu k danej objednávke.
+              Údaje používame na vytvorenie a spracovanie objednávky, prípravu
+              personalizovaného kalendára, online platbu, doručenie alebo osobný
+              odber, komunikáciu so zákazníkom a administráciu objednávky.
+            </Text>
+
+            <Text>
+              E-mail používame na odoslanie informácie o vytvorení objednávky,
+              odkazu na dokončenie platby, potvrdenia prijatej platby a
+              informácie o pripravení objednávky na osobný odber alebo o jej
+              odoslaní cez Packetu.
             </Text>
 
             <Text>
               Vaše údaje nepoužívame na marketingové účely bez samostatného
               súhlasu.
+            </Text>
+          </LegalSection>
+
+          <LegalSection title="Právny základ spracúvania">
+            <Text>
+              Osobné údaje spracúvame najmä preto, aby sme mohli vybaviť vašu
+              objednávku a splniť zmluvu. Niektoré údaje môžeme spracúvať aj z
+              dôvodu plnenia zákonných povinností, napríklad účtovných alebo
+              daňových povinností.
+            </Text>
+
+            <Text>
+              Technické a bezpečnostné údaje môžeme spracúvať na základe
+              oprávneného záujmu, napríklad pri ochrane formulára pred spamom,
+              zneužitím alebo neoprávneným prístupom.
             </Text>
           </LegalSection>
 
@@ -59,30 +111,86 @@ export default function PrivacyPolicyPage() {
               Nepoužívame ich na verejnú prezentáciu, reklamu ani sociálne siete
               bez vášho výslovného súhlasu.
             </Text>
+
+            <Text>
+              Zákazník zodpovedá za to, že má právo nahraté fotky použiť na
+              vytvorenie kalendára a že ich použitím neporušuje práva tretích
+              osôb.
+            </Text>
+          </LegalSection>
+
+          <LegalSection title="Platby">
+            <Text>
+              Online platby spracúva platobná služba Stripe. Platobné údaje,
+              napríklad celé číslo platobnej karty, nespracúvame ani neukladáme
+              priamo v našej aplikácii. Dostávame iba informácie potrebné na
+              potvrdenie stavu platby k objednávke.
+            </Text>
+          </LegalSection>
+
+          <LegalSection title="Doručenie a Packeta">
+            <Text>
+              Ak si zvolíte doručenie cez Packetu, spracúvame údaje o vybranom
+              výdajnom mieste alebo Z-BOXe, napríklad názov, adresu a
+              identifikátor výdajného miesta.
+            </Text>
+
+            <Text>
+              Tieto údaje používame na prípravu a odoslanie zásielky. Pri
+              osobnom odbere v Košiciach spracúvame informáciu o tom, že ste si
+              zvolili osobný odber.
+            </Text>
+          </LegalSection>
+
+          <LegalSection title="Služby tretích strán">
+            <Text>
+              Pri spracovaní objednávky môžeme používať technické služby tretích
+              strán, napríklad databázu, úložisko nahratých fotiek, e-mailovú
+              službu, platobnú bránu, ochranu formulára pred spamom a
+              doručovaciu službu.
+            </Text>
+
+            <Text>
+              Ide najmä o služby potrebné na prevádzku webu, uloženie
+              objednávky, odoslanie e-mailov, spracovanie platby a doručenie
+              zásielky.
+            </Text>
           </LegalSection>
 
           <LegalSection title="Uchovávanie údajov">
             <Text>
-              Údaje uchovávame po dobu potrebnú na vybavenie objednávky a
-              následnú administráciu. Po tejto dobe môžu byť údaje a nahraté
-              fotky odstránené.
+              Údaje uchovávame po dobu potrebnú na vybavenie objednávky,
+              doručenie alebo osobný odber, riešenie prípadnej komunikácie a
+              následnú administráciu.
+            </Text>
+
+            <Text>
+              Údaje, ktoré musíme uchovávať z účtovných, daňových alebo iných
+              zákonných dôvodov, uchovávame po dobu vyžadovanú príslušnými
+              predpismi. Nahraté fotky môžu byť po vybavení objednávky a
+              uplynutí primeranej doby odstránené.
             </Text>
           </LegalSection>
 
           <LegalSection title="Prístup k údajom">
             <Text>
-              K údajom má prístup iba osoba spracúvajúca objednávku. Údaje
-              neposkytujeme tretím stranám, okrem služieb potrebných na
-              technické spracovanie objednávky, napríklad úložisko fotiek,
-              databáza alebo e-mailová služba.
+              K údajom má prístup iba osoba spracúvajúca objednávku a technické
+              služby potrebné na prevádzku objednávkového systému. Údaje
+              neposkytujeme tretím stranám na ich vlastné marketingové účely.
             </Text>
           </LegalSection>
 
           <LegalSection title="Vaše práva">
             <Text>
-              Môžete nás požiadať o informáciu, aké údaje o vás spracúvame,
-              prípadne o ich opravu alebo odstránenie, ak to nebráni vybaveniu
-              objednávky alebo zákonným povinnostiam.
+              Môžete nás požiadať o informáciu, aké údaje o vás spracúvame, o
+              prístup k údajom, ich opravu, vymazanie, obmedzenie spracúvania
+              alebo prenosnosť údajov, ak sú splnené zákonné podmienky.
+            </Text>
+
+            <Text>
+              Ak sa domnievate, že vaše údaje spracúvame nesprávne, môžete nás
+              kontaktovať alebo sa obrátiť na príslušný dozorný orgán na ochranu
+              osobných údajov.
             </Text>
           </LegalSection>
 
@@ -92,7 +200,9 @@ export default function PrivacyPolicyPage() {
               o odstránenie údajov, kontaktujte nás e-mailom.
             </Text>
 
-            <Text className="font-semibold text-primary">E-mail:</Text>
+            <Text className="font-semibold text-primary">
+              E-mail: {CONTACT_EMAIL}
+            </Text>
           </LegalSection>
         </div>
       </div>

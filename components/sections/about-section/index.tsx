@@ -25,7 +25,7 @@ const steps = [
 
 export function AboutSection() {
   return (
-    <section id="ako-to-funguje" className="scroll-mt-24 py-20">
+    <section id="ako-to-funguje" className="scroll-mt-8 py-20">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <Text variant="caption" as="span">

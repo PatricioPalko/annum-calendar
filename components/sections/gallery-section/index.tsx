@@ -26,7 +26,7 @@ export function GallerySection() {
   const [mainImage, ...detailImages] = galleryImages;
 
   return (
-    <section id="ukazka-kalendara" className="scroll-mt-24 bg-[#FFF7F4] py-20">
+    <section id="ukazka-kalendara" className="scroll-mt-8 bg-[#FFF7F4] py-20">
       <div className="mx-auto max-w-6xl px-4 md:px-6">
         <div className="mb-18 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">

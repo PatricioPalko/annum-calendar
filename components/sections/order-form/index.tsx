@@ -12,6 +12,7 @@ import {
 import { Heading, Text } from "@/components/ui/typography";
 import { getDiscountCode } from "@/helpers/discount-codes";
 import { getFinalQuantity } from "@/helpers/form";
+import { loadOrderFormDraft, saveOrderFormDraft } from "@/lib/order-from-draft";
 import { OrderFormValues, orderSchema } from "@/lib/schema";
 import { uploadOrderPhotos } from "@/lib/upload-order-photos";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -59,6 +60,64 @@ export default function OrderForm() {
     reValidateMode: "onChange",
     defaultValues: orderFormDefaultValues,
   });
+
+  const selectedQuantityOption = form.watch("quantityOption");
+  const selectedCalendarType = form.watch("types");
+  const customQuantity = form.watch("customQuantity");
+  const selectedPhotosQuantity = form.watch("photos")?.length ?? 0;
+  const isSubmitting = form.formState.isSubmitting;
+
+  const [discountCodeTouched, setDiscountCodeTouched] = useState(false);
+
+  const discountCode = form.watch("discountCode") ?? "";
+  const normalizedDiscountCode = discountCode.trim().toUpperCase();
+
+  const discountCodeError =
+    normalizedDiscountCode && !getDiscountCode(normalizedDiscountCode)
+      ? "Zľavový kód nie je platný."
+      : undefined;
+
+  const errors = form.formState.errors;
+
+  const hasPhotoError = Boolean(errors.photos);
+  const hasTermsError = Boolean(errors.termsAccepted);
+  const hasTurnstileError = !turnstileToken && form.formState.isSubmitted;
+  const selectedDeliveryMethod = form.watch("deliveryMethod");
+
+  useEffect(() => {
+    const draft = loadOrderFormDraft();
+
+    if (!draft) {
+      return;
+    }
+
+    form.reset({
+      ...orderFormDefaultValues,
+      ...draft,
+      photos: [],
+    });
+  }, [form]);
+
+  useEffect(() => {
+    const subscription = form.watch((values) => {
+      saveOrderFormDraft({
+        ...orderFormDefaultValues,
+        ...values,
+        photos: values.photos ?? [],
+      } as OrderFormValues);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form]);
+
+  useEffect(() => {
+    if (selectedCalendarType === "business") {
+      form.setValue("quantityOption", CUSTOM_QUANTITY_VALUE, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+  }, [selectedCalendarType, form]);
 
   function scrollToFirstError(errors: unknown) {
     requestAnimationFrame(() => {
@@ -161,38 +220,6 @@ export default function OrderForm() {
       );
     }
   }
-
-  const selectedQuantityOption = form.watch("quantityOption");
-  const selectedCalendarType = form.watch("types");
-  const customQuantity = form.watch("customQuantity");
-  const selectedPhotosQuantity = form.watch("photos")?.length ?? 0;
-  const isSubmitting = form.formState.isSubmitting;
-
-  const [discountCodeTouched, setDiscountCodeTouched] = useState(false);
-
-  const discountCode = form.watch("discountCode") ?? "";
-  const normalizedDiscountCode = discountCode.trim().toUpperCase();
-
-  const discountCodeError =
-    normalizedDiscountCode && !getDiscountCode(normalizedDiscountCode)
-      ? "Zľavový kód nie je platný."
-      : undefined;
-
-  useEffect(() => {
-    if (selectedCalendarType === "business") {
-      form.setValue("quantityOption", CUSTOM_QUANTITY_VALUE, {
-        shouldValidate: true,
-        shouldDirty: true,
-      });
-    }
-  }, [selectedCalendarType, form]);
-
-  const errors = form.formState.errors;
-
-  const hasPhotoError = Boolean(errors.photos);
-  const hasTermsError = Boolean(errors.termsAccepted);
-  const hasTurnstileError = !turnstileToken && form.formState.isSubmitted;
-  const selectedDeliveryMethod = form.watch("deliveryMethod");
 
   return (
     <div className="mx-auto mt-8 max-w-7xl rounded-xl border border-[#EAD6DE] bg-white px-4 py-10 text-primary shadow-2xl shadow-[#3E0F28]/10 md:px-6">

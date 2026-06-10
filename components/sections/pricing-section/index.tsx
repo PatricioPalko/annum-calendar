@@ -60,7 +60,7 @@ export function PricingSection() {
   return (
     <section
       id="cennik"
-      className="mx-auto mt-8 max-w-6xl overflow-hidden rounded-xl bg-white px-2 py-12 text-primary shadow-2xl shadow-[#3E0F28]/20 border-[#EAD6DE] border-2"
+      className="scroll-mt-24 mx-auto mt-8 max-w-6xl overflow-hidden rounded-xl bg-white px-2 py-12 text-primary shadow-2xl shadow-[#3E0F28]/20 border-[#EAD6DE] border-2"
     >
       <div className="mb-12 text-center">
         <Text
