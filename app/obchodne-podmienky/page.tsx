@@ -1,7 +1,7 @@
 import { Heading, Text } from "@/components/ui/typography";
 
 const CONTACT_EMAIL = "info@annum.sk";
-const BUSINESS_NAME = "Annum";
+const BUSINESS_NAME = "Ing. Laura Palková - LP GRAPHIC DESIGN";
 
 function LegalSection({
   title,
@@ -37,13 +37,23 @@ export default function TermsPage() {
         <div className="mt-10 space-y-10">
           <LegalSection title="Predávajúci">
             <Text>
-              Predávajúcim je {BUSINESS_NAME}. Doplňte sem identifikačné údaje
-              predávajúceho, napríklad obchodné meno, IČO, sídlo alebo adresu
-              prevádzky.
+              Predávajúcim a prevádzkovateľom internetového obchodu Annum je{" "}
+              {BUSINESS_NAME}, IČO: 54943884, miesto podnikania: Trnavská
+              664/16, 040 01 Košice, zapísaný v Živnostenskom registri
+              Slovenskej republiky, číslo živnostenského registra: 820-98934.
+              Annum je obchodná značka, pod ktorou predávajúci ponúka
+              personalizované produkty.
             </Text>
-
-            <Text className="font-semibold text-primary">
-              E-mail: {CONTACT_EMAIL}
+            <Text>
+              V prípade otázok k objednávke, platbe, doručeniu alebo reklamácii
+              nás kontaktujte na e-mailovej adrese{" "}
+              <a
+                className="font-semibold text-primary"
+                href="mailto:{CONTACT_EMAIL}"
+              >
+                {CONTACT_EMAIL}
+              </a>
+              .
             </Text>
           </LegalSection>
 
