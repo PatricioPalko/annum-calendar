@@ -14,7 +14,7 @@ export function Heading({
       className={cn(
         "font-heading font-bold tracking-tight text-primary",
         {
-          h1: "text-5xl leading-[0.95] md:text-7xl ",
+          h1: "text-4xl leading-[1.02] sm:text-5xl sm:leading-[0.98] md:text-7xl md:leading-[0.95]",
           h2: "text-3xl leading-tight md:text-5xl",
           h3: "text-2xl leading-tight md:text-3xl",
           h4: "text-xl leading-tight md:text-2xl",

@@ -60,7 +60,7 @@ export function PricingSection() {
   return (
     <section
       id="cennik"
-      className="scroll-mt-24 mx-auto mt-8 max-w-6xl overflow-hidden rounded-xl bg-white px-2 py-12 text-primary shadow-2xl shadow-[#3E0F28]/20 border-[#EAD6DE] border-2"
+      className="scroll-mt-24 mx-auto mt-8 max-w-6xl overflow-hidden rounded-xl border-2 border-[#EAD6DE] bg-white px-3 py-8 text-primary shadow-2xl shadow-[#3E0F28]/20 sm:px-4 sm:py-12"
     >
       <div className="mb-12 text-center">
         <Text
@@ -114,18 +114,18 @@ export function PricingSection() {
                 </Text>
               </div>
 
-              <div className="mt-6 flex items-end gap-1">
-                <span className="pb-0.5 text-xl font-bold text-primary">
+              <div className="mt-6 flex flex-wrap items-end gap-1">
+                <span className="pb-0.5 text-lg font-bold text-primary sm:text-xl">
                   od
                 </span>
 
-                <span className="font-body font-bold leading-none tracking-tight text-primary md:text-7xl">
+                <span className="font-body text-5xl font-bold leading-none tracking-tight text-primary sm:text-6xl md:text-7xl">
                   {plan.price}
-                  {index !== 2 && <span className="ml-1 text-6xl">€</span>}
+                  {index !== 2 && <span className="ml-1 text-4xl sm:text-5xl md:text-6xl">€</span>}
                 </span>
 
                 {index !== 2 && (
-                  <span className="pb-1 pl-1 text-xl font-bold text-primary">
+                  <span className="pb-1 pl-1 text-lg font-bold text-primary sm:text-xl">
                     / ks
                   </span>
                 )}

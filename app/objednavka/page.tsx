@@ -3,10 +3,9 @@ import { Heading } from "@/components/ui/typography";
 
 export default function KalendarPage() {
   return (
-    <main className={`font-body min-h-screen bg-[#FFF7F4] p-6 text-[#3E0F28]`}>
-      <section className="mx-auto max-w-7xl px-6 py-16">
-        <div className="grid gap-10 md:grid-cols-[2fr_0.85fr] md:items-center">
-          <div>
+    <main className="font-body min-h-screen bg-[#FFF7F4] px-4 py-6 text-[#3E0F28] sm:px-6">
+      <section className="mx-auto max-w-7xl py-8 sm:py-12">
+        <div>
             <Heading as="h1">
               Vytvor si kalendár
               <span className="block text-secondary">jednoducho a rýchlo</span>
@@ -21,7 +20,6 @@ export default function KalendarPage() {
               </span>
             </p>
           </div>
-        </div>
       </section>
       <div className="relative block">
         <OrderForm />

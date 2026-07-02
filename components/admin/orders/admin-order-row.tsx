@@ -56,7 +56,7 @@ export function AdminOrderRow({ order, index }: AdminOrderRowProps) {
       <td className="px-3 py-3 align-top">
         <div className="space-y-1">
           <p
-            className="font-bold text-[#3E0F28]"
+            className="font-bold text-[#3E0F28] truncate max-w-40 sm:max-w-none"
             title={order.order_code ?? order.id}
           >
             {order.order_code ?? order.id}
@@ -75,7 +75,9 @@ export function AdminOrderRow({ order, index }: AdminOrderRowProps) {
             {order.first_name} {order.last_name}
           </p>
 
-          <p className="text-xs font-medium text-[#3E0F28]/65">{order.email}</p>
+          <p className="truncate text-xs font-medium text-[#3E0F28]/65 max-w-44 lg:max-w-none">
+            {order.email}
+          </p>
 
           <p className="text-xs font-medium text-[#3E0F28]/55">
             {order.phone ?? "Bez telefónu"}

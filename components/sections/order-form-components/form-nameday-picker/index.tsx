@@ -68,7 +68,7 @@ export function NamedayPicker({
           onClick={() => setLetter("all")}
           aria-pressed={letter === "all"}
           variant={letter === "all" ? "default" : "secondary"}
-          size={"sm"}
+          className="h-10 min-w-10 px-3"
         >
           Všetky
         </Button>
@@ -83,7 +83,7 @@ export function NamedayPicker({
               variant={isSelected ? "default" : "secondary"}
               onClick={() => setLetter(item)}
               aria-pressed={isSelected}
-              size={"sm"}
+              className="h-10 min-w-10 px-3"
             >
               {item}
             </Button>

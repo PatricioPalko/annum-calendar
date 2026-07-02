@@ -37,7 +37,7 @@ export function FormConsentCheckbox({
               )}
             />
 
-            <span className="cursor-pointer text-xs font-medium leading-6 text-[#3E0F28]/75 transition group-hover:text-[#3E0F28]">
+            <span className="cursor-pointer text-sm font-medium leading-6 text-[#3E0F28]/75 transition group-hover:text-[#3E0F28]">
               Súhlasím so spracovaním údajov potrebných na vybavenie objednávky.
             </span>
           </label>

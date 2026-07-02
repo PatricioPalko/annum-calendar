@@ -35,10 +35,8 @@ export default function Home() {
   return (
     <>
       <JsonLd data={productJsonLd} />
-      <main
-        className={`font-body min-h-screen bg-[#FFF7F4] p-6 text-[#3E0F28]`}
-      >
-        <section className="mx-auto max-w-6xl px-6 py-8">
+      <main className="font-body min-h-screen bg-[#FFF7F4] px-4 py-6 text-[#3E0F28] sm:px-6">
+        <section className="mx-auto max-w-6xl py-4 sm:py-8">
           <div className="grid gap-6 md:grid-cols-[1fr_1fr] md:items-center">
             <div>
               {/* <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-[#EAD6DE] bg-[#FFF7F4] px-4 py-2 text-sm font-semibold text-[#7B5A6B]">

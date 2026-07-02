@@ -91,7 +91,7 @@ export default async function AdminOrdersPage({
   ).length;
 
   return (
-    <main className="min-h-screen bg-[#FFF7F4] px-6 py-10">
+    <main className="min-h-screen bg-[#FFF7F4] px-4 py-8 sm:px-6 sm:py-10">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
@@ -99,7 +99,7 @@ export default async function AdminOrdersPage({
               Admin
             </p>
 
-            <h1 className="mt-2 font-heading text-4xl font-bold text-[#3E0F28]">
+            <h1 className="mt-2 font-heading text-3xl font-bold text-[#3E0F28] sm:text-4xl">
               Objednávky
             </h1>
 
@@ -116,14 +116,11 @@ export default async function AdminOrdersPage({
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-[#EAD6DE] bg-white shadow-xl shadow-[#3E0F28]/10">
-          <div className="overflow-x-auto">
-            <AdminOrdersTable
+          <AdminOrdersTable
               orders={orders}
               currentSort={currentSort}
               currentDir={currentDir}
             />
-          </div>
-
           <AdminOrdersSummary
             ordersCount={orders.length}
             paidCount={paidCount}

@@ -25,13 +25,13 @@ export default async function PaymentCancelledPage({
   const orderCode = params.order;
 
   return (
-    <main className="min-h-screen bg-[#FFF7F4] px-6 py-20 text-[#3E0F28]">
-      <div className="mx-auto max-w-2xl rounded-2xl bg-white p-8 text-center shadow-xl shadow-[#3E0F28]/10">
+    <main className="min-h-screen bg-[#FFF7F4] px-4 py-12 text-[#3E0F28] sm:px-6 sm:py-20">
+      <div className="mx-auto max-w-2xl rounded-2xl bg-white p-6 text-center shadow-xl shadow-[#3E0F28]/10 sm:p-8">
         <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#FC5A61]">
           Platba nebola dokončená
         </p>
 
-        <h1 className="mt-3 font-heading text-4xl font-bold">
+        <h1 className="mt-3 font-heading text-3xl font-bold sm:text-4xl">
           Objednávku máte uloženú
         </h1>
 

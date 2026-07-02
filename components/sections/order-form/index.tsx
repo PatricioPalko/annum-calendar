@@ -29,6 +29,7 @@ import { PriceSummary } from "../order-form-components/form-price-summary";
 import { FormQuantity } from "../order-form-components/form-quantity";
 import { FormRadioGroup } from "../order-form-components/form-radiogroup";
 import { FormTextarea } from "../order-form-components/form-textarea";
+import { OrderFormMobileBar } from "../order-form-components/order-form-mobile-bar";
 import OrderSection from "../order-section";
 
 const orderFormDefaultValues: OrderFormValues = {
@@ -224,7 +225,7 @@ export default function OrderForm() {
   }
 
   return (
-    <div className="mx-auto mt-8 max-w-7xl rounded-xl border border-[#EAD6DE] bg-white px-4 py-10 text-primary shadow-2xl shadow-[#3E0F28]/10 md:px-6">
+    <div className="mx-auto mt-6 max-w-7xl rounded-xl border border-[#EAD6DE] bg-white px-3 py-8 text-primary shadow-2xl shadow-[#3E0F28]/10 sm:px-4 md:px-6 lg:pb-10">
       <div className="my-8 text-center">
         <Text variant="caption" as="span">
           Konfigurátor
@@ -243,7 +244,7 @@ export default function OrderForm() {
       <form
         onSubmit={form.handleSubmit(onSubmit, scrollToFirstError)}
         id="order-form"
-        className="grid gap-4 lg:grid-cols-[1fr_360px] mt-20"
+        className="grid gap-4 pb-24 lg:grid-cols-[1fr_360px] lg:pb-0 lg:pt-8"
       >
         <fieldset
           disabled={isSubmitting}
@@ -407,7 +408,10 @@ export default function OrderForm() {
           </OrderSection>
         </fieldset>
 
-        <aside className="lg:sticky lg:top-20 lg:self-start overflow-hidden rounded-md bg-white text-primary shadow-xl shadow-primary/10 ring-1 ring-soft">
+        <aside
+          id="order-summary"
+          className="scroll-mt-24 overflow-hidden rounded-md bg-white text-primary shadow-xl shadow-primary/10 ring-1 ring-soft lg:sticky lg:top-20 lg:self-start"
+        >
           <div className="space-y-2">
             <PriceSummary
               type={selectedCalendarType}
@@ -467,7 +471,7 @@ export default function OrderForm() {
               />
             ) : null}
 
-            <div className="px-5 pb-6">
+            <div className="hidden px-5 pb-6 lg:block">
               <Button
                 type="submit"
                 form="order-form"
@@ -486,13 +490,22 @@ export default function OrderForm() {
               </Button>
             </div>
             {submitError && (
-              <p className="rounded-md border border-[#FC5A61]/30 bg-[#FFF7F4] p-3 text-sm font-semibold text-[#FC5A61]">
+              <p className="mx-5 mb-6 rounded-md border border-[#FC5A61]/30 bg-[#FFF7F4] p-3 text-sm font-semibold text-[#FC5A61]">
                 {submitError}
               </p>
             )}
           </div>
         </aside>
       </form>
+
+      <OrderFormMobileBar
+        type={selectedCalendarType}
+        quantityOption={selectedQuantityOption}
+        customQuantity={customQuantity}
+        deliveryMethod={selectedDeliveryMethod}
+        discountCode={discountCode}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 }

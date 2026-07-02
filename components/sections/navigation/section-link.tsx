@@ -8,6 +8,7 @@ type SectionLinkProps = {
   sectionId: string;
   children: ReactNode;
   className?: string;
+  onClick?: () => void;
 };
 
 function scrollToSection(sectionId: string) {
@@ -37,6 +38,7 @@ export function SectionLink({
   sectionId,
   children,
   className,
+  onClick,
 }: SectionLinkProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -45,6 +47,7 @@ export function SectionLink({
 
   function handleClick(event: React.MouseEvent<HTMLAnchorElement>) {
     event.preventDefault();
+    onClick?.();
 
     if (pathname === "/") {
       window.history.pushState(null, "", `#${sectionId}`);

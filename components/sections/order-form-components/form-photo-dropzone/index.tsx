@@ -117,7 +117,7 @@ export function PhotoDropzone({
       )}
 
       {previewUrls.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-7">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
           {previewUrls.map(({ file, url }, index) => (
             <div
               key={`${file.name}-${index}`}
@@ -136,7 +136,7 @@ export function PhotoDropzone({
                 variant="dark"
                 size="icon"
                 onClick={() => removeFile(index)}
-                className="absolute right-2 top-2 size-6 rounded-md opacity-0 transition group-hover:opacity-100 hover:cursor-pointer"
+                className="absolute right-2 top-2 size-8 rounded-md opacity-100 transition hover:cursor-pointer sm:size-7 sm:opacity-0 sm:group-hover:opacity-100"
                 aria-label={`Odstrániť ${file.name}`}
               >
                 <X className="size-4" />
