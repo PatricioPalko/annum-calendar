@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { CookieSettingsButton } from "@/components/cookiebot/cookie-settings-button";
 import { SectionLink } from "@/components/sections/navigation/section-link";
 
 const footerNavigationLinks = [
@@ -82,6 +83,8 @@ export function Footer() {
                 {link.label}
               </Link>
             ))}
+
+            <CookieSettingsButton className="w-fit text-left text-sm font-bold text-[#3E0F28]/65 transition hover:text-[#FC5A61]" />
           </div>
 
           <div className="mt-4 space-y-1 text-xs font-medium leading-5 text-[#3E0F28]/50">

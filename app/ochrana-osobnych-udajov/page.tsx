@@ -1,3 +1,4 @@
+import { CookiebotDeclaration } from "@/components/cookiebot/cookiebot-declaration";
 import { Heading, Text } from "@/components/ui/typography";
 
 const CONTACT_EMAIL = "info@annum.sk";
@@ -144,6 +145,27 @@ export default function PrivacyPolicyPage() {
               osobnom odbere v Košiciach spracúvame informáciu o tom, že ste si
               zvolili osobný odber.
             </Text>
+          </LegalSection>
+
+          <LegalSection title="Cookies">
+            <Text>
+              Na webe používame cookies na zabezpečenie prevádzky stránky,
+              spracovanie objednávky, ochranu formulára a, ak udelíte súhlas,
+              aj na analytické alebo marketingové účely.
+            </Text>
+
+            <Text>
+              Pri prvej návšteve vám zobrazíme cookie lištu, kde môžete
+              prijať všetky cookies, odmietnuť nepovinné cookies alebo si
+              nastavenia upraviť.
+            </Text>
+
+            <div
+              id="cookies"
+              className="scroll-mt-24 rounded-xl border border-[#EAD6DE] bg-[#FFF7F4] p-4 md:p-6"
+            >
+              <CookiebotDeclaration />
+            </div>
           </LegalSection>
 
           <LegalSection title="Služby tretích strán">

@@ -81,3 +81,22 @@
     @apply bg-background text-foreground overflow-x-hidden;
   }
 }
+
+.cookiebot-declaration :is(table, p, li) {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: rgba(62, 15, 40, 0.78);
+}
+
+.cookiebot-declaration table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.cookiebot-declaration th,
+.cookiebot-declaration td {
+  border: 1px solid #ead6de;
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  vertical-align: top;
+}

@@ -1,3 +1,4 @@
+import { CookiebotScript } from "@/components/cookiebot/cookiebot-script";
 import { Footer } from "@/components/sections/footer";
 import Navigation from "@/components/sections/navigation";
 import { cn } from "@/lib/utils";
@@ -124,6 +125,9 @@ export default function RootLayout({
         "font-sans",
       )}
     >
+      <head>
+        <CookiebotScript />
+      </head>
       <body className="min-h-full flex flex-col">
         <Navigation />
         {children}
