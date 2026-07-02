@@ -5,7 +5,7 @@ import {
 } from "@/app/types/types";
 import { getDeliveryPrice } from "@/helpers/delivery";
 import { getDiscountAmount } from "@/helpers/discount-codes";
-import { sendPendingPaymentEmail } from "@/lib/order-emails";
+import { sendOrderCreatedEmail } from "@/lib/order-emails";
 import { syncPacketaPacketForOrder } from "@/lib/packeta";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -380,12 +380,22 @@ export async function POST(request: Request) {
       data.order_code,
     )}/pay`;
 
-    await sendPendingPaymentEmail({
+    await sendOrderCreatedEmail({
       orderCode: data.order_code,
       firstName: values.firstName,
       lastName: values.lastName,
       email: values.email,
+      phone: values.phone ?? null,
       totalPrice: finalTotalPrice,
+      goodsPrice: price.totalPrice,
+      discountCode: discount.isValid ? discount.code : null,
+      discountAmount: discount.discountAmount,
+      calendarType: values.type,
+      quantity: values.quantity,
+      photoCount: values.photos.length,
+      birthdaysCount: values.birthdays.length,
+      namedaysCount: values.namedays.length,
+      note: values.note?.trim() || null,
       paymentUrl,
       delivery: {
         method: values.deliveryMethod,
@@ -401,7 +411,7 @@ export async function POST(request: Request) {
       },
     });
   } catch (emailError) {
-    console.error("PENDING_PAYMENT_EMAIL_ERROR:", emailError);
+    console.error("ORDER_CREATED_EMAIL_ERROR:", emailError);
   }
 
   return NextResponse.json({

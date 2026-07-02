@@ -1,6 +1,6 @@
 import type Stripe from "stripe";
 
-import { sendPaidOrderEmail } from "@/lib/order-emails";
+import { sendOrderPaidEmail } from "@/lib/order-emails";
 import { syncPacketaPacketForOrder } from "@/lib/packeta";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -13,6 +13,7 @@ type PaidOrderRow = {
   email: string;
   phone: string | null;
   note: string | null;
+  calendar_type: string;
   quantity: number;
   total_price: number | null;
   delivery_price: number | string | null;
@@ -22,6 +23,11 @@ type PaidOrderRow = {
   packeta_point_address: string | null;
   tracking_number: string | null;
   payment_status: string | null;
+  discount_code: string | null;
+  discount_amount: number | string | null;
+  photos: unknown[] | null;
+  birthdays: unknown[] | null;
+  namedays: unknown[] | null;
 };
 
 const paidOrderSelect = `
@@ -33,6 +39,7 @@ const paidOrderSelect = `
   email,
   phone,
   note,
+  calendar_type,
   quantity,
   total_price,
   delivery_price,
@@ -41,7 +48,12 @@ const paidOrderSelect = `
   packeta_point_name,
   packeta_point_address,
   tracking_number,
-  payment_status
+  payment_status,
+  discount_code,
+  discount_amount,
+  photos,
+  birthdays,
+  namedays
 `;
 
 export type MarkOrderPaidResult =
@@ -93,18 +105,37 @@ async function runPostPaymentSideEffects(
 
   if (options.sendEmail && order.order_code) {
     try {
-      await sendPaidOrderEmail({
+      const totalPrice =
+        order.total_price === null || order.total_price === undefined
+          ? null
+          : Number(order.total_price);
+      const deliveryPrice = Number(order.delivery_price ?? 0);
+      const discountAmount =
+        order.discount_amount === null || order.discount_amount === undefined
+          ? null
+          : Number(order.discount_amount);
+
+      await sendOrderPaidEmail({
         orderCode: order.order_code,
         firstName: order.first_name,
         lastName: order.last_name,
         email: order.email,
-        totalPrice:
-          order.total_price === null || order.total_price === undefined
-            ? null
-            : Number(order.total_price),
+        phone: order.phone,
+        totalPrice,
+        calendarType:
+          order.calendar_type === "basic" ||
+          order.calendar_type === "premium" ||
+          order.calendar_type === "business"
+            ? order.calendar_type
+            : "basic",
+        quantity: order.quantity,
+        goodsPrice:
+          totalPrice === null ? null : Math.max(0, totalPrice - deliveryPrice),
+        discountCode: order.discount_code,
+        discountAmount,
         delivery: {
           method: order.delivery_method === "packeta" ? "packeta" : "pickup",
-          price: Number(order.delivery_price ?? 0),
+          price: deliveryPrice,
           packetaPoint:
             order.delivery_method === "packeta" && order.packeta_point_id
               ? {
@@ -114,6 +145,14 @@ async function runPostPaymentSideEffects(
                 }
               : null,
         },
+        photoCount: Array.isArray(order.photos) ? order.photos.length : undefined,
+        birthdaysCount: Array.isArray(order.birthdays)
+          ? order.birthdays.length
+          : undefined,
+        namedaysCount: Array.isArray(order.namedays)
+          ? order.namedays.length
+          : undefined,
+        note: order.note,
       });
     } catch (emailError) {
       console.error("PAID_ORDER_EMAIL_ERROR:", emailError);
