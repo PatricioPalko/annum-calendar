@@ -3,10 +3,10 @@ import crypto from "node:crypto";
 import { z } from "zod";
 
 import { createOrderCode, createStorageFolder } from "@/helpers/order-code";
+import { MAX_PHOTOS } from "@/lib/order/config";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const BUCKET = "calendar-uploads";
-const MAX_FILES = 52;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const TOKEN_TTL_SECONDS = 60 * 60;
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
@@ -56,7 +56,7 @@ const bodySchema = z.object({
         ),
     )
     .min(1)
-    .max(MAX_FILES),
+    .max(MAX_PHOTOS),
 });
 
 function getIp(request: Request) {

@@ -44,7 +44,8 @@ export async function POST(request: Request, { params }: RouteParams) {
         delivery_price,
         packeta_point_id,
         packeta_point_name,
-        packeta_point_address
+        packeta_point_address,
+        tracking_number
       `,
     )
     .eq("id", orderId)
@@ -65,6 +66,9 @@ export async function POST(request: Request, { params }: RouteParams) {
   }
 
   const isPacketa = order.delivery_method === "packeta";
+  const resolvedTrackingNumber = isPacketa
+    ? trackingNumber ?? order.tracking_number
+    : null;
   const now = new Date().toISOString();
 
   const { error: updateError } = await supabaseAdmin
@@ -73,7 +77,7 @@ export async function POST(request: Request, { params }: RouteParams) {
       status: isPacketa ? "shipped" : "ready",
       ready_at: isPacketa ? null : now,
       shipped_at: isPacketa ? now : null,
-      tracking_number: isPacketa ? trackingNumber : null,
+      tracking_number: isPacketa ? resolvedTrackingNumber : null,
     })
     .eq("id", order.id);
 
@@ -90,7 +94,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     orderCode: order.order_code,
     firstName: order.first_name,
     email: order.email,
-    trackingNumber,
+    trackingNumber: resolvedTrackingNumber,
     delivery: {
       method: isPacketa ? "packeta" : "pickup",
       price: Number(order.delivery_price ?? 0),

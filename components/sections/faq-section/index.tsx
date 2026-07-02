@@ -6,14 +6,15 @@ import {
 } from "@/components/ui/accordion";
 import { Heading, Text } from "@/components/ui/typography";
 
+import { MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
+
 const faqSections = [
   {
     title: "Fotky a kalendár",
     items: [
       {
         question: "Koľko fotiek musím nahrať?",
-        answer:
-          "Minimálne 14 fotiek. Odporúčame nahrať minimálne 26 fotiek (2 fotky na jeden mesiac) a 2 fotky na titulnú stranu. Nahrať môžete až 52 fotiek.",
+        answer: `Minimálne ${MIN_PHOTOS} fotiek. Odporúčame nahrať minimálne 26 fotiek (2 fotky na jeden mesiac) a 2 fotky na titulnú stranu. Nahrať môžete až ${MAX_PHOTOS} fotiek.`,
       },
       {
         question: "Aké formáty fotiek môžem nahrať?",

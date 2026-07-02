@@ -11,7 +11,7 @@ declare global {
         pick: (
           apiKey: string,
           callback: (point: PacketaPoint | null) => void,
-          options?: Record<string, unknown>,
+          options?: PacketaWidgetOptions,
         ) => void;
       };
     };
@@ -26,6 +26,21 @@ export type PacketaPoint = {
   zip?: string;
   country?: string;
   place?: string;
+  group?: string;
+  error?: string | null;
+};
+
+type PacketaWidgetVendor = {
+  country: string;
+  group?: "zbox";
+  selected?: boolean;
+};
+
+type PacketaWidgetOptions = {
+  country?: string;
+  language?: string;
+  vendors?: PacketaWidgetVendor[];
+  weight?: number;
 };
 
 type PacketaPickerProps = {
@@ -39,11 +54,31 @@ type PacketaPickerProps = {
 };
 
 const PACKETA_SCRIPT_ID = "packeta-widget-script";
+const PACKETA_SCRIPT_URL = "https://widget.packeta.com/v6/www/js/library.js";
+
+const packetaWidgetOptions: PacketaWidgetOptions = {
+  country: "sk",
+  language: "sk",
+  weight: 2,
+  vendors: [
+    { country: "sk", group: "zbox", selected: true },
+    { country: "sk" },
+  ],
+};
 
 function getPacketaAddress(point: PacketaPoint) {
   return [point.street, point.city, point.zip, point.country]
     .filter(Boolean)
     .join(", ");
+}
+
+function markWidgetReady(setIsReady: (value: boolean) => void) {
+  if (window.Packeta?.Widget) {
+    setIsReady(true);
+    return true;
+  }
+
+  return false;
 }
 
 export function PacketaPicker({
@@ -52,34 +87,61 @@ export function PacketaPicker({
   disabled,
 }: PacketaPickerProps) {
   const [isReady, setIsReady] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const apiKey = process.env.NEXT_PUBLIC_PACKETA_API_KEY;
+  const isConfigured = Boolean(apiKey);
 
   useEffect(() => {
-    if (window.Packeta?.Widget) {
-      setIsReady(true);
+    if (markWidgetReady(setIsReady)) {
       return;
     }
 
-    const existingScript = document.getElementById(PACKETA_SCRIPT_ID);
+    const existingScript = document.getElementById(
+      PACKETA_SCRIPT_ID,
+    ) as HTMLScriptElement | null;
 
     if (existingScript) {
-      existingScript.addEventListener("load", () => setIsReady(true), {
-        once: true,
-      });
+      if (existingScript.dataset.loaded === "true") {
+        markWidgetReady(setIsReady);
+        return;
+      }
+
+      existingScript.addEventListener(
+        "load",
+        () => {
+          existingScript.dataset.loaded = "true";
+          markWidgetReady(setIsReady);
+        },
+        { once: true },
+      );
+      existingScript.addEventListener(
+        "error",
+        () => {
+          setLoadError("Packeta widget sa nepodarilo načítať.");
+          setIsReady(false);
+        },
+        { once: true },
+      );
       return;
     }
 
     const script = document.createElement("script");
     script.id = PACKETA_SCRIPT_ID;
-    script.src = "https://widget.packeta.com/v6/library.js";
+    script.src = PACKETA_SCRIPT_URL;
     script.async = true;
-    script.onload = () => setIsReady(true);
+    script.onload = () => {
+      script.dataset.loaded = "true";
+      markWidgetReady(setIsReady);
+    };
+    script.onerror = () => {
+      setLoadError("Packeta widget sa nepodarilo načítať.");
+      setIsReady(false);
+    };
 
     document.body.appendChild(script);
   }, []);
 
   function handlePick() {
-    const apiKey = process.env.NEXT_PUBLIC_PACKETA_API_KEY;
-
     if (!apiKey || !window.Packeta?.Widget) {
       return;
     }
@@ -91,29 +153,43 @@ export function PacketaPicker({
           return;
         }
 
+        if (point.error) {
+          window.alert(
+            "Toto výdajné miesto momentálne nie je dostupné. Vyberte prosím iné.",
+          );
+          return;
+        }
+
         onChange({
           id: String(point.id),
           name: point.name,
           address: getPacketaAddress(point) || point.name,
         });
       },
-      {
-        country: "sk",
-        language: "sk",
-      },
+      packetaWidgetOptions,
     );
   }
 
   return (
     <div className="space-y-3">
+      {!isConfigured && (
+        <p className="text-sm text-[#FC5A61]">
+          Výber výdajného miesta nie je dostupný. Skúste to prosím neskôr.
+        </p>
+      )}
+
+      {loadError && (
+        <p className="text-sm text-[#FC5A61]">{loadError}</p>
+      )}
+
       <Button
         type="button"
         variant="secondary"
         onClick={handlePick}
-        disabled={disabled || !isReady}
+        disabled={disabled || !isReady || !isConfigured}
         className="mt-2"
       >
-        {value ? "Zmeniť výdajné miesto" : "Vybrať výdajné miesto"}
+        {value ? "Zmeniť výdajné miesto" : "Vybrať Z-BOX alebo výdajné miesto"}
       </Button>
 
       {value && (

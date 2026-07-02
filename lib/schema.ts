@@ -1,8 +1,6 @@
 import { calendarTypesValues, CUSTOM_QUANTITY_VALUE } from "@/app/types/types";
+import { MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
 import { z } from "zod";
-
-const MIN_PHOTOS = 14;
-const MAX_FILES = 52;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 const birthdaySchema = z.object({
@@ -49,7 +47,7 @@ export const orderSchema = z
     photos: z
       .array(z.instanceof(File))
       .min(MIN_PHOTOS, `Nahrajte aspoň ${MIN_PHOTOS} fotiek`)
-      .max(MAX_FILES, `Nahrajte maximálne ${MAX_FILES} fotiek`)
+      .max(MAX_PHOTOS, `Nahrajte maximálne ${MAX_PHOTOS} fotiek`)
       .refine(
         (files) => files.every((file) => file.size <= MAX_FILE_SIZE),
         "Jedna fotka môže mať maximálne 10 MB",

@@ -9,12 +9,14 @@ import { Button } from "@/components/ui/button";
 type AdminNotifyFulfillmentButtonProps = {
   orderId: string;
   deliveryMethod?: string | null;
+  trackingNumber?: string | null;
   disabled?: boolean;
 };
 
 export function AdminNotifyFulfillmentButton({
   orderId,
   deliveryMethod,
+  trackingNumber,
   disabled = false,
 }: AdminNotifyFulfillmentButtonProps) {
   const router = useRouter();
@@ -25,10 +27,12 @@ export function AdminNotifyFulfillmentButton({
       return;
     }
 
-    const trackingNumber =
-      deliveryMethod === "packeta"
-        ? window.prompt("Zadaj tracking číslo Packety, ak ho máš:", "")?.trim()
-        : null;
+    const trackingNumberInput =
+      deliveryMethod === "packeta" && !trackingNumber
+        ? window
+            .prompt("Zadaj tracking číslo Packety, ak ho máš:", "")
+            ?.trim()
+        : trackingNumber ?? undefined;
 
     try {
       setIsSubmitting(true);
@@ -41,7 +45,7 @@ export function AdminNotifyFulfillmentButton({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            trackingNumber: trackingNumber || undefined,
+            trackingNumber: trackingNumberInput || undefined,
           }),
         },
       );

@@ -8,8 +8,8 @@ import { useDropzone } from "react-dropzone";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const MIN_FILES = 14;
-const MAX_FILES = 52;
+import { MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
+
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 type PhotoDropzoneProps = {
@@ -25,9 +25,9 @@ export function PhotoDropzone({
   disabled,
   hasPhotoError = false,
 }: PhotoDropzoneProps) {
-  const remainingSlots = MAX_FILES - value.length;
-  const missingFiles = Math.max(0, MIN_FILES - value.length);
-  const hasMinimumFiles = value.length >= MIN_FILES;
+  const remainingSlots = MAX_PHOTOS - value.length;
+  const missingFiles = Math.max(0, MIN_PHOTOS - value.length);
+  const hasMinimumFiles = value.length >= MIN_PHOTOS;
 
   const previewUrls = useMemo(
     () =>
@@ -55,7 +55,7 @@ export function PhotoDropzone({
       maxSize: MAX_FILE_SIZE,
       disabled: disabled || remainingSlots <= 0,
       onDrop: (acceptedFiles) => {
-        const nextFiles = [...value, ...acceptedFiles].slice(0, MAX_FILES);
+        const nextFiles = [...value, ...acceptedFiles].slice(0, MAX_PHOTOS);
         onChange(nextFiles);
       },
     });
@@ -96,7 +96,7 @@ export function PhotoDropzone({
             hasMinimumFiles ? "text-primary" : "text-secondary",
           )}
         >
-          Nahratých: {value.length}/{MAX_FILES} fotiek
+          Nahratých: {value.length}/{MAX_PHOTOS} fotiek
           {!hasMinimumFiles &&
             ` · chýba ešte ${missingFiles} ${missingFiles === 1 ? "fotka" : "fotky"}`}
         </p>

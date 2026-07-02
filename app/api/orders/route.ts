@@ -6,11 +6,14 @@ import {
 import { getDeliveryPrice } from "@/helpers/delivery";
 import { getDiscountAmount } from "@/helpers/discount-codes";
 import { sendPendingPaymentEmail } from "@/lib/order-emails";
+import { syncPacketaPacketForOrder } from "@/lib/packeta";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { z } from "zod";
+
+import { MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
 
 const uploadedPhotoSchema = z.object({
   name: z.string(),
@@ -40,7 +43,7 @@ const orderBodySchema = z.object({
   type: z.enum(["basic", "premium", "business"]),
   quantity: z.number().int().min(1).max(200),
 
-  photos: z.array(uploadedPhotoSchema).min(14).max(52),
+  photos: z.array(uploadedPhotoSchema).min(MIN_PHOTOS).max(MAX_PHOTOS),
 
   birthdays: z.array(
     z.object({
@@ -347,6 +350,29 @@ export async function POST(request: Request) {
 
   if (paymentUpdateError) {
     console.error("STRIPE_SESSION_UPDATE_ERROR:", paymentUpdateError);
+  }
+
+  if (
+    values.deliveryMethod === "packeta" &&
+    values.packetaPoint &&
+    data.order_code
+  ) {
+    await syncPacketaPacketForOrder({
+      orderId: data.id,
+      orderCode: data.order_code,
+      orderNumber: values.orderNumber,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      email: values.email,
+      phone: values.phone ?? null,
+      packetaPointId: values.packetaPoint.id,
+      goodsValue: Math.max(
+        1,
+        price.totalPrice ?? finalTotalPrice - deliveryPrice,
+      ),
+      quantity: values.quantity,
+      note: values.note?.trim() || null,
+    });
   }
 
   try {

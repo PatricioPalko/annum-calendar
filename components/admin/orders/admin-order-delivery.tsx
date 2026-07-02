@@ -41,6 +41,12 @@ export function AdminOrderDelivery({ order }: AdminOrderDeliveryProps) {
               ID: {order.packeta_point_id}
             </p>
           )}
+
+          {order.tracking_number && (
+            <p className="text-[11px] font-bold text-[#3E0F28]/70">
+              Štítok: {order.tracking_number}
+            </p>
+          )}
         </div>
       )}
     </div>

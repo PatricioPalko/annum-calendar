@@ -49,6 +49,8 @@ const orderFormDefaultValues: OrderFormValues = {
   packetaPoint: undefined,
 };
 
+import { MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
+
 export default function OrderForm() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string>("");
@@ -285,8 +287,8 @@ export default function OrderForm() {
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
                     <FieldDescription>
-                      JPG, PNG alebo WEBP · minimálne 14 fotiek · maximálne 52
-                      fotiek · max. 10 MB / fotka
+                      {`JPG, PNG alebo WEBP · minimálne ${MIN_PHOTOS} fotiek ·
+                      maximálne ${MAX_PHOTOS} fotiek · max. 10 MB / fotka`}
                     </FieldDescription>
 
                     <PhotoDropzone

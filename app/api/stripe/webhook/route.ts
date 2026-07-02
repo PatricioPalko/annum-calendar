@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-import { sendPaidOrderEmail } from "@/lib/order-emails";
+import { markOrderPaidFromCheckoutSession } from "@/lib/order-payments";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -35,52 +35,20 @@ export async function POST(request: Request) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const orderId = session.metadata?.orderId;
+    const result = await markOrderPaidFromCheckoutSession(session);
 
-    if (!orderId) {
+    if (result.status === "error") {
       return NextResponse.json(
-        { message: "Missing orderId metadata." },
-        { status: 400 },
-      );
-    }
-
-    const { data: order, error } = await supabaseAdmin
-      .from("orders")
-      .update({
-        payment_status: "paid",
-        paid_at: new Date().toISOString(),
-        stripe_checkout_session_id: session.id,
-        stripe_payment_intent_id:
-          typeof session.payment_intent === "string"
-            ? session.payment_intent
-            : null,
-      })
-      .eq("id", orderId)
-      .select("id, order_code, first_name, last_name, email, total_price")
-      .single();
-
-    if (error) {
-      console.error("STRIPE_MARK_PAID_ERROR:", error);
-
-      return NextResponse.json(
-        { message: "Failed to mark order as paid." },
+        { message: result.message },
         { status: 500 },
       );
     }
 
-    try {
-      await sendPaidOrderEmail({
-        orderCode: order.order_code,
-        firstName: order.first_name,
-        lastName: order.last_name,
-        email: order.email,
-        totalPrice:
-          order.total_price === null || order.total_price === undefined
-            ? null
-            : Number(order.total_price),
-      });
-    } catch (emailError) {
-      console.error("PAID_ORDER_EMAIL_ERROR:", emailError);
+    if (result.status === "skipped" && result.reason === "Missing orderId metadata.") {
+      return NextResponse.json(
+        { message: result.reason },
+        { status: 400 },
+      );
     }
   }
 

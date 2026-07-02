@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
 import { AdminCompleteOrderButton } from "../admin-complete-order-button";
+import { AdminCreatePacketaPacketButton } from "../admin-create-packeta-packet-button";
 import { AdminNotifyFulfillmentButton } from "../admin-notify-fulfillment-button";
 import { AdminOrderDelivery } from "./admin-order-delivery";
 import { AdminOrderJsonPreview } from "./admin-order-json-preview";
@@ -176,9 +177,17 @@ export function AdminOrderRow({ order, index }: AdminOrderRowProps) {
             disabled={order.payment_status !== "paid"}
           />
 
+          <AdminCreatePacketaPacketButton
+            orderId={order.id}
+            deliveryMethod={order.delivery_method}
+            trackingNumber={order.tracking_number}
+            disabled={order.payment_status !== "paid"}
+          />
+
           <AdminNotifyFulfillmentButton
             orderId={order.id}
             deliveryMethod={order.delivery_method}
+            trackingNumber={order.tracking_number}
             disabled={
               order.payment_status !== "paid" ||
               order.status === "ready" ||

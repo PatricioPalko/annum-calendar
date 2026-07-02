@@ -2,11 +2,10 @@ import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { z } from "zod";
 
+import { MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const BUCKET = "calendar-uploads";
-const MIN_PHOTOS = 14;
-const MAX_FILES = 52;
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 const FINALIZE_TTL_SECONDS = 10 * 60;
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
@@ -45,7 +44,7 @@ const uploadedPhotoSchema = z.object({
 
 const bodySchema = z.object({
   storageFolder: z.string().min(1),
-  photos: z.array(uploadedPhotoSchema).min(MIN_PHOTOS).max(MAX_FILES),
+  photos: z.array(uploadedPhotoSchema).min(MIN_PHOTOS).max(MAX_PHOTOS),
 });
 
 function getIp(request: Request) {

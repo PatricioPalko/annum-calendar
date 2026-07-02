@@ -2,6 +2,7 @@ import { CalendarCheck, Images, MailCheck } from "lucide-react";
 
 import { Heading, Text } from "@/components/ui/typography";
 
+import { MIN_PHOTOS } from "@/lib/order/config";
 const steps = [
   {
     icon: CalendarCheck,
@@ -12,8 +13,7 @@ const steps = [
   {
     icon: Images,
     title: "Nahráte obľúbené fotky",
-    description:
-      "Nahráte minimálne 14 fotiek. Môžu byť na výšku aj na šírku — rozloženie prispôsobíme výslednému kalendáru.",
+    description: `Nahráte minimálne ${MIN_PHOTOS} fotiek. Môžu byť na výšku aj na šírku — rozloženie prispôsobíme výslednému kalendáru.`,
   },
   {
     icon: MailCheck,

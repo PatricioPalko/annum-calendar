@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { markOrderPaidFromCheckoutSession } from "@/lib/order-payments";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Metadata } from "next";
@@ -32,6 +33,14 @@ export default async function OrderThankYouPage({ searchParams }: PageProps) {
 
     orderCode = session.metadata?.orderCode ?? null;
     isPaid = session.payment_status === "paid";
+
+    if (isPaid) {
+      const result = await markOrderPaidFromCheckoutSession(session);
+
+      if (result.status === "error") {
+        console.error("THANK_YOU_MARK_PAID_ERROR:", result.message);
+      }
+    }
   }
 
   if (!orderCode && params.order) {
@@ -45,6 +54,16 @@ export default async function OrderThankYouPage({ searchParams }: PageProps) {
       orderCode = order.order_code;
       isPaid = order.payment_status === "paid";
     }
+  }
+
+  if (orderCode && !isPaid) {
+    const { data: order } = await supabaseAdmin
+      .from("orders")
+      .select("payment_status")
+      .eq("order_code", orderCode)
+      .maybeSingle();
+
+    isPaid = order?.payment_status === "paid";
   }
 
   return (
