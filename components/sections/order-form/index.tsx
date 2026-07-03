@@ -89,7 +89,12 @@ export default function OrderForm() {
 
   const hasPhotoError = Boolean(errors.photos);
   const hasTermsError = Boolean(errors.termsAccepted);
-  const hasTurnstileError = !turnstileToken && form.formState.isSubmitted;
+  const hasTurnstileError =
+    Boolean(turnstileSiteKey) &&
+    !turnstileToken &&
+    form.formState.isSubmitted;
+  const turnstileConfigured = Boolean(turnstileSiteKey);
+  const canSubmitWithTurnstile = !turnstileConfigured || Boolean(turnstileToken);
   const selectedDeliveryMethod = form.watch("deliveryMethod");
 
   useEffect(() => {
@@ -150,12 +155,14 @@ export default function OrderForm() {
 
   async function onSubmit(values: OrderFormValues) {
     try {
-      console.log("SUBMIT_START", values);
-
       setSubmitError(null);
 
+      if (turnstileConfigured && !turnstileToken) {
+        setSubmitError("Prosím potvrďte, že nie ste robot.");
+        return;
+      }
+
       const quantity = getFinalQuantity(values);
-      console.log("QUANTITY_OK", quantity);
 
       const uploaded = await uploadOrderPhotos({
         firstName: values.firstName,
@@ -165,8 +172,6 @@ export default function OrderForm() {
         quantity,
         turnstileToken,
       });
-
-      console.log("UPLOAD_OK", uploaded);
 
       const payload = {
         orderNumber: uploaded.orderNumber,
@@ -196,8 +201,6 @@ export default function OrderForm() {
         discountCode: values.discountCode?.trim() || undefined,
       };
 
-      console.log("CREATE_ORDER_PAYLOAD", payload);
-
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: {
@@ -205,8 +208,6 @@ export default function OrderForm() {
         },
         body: JSON.stringify(payload),
       });
-
-      console.log("CREATE_ORDER_STATUS", response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -220,8 +221,6 @@ export default function OrderForm() {
       }
 
       const result = await response.json();
-
-      console.log("CREATE_ORDER_OK", result);
 
       if (result.checkoutUrl) {
         resetOrderFormState();
@@ -295,7 +294,7 @@ export default function OrderForm() {
             <OrderSection
               step="3"
               title="Fotky"
-              description="Nahrajte minimálne 14 fotiek, ideálne aspoň 30. Vďaka väčšiemu počtu fotiek budú jednotlivé mesiace pestrejšie."
+              description={`Nahrajte minimálne ${MIN_PHOTOS}, ideálne aspoň 30. Vďaka väčšiemu počtu fotiek budú jednotlivé mesiace pestrejšie."`}
             >
               <Controller
                 name="photos"
@@ -476,15 +475,30 @@ export default function OrderForm() {
             />
             <FormConsentCheckbox control={form.control} className="px-5" />
 
-            {turnstileSiteKey ? (
-              <TurnstileWidget
-                siteKey={turnstileSiteKey}
-                onToken={(token) => setTurnstileToken(token)}
-                onExpired={() => setTurnstileToken("")}
-                onError={() => setTurnstileToken("")}
+            {turnstileConfigured ? (
+              <div
+                data-error-section={hasTurnstileError ? "true" : undefined}
                 className="px-6"
-              />
-            ) : null}
+              >
+                <TurnstileWidget
+                  siteKey={turnstileSiteKey}
+                  onToken={(token) => setTurnstileToken(token)}
+                  onExpired={() => setTurnstileToken("")}
+                  onError={() => setTurnstileToken("")}
+                />
+
+                {hasTurnstileError && (
+                  <p className="mt-2 text-sm font-semibold text-[#FC5A61]">
+                    Prosím potvrďte, že nie ste robot.
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="px-6 text-sm font-semibold text-[#FC5A61]">
+                Overenie formulára nie je nakonfigurované. Objednávku momentálne
+                nie je možné odoslať.
+              </p>
+            )}
 
             <div className="hidden px-5 pb-6 lg:block">
               <Button
@@ -492,7 +506,7 @@ export default function OrderForm() {
                 form="order-form"
                 size="lg"
                 className="w-full"
-                disabled={form.formState.isSubmitting}
+                disabled={form.formState.isSubmitting || !canSubmitWithTurnstile}
               >
                 {form.formState.isSubmitting ? (
                   <>
@@ -520,6 +534,7 @@ export default function OrderForm() {
         deliveryMethod={selectedDeliveryMethod}
         discountCode={discountCode}
         isSubmitting={isSubmitting}
+        submitDisabled={!canSubmitWithTurnstile}
       />
     </div>
   );

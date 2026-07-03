@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 
 import { getDeliveryLabel } from "@/helpers/delivery";
+import { verifyOrderPaymentToken } from "@/lib/order-payment-token";
+import {
+  consumeRateLimit,
+  getClientIp,
+  rateLimitResponse,
+} from "@/lib/rate-limit";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -24,7 +30,29 @@ function getCalendarTypeLabel(type: string) {
 }
 
 export async function GET(request: Request, { params }: RouteParams) {
+  const ip = getClientIp(request);
+  const rate = consumeRateLimit("orders-pay", ip, {
+    windowMs: 10 * 60 * 1000,
+    max: 10,
+  });
+
+  if (!rate.ok) {
+    const limited = rateLimitResponse(rate.retryAfterMs);
+
+    return NextResponse.json(
+      { message: limited.message },
+      { status: limited.status, headers: limited.headers },
+    );
+  }
+
   const { orderCode } = await params;
+  const token = new URL(request.url).searchParams.get("token");
+
+  if (!token) {
+    return NextResponse.redirect(
+      new URL("/objednavka?payment=invalid-link", request.url),
+    );
+  }
 
   const { data: order, error } = await supabaseAdmin
     .from("orders")
@@ -37,6 +65,14 @@ export async function GET(request: Request, { params }: RouteParams) {
   if (error || !order) {
     return NextResponse.redirect(
       new URL("/objednavka?payment=order-not-found", request.url),
+    );
+  }
+
+  if (
+    !verifyOrderPaymentToken(order.id, order.order_code ?? orderCode, token)
+  ) {
+    return NextResponse.redirect(
+      new URL("/objednavka?payment=invalid-link", request.url),
     );
   }
 
@@ -58,7 +94,10 @@ export async function GET(request: Request, { params }: RouteParams) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
   if (!appUrl) {
-    throw new Error("Missing NEXT_PUBLIC_APP_URL");
+    return NextResponse.json(
+      { message: "Server nie je správne nakonfigurovaný." },
+      { status: 500 },
+    );
   }
 
   const checkoutSession = await stripe.checkout.sessions.create({

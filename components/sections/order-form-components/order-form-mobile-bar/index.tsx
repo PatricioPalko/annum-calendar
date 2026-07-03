@@ -20,6 +20,7 @@ type OrderFormMobileBarProps = {
   deliveryMethod: DeliveryMethod;
   discountCode?: string;
   isSubmitting: boolean;
+  submitDisabled?: boolean;
 };
 
 function formatPrice(value: number) {
@@ -33,6 +34,7 @@ export function OrderFormMobileBar({
   deliveryMethod,
   discountCode = "",
   isSubmitting,
+  submitDisabled = false,
 }: OrderFormMobileBarProps) {
   const price = getCalendarPrice({ type, quantityOption, customQuantity });
   const discount = getDiscountAmount(price.totalPrice, discountCode);
@@ -58,7 +60,7 @@ export function OrderFormMobileBar({
           form="order-form"
           size="lg"
           className="shrink-0 px-5"
-          disabled={isSubmitting}
+          disabled={isSubmitting || submitDisabled}
         >
           {isSubmitting ? (
             <>

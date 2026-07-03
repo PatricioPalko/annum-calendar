@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { buildOrderPaymentPath } from "@/lib/order-payment-token";
+import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -24,6 +26,20 @@ export default async function PaymentCancelledPage({
   const params = await searchParams;
   const orderCode = params.order;
 
+  let paymentPath: string | null = null;
+
+  if (orderCode) {
+    const { data: order } = await supabaseAdmin
+      .from("orders")
+      .select("id, order_code, payment_status")
+      .eq("order_code", orderCode)
+      .maybeSingle();
+
+    if (order?.order_code && order.payment_status !== "paid") {
+      paymentPath = buildOrderPaymentPath(order.id, order.order_code);
+    }
+  }
+
   return (
     <main className="min-h-screen bg-[#FFF7F4] px-4 py-12 text-[#3E0F28] sm:px-6 sm:py-20">
       <div className="mx-auto max-w-2xl rounded-2xl bg-white p-6 text-center shadow-xl shadow-[#3E0F28]/10 sm:p-8">
@@ -47,9 +63,9 @@ export default async function PaymentCancelledPage({
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-          {orderCode && (
+          {paymentPath && (
             <Link
-              href={`/api/orders/${encodeURIComponent(orderCode)}/pay`}
+              href={paymentPath}
               className="inline-flex rounded-md bg-[#3E0F28] px-5 py-3 text-sm font-bold text-white"
             >
               Zaplatiť znova

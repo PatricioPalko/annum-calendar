@@ -6,7 +6,12 @@ import {
 import { getDeliveryPrice } from "@/helpers/delivery";
 import { getDiscountAmount } from "@/helpers/discount-codes";
 import { sendOrderCreatedEmail } from "@/lib/order-emails";
-import { syncPacketaPacketForOrder } from "@/lib/packeta";
+import { buildOrderPaymentUrl } from "@/lib/order-payment-token";
+import {
+  consumeRateLimit,
+  getClientIp,
+  rateLimitResponse,
+} from "@/lib/rate-limit";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
@@ -128,6 +133,30 @@ function getCalendarTypeLabel(type: "basic" | "premium" | "business") {
 }
 
 export async function POST(request: Request) {
+  const ip = getClientIp(request);
+  const rate = consumeRateLimit("orders-create", ip, {
+    windowMs: 10 * 60 * 1000,
+    max: 5,
+  });
+
+  if (!rate.ok) {
+    const limited = rateLimitResponse(rate.retryAfterMs);
+
+    return NextResponse.json(
+      { message: limited.message },
+      { status: limited.status, headers: limited.headers },
+    );
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+
+  if (!appUrl) {
+    return NextResponse.json(
+      { message: "Server nie je správne nakonfigurovaný." },
+      { status: 500 },
+    );
+  }
+
   const body = await request.json();
   const parsed = orderBodySchema.safeParse(body);
 
@@ -293,16 +322,9 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         message: "Nepodarilo sa uložiť objednávku.",
-        error: error.message,
       },
       { status: 500 },
     );
-  }
-
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-
-  if (!appUrl) {
-    throw new Error("Missing NEXT_PUBLIC_APP_URL");
   }
 
   const checkoutSession = await stripe.checkout.sessions.create({
@@ -356,33 +378,8 @@ export async function POST(request: Request) {
     console.error("STRIPE_SESSION_UPDATE_ERROR:", paymentUpdateError);
   }
 
-  if (
-    values.deliveryMethod === "packeta" &&
-    values.packetaPoint &&
-    data.order_code
-  ) {
-    await syncPacketaPacketForOrder({
-      orderId: data.id,
-      orderCode: data.order_code,
-      orderNumber: values.orderNumber,
-      firstName: values.firstName,
-      lastName: values.lastName,
-      email: values.email,
-      phone: values.phone ?? null,
-      packetaPointId: values.packetaPoint.id,
-      goodsValue: Math.max(
-        1,
-        price.totalPrice ?? finalTotalPrice - deliveryPrice,
-      ),
-      quantity: values.quantity,
-      note: values.note?.trim() || null,
-    });
-  }
-
   try {
-    const paymentUrl = `${appUrl}/api/orders/${encodeURIComponent(
-      data.order_code,
-    )}/pay`;
+    const paymentUrl = buildOrderPaymentUrl(data.id, data.order_code);
 
     await sendOrderCreatedEmail({
       orderCode: data.order_code,

@@ -11,7 +11,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           "/admin",
           "/api",
-          "/login",
+          "/admin/login",
           "/objednavka/dakujeme",
           "/objednavka/platba-zrusena",
         ],

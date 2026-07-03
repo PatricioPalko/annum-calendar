@@ -196,6 +196,30 @@ export async function markOrderPaidFromCheckoutSession(
     };
   }
 
+  if (session.amount_total === null) {
+    return { status: "error", message: "Missing payment amount." };
+  }
+
+  if (session.currency && session.currency !== "eur") {
+    return { status: "error", message: "Unexpected payment currency." };
+  }
+
+  if (existingOrder.total_price === null) {
+    return { status: "error", message: "Order has no price." };
+  }
+
+  const expectedAmountCents = Math.round(Number(existingOrder.total_price) * 100);
+
+  if (session.amount_total !== expectedAmountCents) {
+    console.error("PAYMENT_AMOUNT_MISMATCH:", {
+      orderId,
+      expectedAmountCents,
+      actualAmountCents: session.amount_total,
+    });
+
+    return { status: "error", message: "Payment amount mismatch." };
+  }
+
   const { data: order, error } = await supabaseAdmin
     .from("orders")
     .update({

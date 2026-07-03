@@ -49,7 +49,7 @@ export default function TermsPage() {
               nás kontaktujte na e-mailovej adrese{" "}
               <a
                 className="font-semibold text-primary"
-                href="mailto:{CONTACT_EMAIL}"
+                href={`mailto:${CONTACT_EMAIL}`}
               >
                 {CONTACT_EMAIL}
               </a>

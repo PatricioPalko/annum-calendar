@@ -35,6 +35,14 @@ export function AdminLoginForm() {
       return;
     }
 
+    const sessionCheck = await fetch("/api/admin/session");
+
+    if (!sessionCheck.ok) {
+      await supabase.auth.signOut();
+      setErrorMessage("Tento účet nemá prístup do administrácie.");
+      return;
+    }
+
     router.push("/admin");
     router.refresh();
   }

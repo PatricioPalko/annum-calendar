@@ -210,6 +210,8 @@ export type OrderRow = {
 
   status: string;
   downloaded_at: string | null;
+  ready_at: string | null;
+  shipped_at: string | null;
 
   discount_code: string | null;
   discount_amount: number | string | null;
@@ -226,9 +228,9 @@ export type OrderRow = {
   packeta_point_address: string | null;
 
   tracking_number: string | null;
-  shipped_at: string | null;
 
   marketing_consent_at: string | null;
+  terms_accepted_at: string | null;
 };
 
 export function getQuantityOptionFromQuantity(

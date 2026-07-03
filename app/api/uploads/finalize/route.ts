@@ -3,6 +3,11 @@ import crypto from "node:crypto";
 import { z } from "zod";
 
 import { MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
+import {
+  consumeRateLimit,
+  getClientIp,
+  rateLimitResponse,
+} from "@/lib/rate-limit";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const BUCKET = "calendar-uploads";
@@ -20,13 +25,6 @@ type CanonicalPhoto = {
   size: number;
   path: string;
 };
-
-type RateLimitState = {
-  windowStartMs: number;
-  count: number;
-};
-
-const rateLimitByIp = new Map<string, RateLimitState>();
 
 function hasAllowedImageExtension(fileName: string) {
   const lowerName = fileName.toLowerCase();
@@ -46,56 +44,6 @@ const bodySchema = z.object({
   storageFolder: z.string().min(1),
   photos: z.array(uploadedPhotoSchema).min(MIN_PHOTOS).max(MAX_PHOTOS),
 });
-
-function getIp(request: Request) {
-  const xff = request.headers.get("x-forwarded-for");
-
-  if (xff) {
-    const first = xff.split(",")[0]?.trim();
-
-    if (first) {
-      return first;
-    }
-  }
-
-  return request.headers.get("x-real-ip") ?? "unknown";
-}
-
-function consumeRateLimit(ip: string) {
-  const now = Date.now();
-  const state = rateLimitByIp.get(ip);
-
-  if (!state || now - state.windowStartMs > RATE_LIMIT_WINDOW_MS) {
-    rateLimitByIp.set(ip, {
-      windowStartMs: now,
-      count: 1,
-    });
-
-    return {
-      ok: true as const,
-      remaining: RATE_LIMIT_MAX - 1,
-      retryAfterMs: 0,
-    };
-  }
-
-  if (state.count >= RATE_LIMIT_MAX) {
-    const retryAfterMs = RATE_LIMIT_WINDOW_MS - (now - state.windowStartMs);
-
-    return {
-      ok: false as const,
-      remaining: 0,
-      retryAfterMs,
-    };
-  }
-
-  state.count += 1;
-
-  return {
-    ok: true as const,
-    remaining: Math.max(0, RATE_LIMIT_MAX - state.count),
-    retryAfterMs: 0,
-  };
-}
 
 function verifyUploadPathToken(values: {
   path: string;
@@ -160,20 +108,18 @@ function createFinalizeToken(values: {
 }
 
 export async function POST(request: Request) {
-  const ip = getIp(request);
-  const rate = consumeRateLimit(ip);
+  const ip = getClientIp(request);
+  const rate = consumeRateLimit("upload-finalize", ip, {
+    windowMs: RATE_LIMIT_WINDOW_MS,
+    max: RATE_LIMIT_MAX,
+  });
 
   if (!rate.ok) {
+    const limited = rateLimitResponse(rate.retryAfterMs);
+
     return NextResponse.json(
-      {
-        message: "Príliš veľa pokusov. Skúste to prosím neskôr.",
-      },
-      {
-        status: 429,
-        headers: {
-          "Retry-After": String(Math.ceil(rate.retryAfterMs / 1000)),
-        },
-      },
+      { message: limited.message },
+      { status: limited.status, headers: limited.headers },
     );
   }
 
