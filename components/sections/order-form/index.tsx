@@ -12,7 +12,11 @@ import {
 import { Heading, Text } from "@/components/ui/typography";
 import { getDiscountCode } from "@/helpers/discount-codes";
 import { getFinalQuantity } from "@/helpers/form";
-import { loadOrderFormDraft, saveOrderFormDraft } from "@/lib/order-from-draft";
+import {
+  clearOrderFormDraft,
+  loadOrderFormDraft,
+  saveOrderFormDraft,
+} from "@/lib/order-from-draft";
 import { OrderFormValues, orderSchema } from "@/lib/schema";
 import { uploadOrderPhotos } from "@/lib/upload-order-photos";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -45,6 +49,7 @@ const orderFormDefaultValues: OrderFormValues = {
   birthdays: [],
   namedays: [],
   termsAccepted: false,
+  marketingConsent: false,
   discountCode: "",
   deliveryMethod: "pickup",
   packetaPoint: undefined,
@@ -122,6 +127,14 @@ export default function OrderForm() {
     }
   }, [selectedCalendarType, form]);
 
+  function resetOrderFormState() {
+    clearOrderFormDraft();
+    form.reset(orderFormDefaultValues);
+    setTurnstileToken("");
+    setDiscountCodeTouched(false);
+    setSubmitError(null);
+  }
+
   function scrollToFirstError(errors: unknown) {
     requestAnimationFrame(() => {
       const firstInvalidElement = document.querySelector(
@@ -179,6 +192,7 @@ export default function OrderForm() {
           values.deliveryMethod === "packeta" ? values.packetaPoint : undefined,
 
         termsAccepted: values.termsAccepted,
+        marketingConsent: values.marketingConsent ?? false,
         discountCode: values.discountCode?.trim() || undefined,
       };
 
@@ -210,6 +224,7 @@ export default function OrderForm() {
       console.log("CREATE_ORDER_OK", result);
 
       if (result.checkoutUrl) {
+        resetOrderFormState();
         window.location.href = result.checkoutUrl;
         return;
       }
@@ -316,7 +331,7 @@ export default function OrderForm() {
               <OrderSection
                 step="4"
                 title="Dôležité narodeniny"
-                description="Doplňte narodeniny a meniny, ktoré chcete mať v kalendári zvýraznené."
+                description="Doplňte narodeniny, ktoré chcete mať v kalendári zvýraznené."
               >
                 <div className="space-y-8">
                   <BirthdaysFieldArray control={form.control} />
@@ -325,7 +340,7 @@ export default function OrderForm() {
               <OrderSection
                 step="5"
                 title="Dôležité meniny"
-                description="Doplňte narodeniny a meniny, ktoré chcete mať v kalendári zvýraznené."
+                description="Doplňte meniny, ktoré chcete mať v kalendári zvýraznené."
               >
                 <div className="space-y-8">
                   <NamedaysFieldArray control={form.control} />

@@ -58,6 +58,7 @@ export const orderSchema = z
     termsAccepted: z.boolean().refine((value) => value === true, {
       message: "Pre odoslanie objednávky je potrebné potvrdiť súhlas.",
     }),
+    marketingConsent: z.boolean().optional(),
     deliveryMethod: z.enum(["pickup", "packeta"]),
     packetaPoint: z
       .object({

@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { ClearOrderFormDraft } from "@/components/order/clear-order-form-draft";
 import { markOrderPaidFromCheckoutSession } from "@/lib/order-payments";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -68,6 +69,7 @@ export default async function OrderThankYouPage({ searchParams }: PageProps) {
 
   return (
     <main className="min-h-screen bg-[#FFF7F4] px-4 py-12 text-[#3E0F28] sm:px-6 sm:py-20">
+      <ClearOrderFormDraft />
       <div className="mx-auto max-w-2xl rounded-2xl bg-white p-6 text-center shadow-xl shadow-[#3E0F28]/10 sm:p-8">
         <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#FC5A61]">
           Ďakujeme

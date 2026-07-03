@@ -63,6 +63,7 @@ const orderBodySchema = z.object({
   packetaPoint: packetaPointSchema.optional(),
 
   termsAccepted: z.literal(true),
+  marketingConsent: z.boolean().optional(),
   discountCode: z.string().max(40).optional(),
 });
 
@@ -279,6 +280,9 @@ export async function POST(request: Request) {
       packeta_point_address: values.packetaPoint?.address ?? null,
 
       terms_accepted_at: new Date().toISOString(),
+      marketing_consent_at: values.marketingConsent
+        ? new Date().toISOString()
+        : null,
     })
     .select("id, order_code, storage_folder")
     .single();

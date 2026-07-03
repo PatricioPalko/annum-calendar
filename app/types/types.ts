@@ -227,6 +227,8 @@ export type OrderRow = {
 
   tracking_number: string | null;
   shipped_at: string | null;
+
+  marketing_consent_at: string | null;
 };
 
 export function getQuantityOptionFromQuantity(
