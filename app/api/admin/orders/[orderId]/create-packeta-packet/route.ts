@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { isAdminEmail } from "@/lib/auth/admin";
-import { createPacketaPacket, isPacketaConfigured } from "@/lib/packeta";
+import { createPacketaPacket, isPacketaConfigured, PacketaApiError } from "@/lib/packeta";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -126,6 +126,16 @@ export async function POST(_request: Request, { params }: RouteParams) {
   } catch (error) {
     console.error("PACKETA_MANUAL_CREATE_ERROR:", error);
 
+    if (error instanceof PacketaApiError) {
+      return NextResponse.json(
+        {
+          message: error.message,
+          code: error.code,
+        },
+        { status: error.statusCode },
+      );
+    }
+
     return NextResponse.json(
       {
         message:
@@ -133,7 +143,7 @@ export async function POST(_request: Request, { params }: RouteParams) {
             ? error.message
             : "Nepodarilo sa vytvoriť štítok v Packete.",
       },
-      { status: 502 },
+      { status: 500 },
     );
   }
 }

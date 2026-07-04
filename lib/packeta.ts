@@ -30,7 +30,10 @@ export function toPacketaPacketNumber(input: {
     .slice(0, 36);
 
   if (!sanitized) {
-    throw new Error("Číslo objednávky nie je vhodné pre Packeta API.");
+    throw new PacketaApiError(
+      "Číslo objednávky nie je vhodné pre Packeta API.",
+      "validation",
+    );
   }
 
   return sanitized;
@@ -49,6 +52,29 @@ export type PacketaPacketResult = {
   barcode: string;
   barcodeText: string;
 };
+
+export type PacketaErrorCode =
+  | "account_not_approved"
+  | "invalid_eshop"
+  | "validation"
+  | "http"
+  | "unknown";
+
+export class PacketaApiError extends Error {
+  readonly code: PacketaErrorCode;
+  readonly statusCode: number;
+
+  constructor(
+    message: string,
+    code: PacketaErrorCode,
+    statusCode = 422,
+  ) {
+    super(message);
+    this.name = "PacketaApiError";
+    this.code = code;
+    this.statusCode = statusCode;
+  }
+}
 
 function escapeXml(value: string) {
   return value
@@ -107,16 +133,22 @@ function parsePacketaAttributeFaults(xml: string) {
   return faults;
 }
 
-function toPacketaUserMessage(fault: string) {
+function toPacketaUserMessage(fault: string): PacketaApiError {
   if (/not approved for posting parcels/i.test(fault)) {
-    return "Packeta účet ešte nemá povolené odosielanie zásielok. Kontaktuj Packeta podporu alebo obchodné oddelenie a nechaj si aktivovať odosielanie v klientskej sekcii.";
+    return new PacketaApiError(
+      "Packeta účet ešte nemá povolené odosielanie zásielok. Skontroluj, či PACKETA_ESHOP presne zodpovedá stĺpcu Indication pri schválenom odosielateľovi v client.packeta.com/senders. Ak sedí, kontaktuj Packeta podporu alebo obchodné oddelenie a nechaj si aktivovať odosielanie.",
+      "account_not_approved",
+    );
   }
 
   if (/sender is not given|choose a sender/i.test(fault)) {
-    return "Chýba alebo je nesprávna hodnota PACKETA_ESHOP. Skontroluj indikáciu odosielateľa v Packeta klientovi.";
+    return new PacketaApiError(
+      "Chýba alebo je nesprávna hodnota PACKETA_ESHOP. Skopíruj presnú Indication zo sekcie Odosielatelia v client.packeta.com/senders.",
+      "invalid_eshop",
+    );
   }
 
-  return fault;
+  return new PacketaApiError(fault, "validation");
 }
 
 function parsePacketaResponse(xml: string) {
@@ -130,7 +162,7 @@ function parsePacketaResponse(xml: string) {
       xml.match(/<fault>([^<]*)<\/fault>/)?.[1]?.trim() ||
       "Packeta API request failed";
 
-    throw new Error(toPacketaUserMessage(fault));
+    throw toPacketaUserMessage(fault);
   }
 
   const id = xml.match(/<id>([^<]+)<\/id>/)?.[1];
@@ -138,7 +170,10 @@ function parsePacketaResponse(xml: string) {
   const barcodeText = xml.match(/<barcodeText>([^<]+)<\/barcodeText>/)?.[1];
 
   if (!id || !barcode) {
-    throw new Error("Packeta API returned an incomplete packet response.");
+    throw new PacketaApiError(
+      "Packeta API vrátilo neúplnú odpoveď pri vytváraní zásielky.",
+      "unknown",
+    );
   }
 
   return {
@@ -161,12 +196,18 @@ export async function createPacketaPacket(
   const config = getPacketaConfig();
 
   if (!config) {
-    throw new Error("Chýba PACKETA_API_PASSWORD.");
+    throw new PacketaApiError(
+      "Chýba PACKETA_API_PASSWORD.",
+      "invalid_eshop",
+      503,
+    );
   }
 
   if (!config.eshop) {
-    throw new Error(
-      "Chýba PACKETA_ESHOP. Nastav indikáciu odosielateľa z Packeta klienta (Stav odosielateľa / Indication).",
+    throw new PacketaApiError(
+      "Chýba PACKETA_ESHOP. Skopíruj presnú Indication zo sekcie Odosielatelia v client.packeta.com/senders.",
+      "invalid_eshop",
+      503,
     );
   }
 
@@ -177,7 +218,10 @@ export async function createPacketaPacket(
   const phone = input.phone ? formatPhoneForPacketa(input.phone) : null;
 
   if (!input.email && !phone) {
-    throw new Error("Packeta vyžaduje e-mail alebo telefón príjemcu.");
+    throw new PacketaApiError(
+      "Packeta vyžaduje e-mail alebo telefón príjemcu.",
+      "validation",
+    );
   }
 
   const packetAttributes = [
@@ -217,7 +261,11 @@ export async function createPacketaPacket(
       body: responseText,
     });
 
-    throw new Error(`Packeta API HTTP ${response.status}`);
+    throw new PacketaApiError(
+      `Packeta API HTTP ${response.status}`,
+      "http",
+      502,
+    );
   }
 
   try {
@@ -230,12 +278,21 @@ export async function createPacketaPacket(
       response: responseText,
     });
 
-    throw error;
+    if (error instanceof PacketaApiError) {
+      throw error;
+    }
+
+    throw new PacketaApiError(
+      error instanceof Error ? error.message : "Packeta API request failed",
+      "unknown",
+    );
   }
 }
 
 export function isPacketaConfigured() {
-  return Boolean(getPacketaConfig());
+  const config = getPacketaConfig();
+
+  return Boolean(config?.apiPassword && config.eshop);
 }
 
 type SyncPacketaPacketForOrderInput = {

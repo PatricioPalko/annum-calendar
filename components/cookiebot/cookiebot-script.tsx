@@ -12,7 +12,7 @@ export function CookiebotScript() {
     <Script
       id="Cookiebot"
       src="https://consent.cookiebot.com/uc.js"
-      strategy="beforeInteractive"
+      strategy="afterInteractive"
       data-cbid={cookiebotId}
       data-blockingmode="auto"
       data-culture="SK"

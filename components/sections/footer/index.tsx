@@ -96,7 +96,9 @@ export function Footer() {
 
       <div className="border-t border-[#EAD6DE]">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-4 text-xs font-medium text-[#3E0F28]/45 md:flex-row md:items-center md:justify-between md:px-6">
-          <p>© {new Date().getFullYear()} Annum. Všetky práva vyhradené.</p>
+          <p suppressHydrationWarning>
+            © {new Date().getFullYear()} Annum. Všetky práva vyhradené.
+          </p>
 
           <p>Personalizované kalendáre z fotiek · Košice · Slovensko</p>
         </div>

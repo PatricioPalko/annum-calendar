@@ -1,4 +1,3 @@
-import { AdminDeleteOrderButton } from "@/components/admin/admin-delete-order-button";
 import { AdminDownloadButton } from "@/components/admin/admin-download-button";
 import { formatPrice } from "@/helpers/admin-order-price";
 import {
@@ -16,19 +15,11 @@ import { formatDateOnly, formatTimeOnly } from "@/helpers/format-date-time";
 import { cn } from "@/lib/utils";
 
 import { OrderRow } from "@/app/types/types";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
 import { AdminCompleteOrderButton } from "../admin-complete-order-button";
 import { AdminCreatePacketaPacketButton } from "../admin-create-packeta-packet-button";
 import { AdminNotifyFulfillmentButton } from "../admin-notify-fulfillment-button";
+import { AdminOrderActionsMenu } from "./admin-order-actions-menu";
 import { AdminOrderDelivery } from "./admin-order-delivery";
-import { AdminOrderJsonPreview } from "./admin-order-json-preview";
 import { AdminOrderStatusBadge } from "./admin-order-status-badge";
 import { AdminPaymentStatusBadge } from "./admin-payment-status-badge";
 
@@ -206,27 +197,7 @@ export function AdminOrderRow({ order, index }: AdminOrderRowProps) {
             }
           />
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8 text-primary/50"
-              >
-                <MoreHorizontal className="size-4" />
-                <span className="sr-only">Ďalšie akcie</span>
-              </Button>
-            </DropdownMenuTrigger>
-
-            <DropdownMenuContent align="end" className="w-48 bg-background p-1">
-              <AdminOrderJsonPreview order={order} />
-              <DropdownMenuSeparator />
-              <AdminDeleteOrderButton
-                orderId={order.id}
-                orderCode={order.order_code ?? order.id}
-              />
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <AdminOrderActionsMenu order={order} />
         </div>
       </td>
     </tr>
