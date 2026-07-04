@@ -45,12 +45,38 @@ export const calendarTypes = [
   {
     value: "business",
     label: "Business",
-    badge: "10+ ks",
-    description: "Pre firmy alebo väčšie objednávky od 10 kusov.",
+    badge: "Pre firmy",
+    description: "Kalendáre pre firmy, tímy alebo väčšie darčekové objednávky.",
     prices: {},
-    priceNote: "Cena na mieru",
+    priceNote: "Cena podľa množstva",
   },
 ] satisfies CalendarTypesOption[];
+
+export const BUSINESS_MIN_QUANTITY = 10;
+
+export const businessVolumeTiers = [
+  { minQuantity: 50, unitPrice: 13 },
+  { minQuantity: 20, unitPrice: 14 },
+  { minQuantity: 10, unitPrice: 15 },
+] as const;
+
+export function getBusinessUnitPrice(quantity: number): number | null {
+  if (quantity < BUSINESS_MIN_QUANTITY) {
+    return null;
+  }
+
+  for (const tier of businessVolumeTiers) {
+    if (quantity >= tier.minQuantity) {
+      return tier.unitPrice;
+    }
+  }
+
+  return businessVolumeTiers[businessVolumeTiers.length - 1]?.unitPrice ?? null;
+}
+
+export function getBusinessEntryUnitPrice() {
+  return businessVolumeTiers[businessVolumeTiers.length - 1]!.unitPrice;
+}
 
 export const quantityItems = [
   { value: 1, label: "1 ks" },
@@ -73,6 +99,26 @@ export function isFixedPriceQuantity(
   quantity: number,
 ): quantity is FixedPriceQuantity {
   return quantity === 1 || quantity === 3 || quantity === 5;
+}
+
+export function formatUnitPrice(price: number) {
+  return Number.isInteger(price)
+    ? String(price)
+    : price.toFixed(2).replace(".", ",");
+}
+
+export function getLowestUnitPrice(plan: CalendarTypesOption): number | null {
+  if (plan.value === "business") {
+    return businessVolumeTiers[0]?.unitPrice ?? null;
+  }
+
+  const fivePiecesPrice = plan.prices[5];
+
+  if (!fivePiecesPrice) {
+    return null;
+  }
+
+  return fivePiecesPrice / 5;
 }
 
 export function resolveQuantity(values: {
@@ -105,7 +151,7 @@ export function getCalendarPrice(values: {
 
   const calendarType = getCalendarType(values.type);
 
-  if (!quantity || values.type === "business") {
+  if (!quantity) {
     return {
       quantity,
       totalPrice: null,
@@ -113,6 +159,46 @@ export function getCalendarPrice(values: {
       originalPrice: null,
       savedAmount: null,
       priceNote: calendarType.priceNote ?? "Cena na mieru",
+    };
+  }
+
+  if (values.type === "business") {
+    if (quantity < BUSINESS_MIN_QUANTITY) {
+      return {
+        quantity,
+        totalPrice: null,
+        pricePerPiece: null,
+        originalPrice: null,
+        savedAmount: null,
+        priceNote: `Minimálne ${BUSINESS_MIN_QUANTITY} kusov`,
+      };
+    }
+
+    const unitPrice = getBusinessUnitPrice(quantity);
+
+    if (unitPrice === null) {
+      return {
+        quantity,
+        totalPrice: null,
+        pricePerPiece: null,
+        originalPrice: null,
+        savedAmount: null,
+        priceNote: calendarType.priceNote ?? "Cena na mieru",
+      };
+    }
+
+    const entryUnitPrice = getBusinessEntryUnitPrice();
+    const totalPrice = unitPrice * quantity;
+    const originalPrice = entryUnitPrice * quantity;
+    const savedAmount = originalPrice - totalPrice;
+
+    return {
+      quantity,
+      totalPrice,
+      pricePerPiece: unitPrice,
+      originalPrice,
+      savedAmount: savedAmount > 0 ? savedAmount : null,
+      priceNote: null,
     };
   }
 
@@ -155,16 +241,6 @@ export function getCalendarPrice(values: {
     savedAmount: savedAmount > 0 ? savedAmount : null,
     priceNote: null,
   };
-}
-
-export function getLowestUnitPrice(plan: CalendarTypesOption): number | null {
-  const fivePiecesPrice = plan.prices[5];
-
-  if (!fivePiecesPrice) {
-    return null;
-  }
-
-  return fivePiecesPrice / 5;
 }
 
 export type SortKey =

@@ -52,7 +52,6 @@ export function FormRadioGroup({
             {options.map((plan) => {
               const id = `calendar-type-${plan.value}`;
               const isSelected = field.value === plan.value;
-              const isBusiness = plan.value === "business";
               const lowestUnitPrice = getLowestUnitPrice(plan);
 
               return (
@@ -102,20 +101,18 @@ export function FormRadioGroup({
                     )}
                   </div>
                   <div className="mt-auto border-t border-[#EAD6DE] pt-2">
-                    {isBusiness ? (
+                    {lowestUnitPrice !== null ? (
+                      <p className="text-sm font-semibold text-primary">
+                        od{" "}
+                        <span className="font-heading text-2xl font-bold text-secondary">
+                          {formatPrice(lowestUnitPrice)}
+                        </span>{" "}
+                        / ks
+                      </p>
+                    ) : (
                       <p className="font-heading text-xl font-bold text-secondary">
                         {plan.priceNote ?? "Cena na mieru"}
                       </p>
-                    ) : (
-                      lowestUnitPrice !== null && (
-                        <p className="text-sm font-semibold text-primary">
-                          od{" "}
-                          <span className="font-heading text-2xl font-bold text-secondary">
-                            {formatPrice(lowestUnitPrice)}
-                          </span>{" "}
-                          / ks
-                        </p>
-                      )
                     )}
                   </div>
                 </label>

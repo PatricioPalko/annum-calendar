@@ -44,7 +44,7 @@ const faqSections = [
       {
         question: "Kedy sa dozviem finálnu cenu?",
         answer:
-          "Pri bežných variantoch sa cena zobrazí priamo v konfigurátore. Pri Business objednávke alebo špeciálnych požiadavkách Vám cenu potvrdíme individuálne.",
+          "Cena sa zobrazí priamo v konfigurátore. Pri Basic a Premium ide o cenu za kus podľa počtu rovnakých kalendárov. Pri Business objednávke od 10 kusov sa cena za kus znižuje podľa množstva — napríklad pri 50 kusoch je cena nižšia než pri objednávke 10 kusov.",
       },
       {
         question: "Ako prebieha platba?",
@@ -89,7 +89,7 @@ const faqSections = [
       {
         question: "Čo je zahrnuté v cene kalendára?",
         answer:
-          "Cena zahŕňa spracovanie objednávky, prípravu kalendára z nahraných fotiek, základnú úpravu rozloženia a tlač podľa zvoleného variantu. Pri variante Premium je zahrnuté aj zvýraznenie vybraných menín a narodenín. Doručenie sa účtuje samostatne podľa zvoleného spôsobu doručenia.",
+          "Cena zahŕňa spracovanie objednávky, prípravu kalendára z nahraných fotiek, tlač, zabalenie a základnú úpravu rozloženia podľa zvoleného variantu. Pri variante Premium je zahrnuté aj zvýraznenie vybraných menín a narodenín. Doručenie sa účtuje samostatne podľa zvoleného spôsobu doručenia.",
       },
     ],
   },

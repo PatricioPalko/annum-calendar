@@ -98,7 +98,7 @@ export function PhotoDropzone({
         >
           Nahratých: {value.length}/{MAX_PHOTOS} fotiek
           {!hasMinimumFiles &&
-            ` · chýba ešte ${missingFiles} ${missingFiles === 1 ? "fotka" : "fotky"}`}
+            ` · chýba ešte ${missingFiles} ${missingFiles === 1 ? "fotka" : missingFiles > 4 ? "fotiek" : "fotky"}`}
         </p>
       </div>
 

@@ -1,58 +1,56 @@
+import {
+  calendarTypes,
+  formatUnitPrice,
+  getLowestUnitPrice,
+} from "@/app/types/types";
 import { Check } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Heading, Text } from "@/components/ui/typography";
 
+const basicPlan = calendarTypes.find((plan) => plan.value === "basic")!;
+const premiumPlan = calendarTypes.find((plan) => plan.value === "premium")!;
+const businessPlan = calendarTypes.find((plan) => plan.value === "business")!;
+
+const sharedInclusions = [
+  "A3 nástenný kalendár s kovovou väzbou",
+  "Vlastné fotky rozložené do 12 mesiacov (min. 14, odporúčame 30+)",
+  "Grafická príprava, tlač a zabalenie v cene",
+  "Doručenie sa účtuje samostatne — osobný odber v Košiciach alebo Packeta",
+];
+
 const plans = [
   {
-    name: "Basic",
-    price: 15,
-    subtitle: "iba fotky",
-    description: "Kalendár s vašimi fotkami bez označených dátumov.",
+    plan: basicPlan,
+    subtitle: "Jednoduchý kalendár s fotkami",
     features: [
-      "A3 nástenný kalendár",
-      "Vlastné fotky",
-      "2-4 fotky na mesiac",
-      "Príprava do tlače",
+      "12 mesiacov s Vašimi fotkami",
+      "Bez vyznačených menín a narodenín",
+      "Jednoduchý dizajn, v ktorom vyniknú Vaše fotky",
     ],
-    button: {
-      label: "Objednať",
-    },
+    buttonLabel: "Objednať",
   },
   {
-    name: "Premium",
-    price: 22,
-    subtitle: "fotky + dátumy",
-    badge: "Najobľúbenejší",
-    description: "Všetko v Basic variante, plus označené meniny a narodeniny.",
+    plan: premiumPlan,
+    subtitle: "Kalendár s fotkami + dôležité dátumy",
     features: [
-      "A3 nástenný kalendár",
-      "Vlastné fotky",
-      "Označené narodeniny",
-      "Označené meniny",
-      "Príprava do tlače",
+      "Všetko z Basic",
+      "Zvýraznené narodeniny",
+      "Zvýraznené meniny",
+      "Dátumy zadáte priamo v objednávke",
     ],
-    button: {
-      label: "Objednať",
-    },
+    buttonLabel: "Objednať",
   },
   {
-    name: "Business",
-    price: "dohodou",
-    subtitle: "10+ ks",
-    description:
-      "Pre firmy, tímy alebo väčšie objednávky s jednotným dizajnom.",
+    plan: businessPlan,
+    subtitle: "Pre firmy a väčšie objednávky",
     features: [
-      "A3 nástenný kalendár",
-      "Firemné fotky alebo tímové momenty",
-      "Možnosť doplniť logo a firemné farby",
-      "Všetko podľa dohody",
-      "Príprava do tlače",
+      "Rovnaké kalendáre pre tím, klientov alebo partnerov",
+      "Logo, firemné fotky a farby podľa dohody",
+      "Individuálna príprava a komunikácia pred tlačou",
     ],
-    button: {
-      label: "Zistiť cenu",
-    },
+    buttonLabel: "Objednať",
   },
 ];
 
@@ -62,7 +60,7 @@ export function PricingSection() {
       id="cennik"
       className="scroll-mt-24 mx-auto mt-8 max-w-6xl overflow-hidden rounded-xl border-2 border-[#EAD6DE] bg-white px-3 py-8 text-primary shadow-2xl shadow-[#3E0F28]/20 sm:px-4 sm:py-12"
     >
-      <div className="mb-12 text-center">
+      <div className="mb-10 text-center">
         <Text
           variant="caption"
           className="text-sm font-extrabold uppercase tracking-[0.2em] text-secondary"
@@ -76,17 +74,24 @@ export function PricingSection() {
         >
           Vyberte si typ kalendára
         </Heading>
+
+        <Text className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[#3E0F28]/70">
+          Presnú sumu uvidíte v konfigurátore podľa zvoleného typu a počtu
+          kusov.
+        </Text>
       </div>
 
-      <div className="grid md:grid-cols-3 py-4">
-        {plans.map((plan, index) => {
-          const isPremium = plan.name === "Premium";
+      <div className="grid py-4 md:grid-cols-3">
+        {plans.map(({ plan, subtitle, features, buttonLabel }) => {
+          const isPremium = plan.value === "premium";
+          const lowestUnitPrice = getLowestUnitPrice(plan);
+          const accentClassName = isPremium ? "bg-[#FC5A61]" : "bg-secondary";
 
           return (
             <article
-              key={plan.name}
+              key={plan.value}
               className={[
-                "relative m-2 rounded-xl px-4 pb-6 pt-8 md:px-10",
+                "relative m-2 flex flex-col rounded-xl px-4 pb-6 pt-8 md:px-8 lg:px-10",
                 isPremium
                   ? "bg-[#FFF7F4] shadow-xl shadow-[#FC5A61]/10 ring-2 ring-[#FC5A61]"
                   : "bg-white",
@@ -100,7 +105,7 @@ export function PricingSection() {
 
               <div
                 className={[
-                  "inline-flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-sm font-semibold",
+                  "inline-flex w-fit items-center gap-2 rounded-md border px-2.5 py-1.5 text-sm font-semibold",
                   isPremium
                     ? "border-[#FC5A61]/30 bg-white text-[#3E0F28]"
                     : "border-[#EAD6DE] bg-[#FFF7F4] text-[#7B5A6B]",
@@ -110,30 +115,49 @@ export function PricingSection() {
                   variant="small"
                   className="font-extrabold uppercase tracking-wide"
                 >
-                  {plan.name}
+                  {plan.label}
                 </Text>
               </div>
 
-              <div className="mt-6 flex flex-wrap items-end gap-1">
-                <span className="pb-0.5 text-lg font-bold text-primary sm:text-xl">
-                  od
-                </span>
+              {lowestUnitPrice !== null && (
+                <div className="mt-6 flex flex-wrap items-end gap-1">
+                  <span className="pb-0.5 text-lg font-bold text-primary sm:text-xl">
+                    od
+                  </span>
 
-                <span className="font-body text-5xl font-bold leading-none tracking-tight text-primary sm:text-6xl md:text-7xl">
-                  {plan.price}
-                  {index !== 2 && <span className="ml-1 text-4xl sm:text-5xl md:text-6xl">€</span>}
-                </span>
+                  <span className="font-body text-5xl font-bold leading-none tracking-tight text-primary sm:text-6xl md:text-7xl">
+                    {formatUnitPrice(lowestUnitPrice)}
+                    <span className="ml-1 text-4xl sm:text-5xl md:text-6xl">
+                      €
+                    </span>
+                  </span>
 
-                {index !== 2 && (
                   <span className="pb-1 pl-1 text-lg font-bold text-primary sm:text-xl">
                     / ks
                   </span>
-                )}
-              </div>
+                </div>
+              )}
 
-              <Text variant="body" className="mt-3 font-medium">
-                {plan.subtitle}
+              <Text
+                variant="body"
+                className="mt-3 font-semibold text-[#3E0F28]"
+              >
+                {subtitle}
               </Text>
+
+              <ul className="mt-8 grow space-y-3">
+                {features.map((feature) => (
+                  <li key={feature} className="flex items-start gap-3">
+                    <span
+                      className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-white ${accentClassName}`}
+                    >
+                      <Check className="size-3 stroke-3" />
+                    </span>
+
+                    <Text>{feature}</Text>
+                  </li>
+                ))}
+              </ul>
 
               <Button
                 asChild
@@ -141,34 +165,29 @@ export function PricingSection() {
                 variant={isPremium ? "lime" : "default"}
                 className="mt-10 w-full"
               >
-                <Link href="/objednavka">{plan.button.label}</Link>
+                <Link href="/objednavka">{buttonLabel}</Link>
               </Button>
-
-              <div className="mt-12">
-                <Text className="font-extrabold leading-8">
-                  {plan.description}
-                </Text>
-
-                <ul className="mt-8 space-y-3">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-3">
-                      <span
-                        className={[
-                          "flex size-5 shrink-0 items-center justify-center rounded-full text-white mt-0.5",
-                          isPremium ? "bg-[#FC5A61]" : "bg-secondary",
-                        ].join(" ")}
-                      >
-                        <Check className="size-3 stroke-3" />
-                      </span>
-
-                      <Text>{feature}</Text>
-                    </li>
-                  ))}
-                </ul>
-              </div>
             </article>
           );
         })}
+      </div>
+
+      <div className="mx-2 mt-4 rounded-xl border border-[#EAD6DE] bg-[#FFF7F4] px-4 py-5 sm:mx-4 sm:px-6">
+        <Text className="text-sm font-extrabold uppercase tracking-[0.14em] text-[#FC5A61]">
+          V každej objednávke
+        </Text>
+
+        <ul className="mt-4 space-y-2">
+          {sharedInclusions.map((item) => (
+            <li
+              key={item}
+              className="flex items-start gap-2 text-sm font-medium leading-6 text-[#3E0F28]/80"
+            >
+              <Check className="mt-1 size-4 shrink-0 text-[#FC5A61]" />
+              {item}
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );
