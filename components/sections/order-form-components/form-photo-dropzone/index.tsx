@@ -128,6 +128,7 @@ export function PhotoDropzone({
                 alt={file.name}
                 width={300}
                 height={300}
+                unoptimized
                 className="aspect-square w-full object-cover"
               />
 

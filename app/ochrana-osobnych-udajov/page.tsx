@@ -1,5 +1,15 @@
 import { CookiebotDeclaration } from "@/components/cookiebot/cookiebot-declaration";
 import { Heading, Text } from "@/components/ui/typography";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Ochrana osobných údajov",
+  description:
+    "Zásady ochrany osobných údajov e-shopu Annum — personalizované A3 kalendáre.",
+  alternates: {
+    canonical: "/ochrana-osobnych-udajov",
+  },
+};
 
 const CONTACT_EMAIL = "info@annum.sk";
 const BUSINESS_NAME = "Ing. Laura Palková - LP GRAPHIC DESIGN";

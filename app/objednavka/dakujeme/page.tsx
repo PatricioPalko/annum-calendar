@@ -30,17 +30,21 @@ export default async function OrderThankYouPage({ searchParams }: PageProps) {
   let isPaid = false;
 
   if (params.session_id) {
-    const session = await stripe.checkout.sessions.retrieve(params.session_id);
+    try {
+      const session = await stripe.checkout.sessions.retrieve(params.session_id);
 
-    orderCode = session.metadata?.orderCode ?? null;
-    isPaid = session.payment_status === "paid";
+      orderCode = session.metadata?.orderCode ?? null;
+      isPaid = session.payment_status === "paid";
 
-    if (isPaid) {
-      const result = await markOrderPaidFromCheckoutSession(session);
+      if (isPaid) {
+        const result = await markOrderPaidFromCheckoutSession(session);
 
-      if (result.status === "error") {
-        console.error("THANK_YOU_MARK_PAID_ERROR:", result.message);
+        if (result.status === "error") {
+          console.error("THANK_YOU_MARK_PAID_ERROR:", result.message);
+        }
       }
+    } catch (error) {
+      console.error("THANK_YOU_SESSION_RETRIEVE_ERROR:", error);
     }
   }
 

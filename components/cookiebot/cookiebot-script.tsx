@@ -8,11 +8,12 @@ export function CookiebotScript() {
     return null;
   }
 
+  // Auto-blocking requires an early head script (not lazy/deferred).
   return (
     <Script
       id="Cookiebot"
       src="https://consent.cookiebot.com/uc.js"
-      strategy="afterInteractive"
+      strategy="beforeInteractive"
       data-cbid={cookiebotId}
       data-blockingmode="auto"
       data-culture="SK"

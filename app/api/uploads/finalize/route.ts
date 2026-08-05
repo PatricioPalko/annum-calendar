@@ -2,12 +2,14 @@ import { NextResponse } from "next/server";
 import crypto from "node:crypto";
 import { z } from "zod";
 
+import { isStorageFolderForOrderNumber } from "@/helpers/order-code";
 import { MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
 import {
   consumeRateLimit,
   getClientIp,
   rateLimitResponse,
 } from "@/lib/rate-limit";
+import { createFinalizeToken } from "@/lib/upload-finalize-token";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 const BUCKET = "calendar-uploads";
@@ -42,6 +44,8 @@ const uploadedPhotoSchema = z.object({
 
 const bodySchema = z.object({
   storageFolder: z.string().min(1),
+  orderNumber: z.number().int().positive(),
+  orderCode: z.string().min(1),
   photos: z.array(uploadedPhotoSchema).min(MIN_PHOTOS).max(MAX_PHOTOS),
 });
 
@@ -85,31 +89,9 @@ function verifyUploadPathToken(values: {
   }
 }
 
-function createFinalizeToken(values: {
-  storageFolder: string;
-  photoPaths: string[];
-  expiresAt: number;
-}) {
-  const secret = process.env.UPLOAD_SIGNING_SECRET;
-
-  if (!secret) {
-    throw new Error("Missing UPLOAD_SIGNING_SECRET");
-  }
-
-  const canonicalPaths = [...values.photoPaths].sort();
-  const payload = `${values.storageFolder}|${canonicalPaths.join(",")}|${values.expiresAt}`;
-
-  const signature = crypto
-    .createHmac("sha256", secret)
-    .update(payload)
-    .digest("base64url");
-
-  return `${values.expiresAt}.${signature}`;
-}
-
 export async function POST(request: Request) {
   const ip = getClientIp(request);
-  const rate = consumeRateLimit("upload-finalize", ip, {
+  const rate = await consumeRateLimit("upload-finalize", ip, {
     windowMs: RATE_LIMIT_WINDOW_MS,
     max: RATE_LIMIT_MAX,
   });
@@ -136,7 +118,16 @@ export async function POST(request: Request) {
     );
   }
 
-  const { storageFolder, photos } = parsed.data;
+  const { storageFolder, orderNumber, orderCode, photos } = parsed.data;
+
+  if (!isStorageFolderForOrderNumber(storageFolder, orderNumber)) {
+    return NextResponse.json(
+      {
+        message: "Invalid finalize request: order number mismatch",
+      },
+      { status: 400 },
+    );
+  }
 
   for (const photo of photos) {
     if (!photo.path.startsWith(`${storageFolder}/`)) {
@@ -273,12 +264,16 @@ export async function POST(request: Request) {
 
   const finalizeToken = createFinalizeToken({
     storageFolder,
+    orderNumber,
+    orderCode,
     photoPaths: canonicalPhotos.map((photo) => photo.path),
     expiresAt,
   });
 
   return NextResponse.json({
     storageFolder,
+    orderNumber,
+    orderCode,
     photos: canonicalPhotos,
     finalizeToken,
     expiresAt,

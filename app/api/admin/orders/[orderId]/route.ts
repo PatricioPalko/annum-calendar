@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { isAdminEmail } from "@/lib/auth/admin";
+import { isAdminEmail, isAdminMutationOriginAllowed } from "@/lib/auth/admin";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -19,7 +19,11 @@ type UploadedPhoto = {
   path: string;
 };
 
-export async function DELETE(_request: Request, { params }: RouteParams) {
+export async function DELETE(request: Request, { params }: RouteParams) {
+  if (!isAdminMutationOriginAllowed(request)) {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
+
   const { orderId } = await params;
 
   const supabase = await createSupabaseServerClient();

@@ -6,7 +6,7 @@ import { MIN_PHOTOS } from "@/lib/order/config";
 const steps = [
   {
     icon: CalendarCheck,
-    title: "Vyberiete typ kalendár",
+    title: "Vyberiete typ kalendára",
     description:
       "Zvolíte variant, počet kusov a pri Premium verzii doplníte meniny alebo narodeniny, ktoré chcete zvýrazniť.",
   },

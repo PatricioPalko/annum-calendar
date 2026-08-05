@@ -1,13 +1,25 @@
 import { calendarTypesValues, CUSTOM_QUANTITY_VALUE } from "@/app/types/types";
+import { isValidCalendarDayMonth } from "@/helpers/calendar-date";
+import { normalizePhone } from "@/helpers/phone";
 import { MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
 import { z } from "zod";
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
-const birthdaySchema = z.object({
-  day: z.number().int().min(1, "Deň je povinný").max(31),
-  month: z.number().int().min(1, "Mesiac je povinný").max(12),
-  name: z.string().min(1, "Zadajte meno"),
-});
+const birthdaySchema = z
+  .object({
+    day: z.number().int().min(1, "Deň je povinný").max(31),
+    month: z.number().int().min(1, "Mesiac je povinný").max(12),
+    name: z.string().min(1, "Zadajte meno"),
+  })
+  .superRefine((value, ctx) => {
+    if (!isValidCalendarDayMonth(value.day, value.month)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["day"],
+        message: "Neplatný dátum narodenín.",
+      });
+    }
+  });
 
 const namedaySchema = z.object({
   name: z.string().min(1, "Zadajte meno"),
@@ -20,10 +32,18 @@ export const orderSchema = z
     email: z.email("Zadajte platnú e-mailovu adresu"),
     phone: z
       .string()
-      .min(9, { message: "Zadajte telefónne číslo v tvare +421 9xx xxx xxx." })
-      .regex(/^(\+421|0)?9\d{8}$/, {
-        message: "Zadajte platné slovenské telefónne číslo.",
-      }),
+      .trim()
+      .transform((value) => normalizePhone(value))
+      .pipe(
+        z
+          .string()
+          .min(9, {
+            message: "Zadajte telefónne číslo v tvare +421 9xx xxx xxx.",
+          })
+          .regex(/^(\+421|0)?9\d{8}$/, {
+            message: "Zadajte platné slovenské telefónne číslo.",
+          }),
+      ),
     note: z
       .string()
       .max(500, "Poznámka môže mať maximálne 500 znakov")

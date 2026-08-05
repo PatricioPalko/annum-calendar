@@ -128,7 +128,7 @@ function createUploadPathToken(values: {
 
 export async function POST(request: Request) {
   const ip = getClientIp(request);
-  const rate = consumeRateLimit("upload-sign", ip, {
+  const rate = await consumeRateLimit("upload-sign", ip, {
     windowMs: RATE_LIMIT_WINDOW_MS,
     max: RATE_LIMIT_MAX,
   });

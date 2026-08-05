@@ -3,11 +3,24 @@ import CTASection from "@/components/sections/cta-section";
 import FaqSection from "@/components/sections/faq-section";
 import { GallerySection } from "@/components/sections/gallery-section";
 import { PricingSection } from "@/components/sections/pricing-section";
+import { businessVolumeTiers, calendarTypes } from "@/app/types/types";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Button } from "@/components/ui/button";
 import { Heading, Text } from "@/components/ui/typography";
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: "/",
+  },
+};
+
+const lowestUnitPrice = businessVolumeTiers[0]?.unitPrice ?? 13;
+const highestListedPackPrice = Math.max(
+  ...calendarTypes.flatMap((plan) => Object.values(plan.prices)),
+);
 
 const productJsonLd = {
   "@context": "https://schema.org",
@@ -24,8 +37,8 @@ const productJsonLd = {
   offers: {
     "@type": "AggregateOffer",
     priceCurrency: "EUR",
-    lowPrice: "15",
-    highPrice: "78",
+    lowPrice: String(lowestUnitPrice),
+    highPrice: String(highestListedPackPrice),
     availability: "https://schema.org/InStock",
     url: "https://www.annum.sk/#cennik",
   },
@@ -69,7 +82,7 @@ export default function Home() {
                 </Button>
 
                 <Button variant="secondary" size="lg" asChild>
-                  <Link href="#pricing">Pozrieť cenník</Link>
+                  <Link href="#cennik">Pozrieť cenník</Link>
                 </Button>
               </div>
             </div>
@@ -81,6 +94,7 @@ export default function Home() {
                 width={800}
                 height={1000}
                 priority
+                sizes="(min-width: 768px) 50vw, 100vw"
                 className="aspect-4/5 w-full object-contain object-center"
               />
 

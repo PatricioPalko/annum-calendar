@@ -41,7 +41,7 @@ const textVariants: Record<TextVariant, string> = {
   small: "text-sm font-medium leading-6 tracking-normal text-[#3E0F28]/68",
   muted: "text-sm font-medium leading-6 tracking-normal text-[#3E0F28]/55",
   caption:
-    "text-md font-extrabold uppercase leading-5 tracking-[0.16em] text-secondary",
+    "text-md font-bold uppercase leading-5 tracking-[0.16em] text-secondary",
 };
 
 export function Text({

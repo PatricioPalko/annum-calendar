@@ -126,6 +126,8 @@ export async function uploadOrderPhotos({
 
   const finalized = await finalizeUploadedPhotos({
     storageFolder: signedUploads.storageFolder,
+    orderNumber: signedUploads.orderNumber,
+    orderCode: signedUploads.orderCode,
     photos: uploadedPhotos,
   });
 
@@ -140,6 +142,8 @@ export async function uploadOrderPhotos({
 
 export async function finalizeUploadedPhotos(params: {
   storageFolder: string;
+  orderNumber: number;
+  orderCode: string;
   photos: UploadedPhoto[];
 }): Promise<FinalizeUploadsResponse> {
   const response = await fetch("/api/uploads/finalize", {
@@ -149,6 +153,8 @@ export async function finalizeUploadedPhotos(params: {
     },
     body: JSON.stringify({
       storageFolder: params.storageFolder,
+      orderNumber: params.orderNumber,
+      orderCode: params.orderCode,
       photos: params.photos,
     }),
   });

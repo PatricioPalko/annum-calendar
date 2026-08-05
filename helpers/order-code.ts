@@ -1,3 +1,5 @@
+import { randomInt } from "node:crypto";
+
 const calendarTypeCodes = {
   basic: "b",
   premium: "p",
@@ -21,7 +23,7 @@ function createRandomOrderSuffix(length = 4) {
   const alphabet = "abcdefghjkmnpqrstuvwxyz23456789";
 
   return Array.from({ length }, () => {
-    return alphabet[Math.floor(Math.random() * alphabet.length)];
+    return alphabet[randomInt(alphabet.length)];
   }).join("");
 }
 
@@ -56,4 +58,29 @@ export function createStorageFolder({
   orderNumber: number;
 }) {
   return `orders/${year}-${String(orderNumber).padStart(3, "0")}`;
+}
+
+export function parseStorageFolder(storageFolder: string): {
+  year: number;
+  orderNumber: number;
+} | null {
+  const match = /^orders\/(\d{4})-(\d+)$/.exec(storageFolder);
+
+  if (!match) {
+    return null;
+  }
+
+  return {
+    year: Number(match[1]),
+    orderNumber: Number(match[2]),
+  };
+}
+
+export function isStorageFolderForOrderNumber(
+  storageFolder: string,
+  orderNumber: number,
+) {
+  const parsed = parseStorageFolder(storageFolder);
+
+  return parsed !== null && parsed.orderNumber === orderNumber;
 }

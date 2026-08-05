@@ -1,7 +1,10 @@
 "use client";
 import { calendarTypes, CUSTOM_QUANTITY_VALUE } from "@/app/types/types";
 import { PacketaPicker } from "@/components/delivery/packeta-picker";
-import { TurnstileWidget } from "@/components/security/turnstile-widget";
+import {
+  TurnstileWidget,
+  type TurnstileWidgetHandle,
+} from "@/components/security/turnstile-widget";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -21,7 +24,7 @@ import { OrderFormValues, orderSchema } from "@/lib/schema";
 import { uploadOrderPhotos } from "@/lib/upload-order-photos";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { BirthdaysFieldArray } from "../order-form-components/form-birthdays";
 import { FormConsentCheckbox } from "../order-form-components/form-consent-checkbox";
@@ -60,7 +63,13 @@ import { MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
 export default function OrderForm() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string>("");
+  const turnstileRef = useRef<TurnstileWidgetHandle>(null);
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
+
+  function resetTurnstile() {
+    setTurnstileToken("");
+    turnstileRef.current?.reset();
+  }
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
@@ -88,11 +97,25 @@ export default function OrderForm() {
   const errors = form.formState.errors;
 
   const hasPhotoError = Boolean(errors.photos);
+  const hasQuantityError = Boolean(
+    errors.quantityOption || errors.customQuantity,
+  );
+  const hasBirthdayError = Boolean(errors.birthdays);
+  const hasDeliveryError = Boolean(
+    errors.deliveryMethod || errors.packetaPoint,
+  );
+  const hasContactError = Boolean(
+    errors.firstName ||
+      errors.lastName ||
+      errors.email ||
+      errors.phone,
+  );
   const hasTermsError = Boolean(errors.termsAccepted);
   const hasTurnstileError =
     Boolean(turnstileSiteKey) &&
     !turnstileToken &&
     form.formState.isSubmitted;
+  const hasSubmitError = Boolean(submitError);
   const turnstileConfigured = Boolean(turnstileSiteKey);
   const canSubmitWithTurnstile = !turnstileConfigured || Boolean(turnstileToken);
   const selectedDeliveryMethod = form.watch("deliveryMethod");
@@ -130,17 +153,40 @@ export default function OrderForm() {
         shouldDirty: true,
       });
     }
+
+    if (selectedCalendarType !== "premium") {
+      form.setValue("birthdays", [], {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+      form.setValue("namedays", [], {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
   }, [selectedCalendarType, form]);
+
+  useEffect(() => {
+    if (!submitError) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      document
+        .querySelector("[data-submit-error='true']")
+        ?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }, [submitError]);
 
   function resetOrderFormState() {
     clearOrderFormDraft();
     form.reset(orderFormDefaultValues);
-    setTurnstileToken("");
+    resetTurnstile();
     setDiscountCodeTouched(false);
     setSubmitError(null);
   }
 
-  function scrollToFirstError(errors: unknown) {
+  function scrollToErrorSection() {
     requestAnimationFrame(() => {
       const firstInvalidElement = document.querySelector(
         "[data-error-section='true']",
@@ -189,8 +235,8 @@ export default function OrderForm() {
         quantity,
 
         photos: uploaded.photos,
-        birthdays: values.birthdays,
-        namedays: values.namedays,
+        birthdays: values.types === "premium" ? values.birthdays : [],
+        namedays: values.types === "premium" ? values.namedays : [],
 
         deliveryMethod: values.deliveryMethod,
         packetaPoint:
@@ -232,6 +278,7 @@ export default function OrderForm() {
     } catch (error) {
       console.error("ORDER_SUBMIT_ERROR:", error);
 
+      resetTurnstile();
       setSubmitError(
         "Objednávku sa nepodarilo odoslať. Skúste to prosím znova alebo nás kontaktujte.",
       );
@@ -256,7 +303,7 @@ export default function OrderForm() {
       </div>
 
       <form
-        onSubmit={form.handleSubmit(onSubmit, scrollToFirstError)}
+        onSubmit={form.handleSubmit(onSubmit, scrollToErrorSection)}
         id="order-form"
         className="grid gap-4 pb-24 lg:grid-cols-[1fr_360px] lg:pb-0 lg:pt-8"
       >
@@ -277,24 +324,26 @@ export default function OrderForm() {
             />
           </OrderSection>
 
-          <OrderSection
-            step="2"
-            title="Počet kusov"
-            description="Pri viacerých rovnakých kusoch sa automaticky použije výhodnejšia cena za kus."
-          >
-            <FormQuantity
-              control={form.control}
-              name="quantityOption"
-              label="Počet kusov"
-              selectedCalendarType={selectedCalendarType}
-            />
-          </OrderSection>
+          <div data-error-section={hasQuantityError ? "true" : undefined}>
+            <OrderSection
+              step="2"
+              title="Počet kusov"
+              description="Pri viacerých rovnakých kusoch sa automaticky použije výhodnejšia cena za kus."
+            >
+              <FormQuantity
+                control={form.control}
+                name="quantityOption"
+                label="Počet kusov"
+                selectedCalendarType={selectedCalendarType}
+              />
+            </OrderSection>
+          </div>
 
           <div data-error-section={hasPhotoError ? "true" : undefined}>
             <OrderSection
               step="3"
               title="Fotky"
-              description={`Nahrajte minimálne ${MIN_PHOTOS}, ideálne aspoň 30. Vďaka väčšiemu počtu fotiek budú jednotlivé mesiace pestrejšie."`}
+              description={`Nahrajte minimálne ${MIN_PHOTOS}, ideálne aspoň 30. Vďaka väčšiemu počtu fotiek budú jednotlivé mesiace pestrejšie.`}
             >
               <Controller
                 name="photos"
@@ -327,15 +376,17 @@ export default function OrderForm() {
 
           {selectedCalendarType === "premium" && (
             <>
-              <OrderSection
-                step="4"
-                title="Dôležité narodeniny"
-                description="Doplňte narodeniny, ktoré chcete mať v kalendári zvýraznené."
-              >
-                <div className="space-y-8">
-                  <BirthdaysFieldArray control={form.control} />
-                </div>
-              </OrderSection>
+              <div data-error-section={hasBirthdayError ? "true" : undefined}>
+                <OrderSection
+                  step="4"
+                  title="Dôležité narodeniny"
+                  description="Doplňte narodeniny, ktoré chcete mať v kalendári zvýraznené."
+                >
+                  <div className="space-y-8">
+                    <BirthdaysFieldArray control={form.control} />
+                  </div>
+                </OrderSection>
+              </div>
               <OrderSection
                 step="5"
                 title="Dôležité meniny"
@@ -347,71 +398,77 @@ export default function OrderForm() {
               </OrderSection>
             </>
           )}
-          <OrderSection
-            step={selectedCalendarType === "premium" ? "6" : "4"}
-            title="Doručenie"
-            description="Vyberte, či si kalendár prevezmete osobne v Košiciach alebo cez Packetu."
-          >
-            <FormDeliveryMethod control={form.control} />
+          <div data-error-section={hasDeliveryError ? "true" : undefined}>
+            <OrderSection
+              step={selectedCalendarType === "premium" ? "6" : "4"}
+              title="Doručenie"
+              description="Vyberte, či si kalendár prevezmete osobne v Košiciach alebo cez Packetu."
+            >
+              <FormDeliveryMethod control={form.control} />
 
-            {form.watch("deliveryMethod") === "packeta" && (
-              <Controller
-                control={form.control}
-                name="packetaPoint"
-                render={({ field, fieldState }) => (
-                  <Field data-invalid={fieldState.invalid}>
-                    <PacketaPicker
-                      value={field.value}
-                      onChange={field.onChange}
-                      disabled={isSubmitting}
-                    />
+              {form.watch("deliveryMethod") === "packeta" && (
+                <Controller
+                  control={form.control}
+                  name="packetaPoint"
+                  render={({ field, fieldState }) => (
+                    <Field data-invalid={fieldState.invalid}>
+                      <PacketaPicker
+                        value={field.value}
+                        onChange={field.onChange}
+                        disabled={isSubmitting}
+                      />
 
-                    {fieldState.error && (
-                      <FieldError errors={[fieldState.error]} />
-                    )}
-                  </Field>
-                )}
-              />
-            )}
-          </OrderSection>
-          <OrderSection
-            step={selectedCalendarType === "premium" ? "7" : "5"}
-            title="Kontaktné údaje"
-            description="Tieto údaje použijeme len na spracovanie objednávky."
-          >
-            <FieldGroup className="grid gap-4 md:grid-cols-2">
-              <FormInput
-                control={form.control}
-                name="firstName"
-                label="Meno"
-                type="text"
-                placeholder="Ján"
-              />
-              <FormInput
-                control={form.control}
-                name="lastName"
-                label="Priezvisko"
-                type="text"
-                placeholder="Novák"
-              />
-              <FormInput
-                control={form.control}
-                name="email"
-                label="E-mail"
-                autoComplete="email"
-                type="email"
-                placeholder="jan.novak@gmail.com"
-              />
-              <FormInput
-                control={form.control}
-                name="phone"
-                label="Telefónne číslo"
-                autoComplete="phone"
-                type="tel"
-                placeholder="+421 9xx xxx xxx"
-              />
-            </FieldGroup>
-          </OrderSection>
+                      {fieldState.error && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
+                    </Field>
+                  )}
+                />
+              )}
+            </OrderSection>
+          </div>
+          <div data-error-section={hasContactError ? "true" : undefined}>
+            <OrderSection
+              step={selectedCalendarType === "premium" ? "7" : "5"}
+              title="Kontaktné údaje"
+              description="Tieto údaje použijeme len na spracovanie objednávky."
+            >
+              <FieldGroup className="grid gap-4 md:grid-cols-2">
+                <FormInput
+                  control={form.control}
+                  name="firstName"
+                  label="Meno"
+                  type="text"
+                  autoComplete="given-name"
+                  placeholder="Ján"
+                />
+                <FormInput
+                  control={form.control}
+                  name="lastName"
+                  label="Priezvisko"
+                  type="text"
+                  autoComplete="family-name"
+                  placeholder="Novák"
+                />
+                <FormInput
+                  control={form.control}
+                  name="email"
+                  label="E-mail"
+                  autoComplete="email"
+                  type="email"
+                  placeholder="jan.novak@gmail.com"
+                />
+                <FormInput
+                  control={form.control}
+                  name="phone"
+                  label="Telefónne číslo"
+                  autoComplete="tel"
+                  type="tel"
+                  placeholder="+421 9xx xxx xxx"
+                />
+              </FieldGroup>
+            </OrderSection>
+          </div>
 
           <OrderSection
             step={selectedCalendarType === "premium" ? "8" : "6"}
@@ -473,7 +530,9 @@ export default function OrderForm() {
               }}
               deliveryMethod={selectedDeliveryMethod}
             />
-            <FormConsentCheckbox control={form.control} className="px-5" />
+            <div data-error-section={hasTermsError ? "true" : undefined}>
+              <FormConsentCheckbox control={form.control} className="px-5" />
+            </div>
 
             {turnstileConfigured ? (
               <div
@@ -481,6 +540,7 @@ export default function OrderForm() {
                 className="px-6"
               >
                 <TurnstileWidget
+                  ref={turnstileRef}
                   siteKey={turnstileSiteKey}
                   onToken={(token) => setTurnstileToken(token)}
                   onExpired={() => setTurnstileToken("")}
@@ -518,8 +578,12 @@ export default function OrderForm() {
                 )}
               </Button>
             </div>
-            {submitError && (
-              <p className="mx-5 mb-6 rounded-md border border-[#FC5A61]/30 bg-[#FFF7F4] p-3 text-sm font-semibold text-[#FC5A61]">
+            {hasSubmitError && (
+              <p
+                data-submit-error="true"
+                data-error-section="true"
+                className="mx-5 mb-6 rounded-md border border-[#FC5A61]/30 bg-[#FFF7F4] p-3 text-sm font-semibold text-[#FC5A61]"
+              >
                 {submitError}
               </p>
             )}

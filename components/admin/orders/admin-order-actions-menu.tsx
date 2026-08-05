@@ -1,7 +1,7 @@
 "use client";
 
 import { MoreHorizontal } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 import { OrderRow } from "@/app/types/types";
 import { Button } from "@/components/ui/button";
@@ -15,16 +15,18 @@ import {
 import { AdminDeleteOrderButton } from "../admin-delete-order-button";
 import { AdminOrderJsonPreview } from "./admin-order-json-preview";
 
+const emptySubscribe = () => () => {};
+
 type AdminOrderActionsMenuProps = {
   order: OrderRow;
 };
 
 export function AdminOrderActionsMenu({ order }: AdminOrderActionsMenuProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
 
   if (!mounted) {
     return (

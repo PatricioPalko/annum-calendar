@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 
-import { isAdminEmail } from "@/lib/auth/admin";
+import { isAdminEmail, isAdminMutationOriginAllowed } from "@/lib/auth/admin";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export async function POST() {
+export async function POST(request: Request) {
+  if (!isAdminMutationOriginAllowed(request)) {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
+
   const supabase = await createSupabaseServerClient();
 
   const {

@@ -60,7 +60,6 @@ export function GallerySection() {
                   src={mainImage.src}
                   alt={mainImage.alt}
                   fill
-                  priority
                   sizes="(min-width: 1024px) 60vw, 100vw"
                   className="object-contain"
                 />
@@ -69,7 +68,7 @@ export function GallerySection() {
           </article>
 
           <div className="grid gap-6 sm:grid-cols-3 lg:grid-cols-1">
-            {detailImages.map((image, index) => (
+            {detailImages.map((image) => (
               <article key={image.src} className="relative">
                 <Text
                   variant="caption"

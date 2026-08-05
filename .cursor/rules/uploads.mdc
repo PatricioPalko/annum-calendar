@@ -8,6 +8,6 @@ alwaysApply: false
 
 - Keep the signed upload flow: sign → client upload → finalize. Do not switch to direct service-role uploads from the browser.
 - Preserve MIME/extension allowlists, `MAX_FILE_SIZE`, `MAX_PHOTOS` / `MIN_PHOTOS`, rate limits, and Turnstile on sign.
-- Signing secrets (`UPLOAD_SIGNING_SECRET`, service role) stay server-side only; never expose them via `NEXT_PUBLIC_`.
+- Signing secrets (`UPLOAD_SIGNING_SECRET`, `ORDER_PAYMENT_SIGNING_SECRET`, service role) stay server-side only; never expose them via `NEXT_PUBLIC_`.
 - Validate finalize tokens and storage paths before creating orders from uploaded files.
 - Reuse `helpers/order-code` and existing upload helpers instead of inventing a parallel storage layout.

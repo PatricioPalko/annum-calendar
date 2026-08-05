@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { isAdminEmail } from "@/lib/auth/admin";
+import { isAdminEmail, isAdminMutationOriginAllowed } from "@/lib/auth/admin";
 import { createPacketaPacket, isPacketaConfigured, PacketaApiError } from "@/lib/packeta";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -11,7 +11,11 @@ type RouteParams = {
   }>;
 };
 
-export async function POST(_request: Request, { params }: RouteParams) {
+export async function POST(request: Request, { params }: RouteParams) {
+  if (!isAdminMutationOriginAllowed(request)) {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
+
   const { orderId } = await params;
 
   const supabase = await createSupabaseServerClient();
@@ -48,6 +52,7 @@ export async function POST(_request: Request, { params }: RouteParams) {
         total_price,
         delivery_price,
         delivery_method,
+        payment_status,
         packeta_point_id,
         tracking_number
       `,
@@ -59,6 +64,13 @@ export async function POST(_request: Request, { params }: RouteParams) {
     return NextResponse.json(
       { message: "Objednávka neexistuje." },
       { status: 404 },
+    );
+  }
+
+  if (order.payment_status !== "paid") {
+    return NextResponse.json(
+      { message: "Packeta zásielku je možné vytvoriť len pre zaplatené objednávky." },
+      { status: 400 },
     );
   }
 

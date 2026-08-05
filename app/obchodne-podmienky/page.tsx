@@ -1,4 +1,13 @@
 import { Heading, Text } from "@/components/ui/typography";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Obchodné podmienky",
+  description: "Obchodné podmienky e-shopu Annum — personalizované A3 kalendáre.",
+  alternates: {
+    canonical: "/obchodne-podmienky",
+  },
+};
 
 const CONTACT_EMAIL = "info@annum.sk";
 const BUSINESS_NAME = "Ing. Laura Palková - LP GRAPHIC DESIGN";

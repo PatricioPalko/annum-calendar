@@ -1,5 +1,15 @@
 import OrderForm from "@/components/sections/order-form";
 import { Heading } from "@/components/ui/typography";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Objednávka",
+  description:
+    "Vytvor si personalizovaný A3 nástenný kalendár z fotiek. Vyber variant, nahraj fotky a dokonči objednávku.",
+  alternates: {
+    canonical: "/objednavka",
+  },
+};
 
 export default function KalendarPage() {
   return (

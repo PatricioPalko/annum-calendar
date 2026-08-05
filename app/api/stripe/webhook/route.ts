@@ -56,6 +56,7 @@ export async function POST(request: Request) {
     const session = event.data.object as Stripe.Checkout.Session;
     const orderId = session.metadata?.orderId;
 
+    // Only fail the order when THIS session is still the active checkout session.
     if (orderId) {
       const { error } = await supabaseAdmin
         .from("orders")
@@ -63,10 +64,16 @@ export async function POST(request: Request) {
           payment_status: "failed",
         })
         .eq("id", orderId)
+        .eq("stripe_checkout_session_id", session.id)
         .neq("payment_status", "paid");
 
       if (error) {
         console.error("STRIPE_SESSION_EXPIRED_UPDATE_ERROR:", error);
+
+        return NextResponse.json(
+          { message: "Failed to mark expired checkout session." },
+          { status: 500 },
+        );
       }
     }
   }

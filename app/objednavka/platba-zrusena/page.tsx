@@ -1,6 +1,9 @@
 import Link from "next/link";
 
-import { buildOrderPaymentPath } from "@/lib/order-payment-token";
+import {
+  buildOrderPaymentPath,
+  verifyOrderPaymentToken,
+} from "@/lib/order-payment-token";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Metadata } from "next";
 
@@ -16,7 +19,10 @@ export const metadata: Metadata = {
 
 type PageProps = {
   searchParams: Promise<{
+    orderId?: string;
+    /** @deprecated legacy cancel URLs used name-based order_code */
     order?: string;
+    token?: string;
   }>;
 };
 
@@ -24,19 +30,34 @@ export default async function PaymentCancelledPage({
   searchParams,
 }: PageProps) {
   const params = await searchParams;
-  const orderCode = params.order;
+  const orderId = params.orderId;
+  const legacyOrderCode = params.order;
+  const token = params.token;
 
   let paymentPath: string | null = null;
+  let displayOrderCode: string | null = null;
 
-  if (orderCode) {
-    const { data: order } = await supabaseAdmin
-      .from("orders")
-      .select("id, order_code, payment_status")
-      .eq("order_code", orderCode)
-      .maybeSingle();
+  // Require a valid payment token — never mint pay capability from identifiers alone.
+  if (token && (orderId || legacyOrderCode)) {
+    const { data: order } = orderId
+      ? await supabaseAdmin
+          .from("orders")
+          .select("id, order_code, payment_status")
+          .eq("id", orderId)
+          .maybeSingle()
+      : await supabaseAdmin
+          .from("orders")
+          .select("id, order_code, payment_status")
+          .eq("order_code", legacyOrderCode!)
+          .maybeSingle();
 
-    if (order?.order_code && order.payment_status !== "paid") {
+    if (
+      order?.order_code &&
+      order.payment_status !== "paid" &&
+      verifyOrderPaymentToken(order.id, order.order_code, token)
+    ) {
       paymentPath = buildOrderPaymentPath(order.id, order.order_code);
+      displayOrderCode = order.order_code;
     }
   }
 
@@ -51,15 +72,16 @@ export default async function PaymentCancelledPage({
           Objednávku máte uloženú
         </h1>
 
-        {orderCode && (
+        {paymentPath && displayOrderCode && (
           <p className="mt-4 text-sm font-semibold text-[#3E0F28]/65">
-            Číslo objednávky: {orderCode}
+            Číslo objednávky: {displayOrderCode}
           </p>
         )}
 
         <p className="mt-4 text-base font-medium leading-7 text-[#3E0F28]/70">
-          Platbu môžete skúsiť znova. Vaše nahraté fotky aj údaje zostali
-          uložené, objednávku nemusíte vypĺňať odznova.
+          {paymentPath
+            ? "Platbu môžete skúsiť znova. Vaše nahraté fotky aj údaje zostali uložené, objednávku nemusíte vypĺňať odznova."
+            : "Platbu môžete dokončiť cez odkaz v e-maile k objednávke. Vaše nahraté fotky aj údaje zostali uložené."}
         </p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">

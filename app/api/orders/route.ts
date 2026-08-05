@@ -3,8 +3,15 @@ import {
   getCalendarPrice,
   getQuantityOptionFromQuantity,
 } from "@/app/types/types";
+import { isValidCalendarDayMonth } from "@/helpers/calendar-date";
 import { getDeliveryPrice } from "@/helpers/delivery";
 import { getDiscountAmount } from "@/helpers/discount-codes";
+import { isStorageFolderForOrderNumber } from "@/helpers/order-code";
+import {
+  isValidSlovakPhone,
+  normalizePhone,
+} from "@/helpers/phone";
+import { getOrCreateOrderCheckoutSession } from "@/lib/order-checkout";
 import { sendOrderCreatedEmail } from "@/lib/order-emails";
 import { buildOrderPaymentUrl } from "@/lib/order-payment-token";
 import {
@@ -12,10 +19,9 @@ import {
   getClientIp,
   rateLimitResponse,
 } from "@/lib/rate-limit";
-import { stripe } from "@/lib/stripe";
+import { verifyFinalizeToken } from "@/lib/upload-finalize-token";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
-import crypto from "node:crypto";
 import { z } from "zod";
 
 import { MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
@@ -42,7 +48,13 @@ const orderBodySchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   email: z.email(),
-  phone: z.string().optional(),
+  phone: z
+    .string()
+    .trim()
+    .transform((value) => normalizePhone(value))
+    .refine((value) => isValidSlovakPhone(value), {
+      message: "Zadajte platné slovenské telefónne číslo.",
+    }),
   note: z.string().optional(),
 
   type: z.enum(["basic", "premium", "business"]),
@@ -72,56 +84,6 @@ const orderBodySchema = z.object({
   discountCode: z.string().max(40).optional(),
 });
 
-function verifyFinalizeToken(values: {
-  storageFolder: string;
-  photoPaths: string[];
-  token: string;
-}) {
-  const secret = process.env.UPLOAD_SIGNING_SECRET;
-
-  if (!secret) {
-    throw new Error("Missing UPLOAD_SIGNING_SECRET");
-  }
-
-  const [expiresAtStr, signature] = values.token.split(".");
-  const expiresAt = Number(expiresAtStr);
-
-  if (!Number.isFinite(expiresAt) || !signature) {
-    return false;
-  }
-
-  if (Math.floor(Date.now() / 1000) > expiresAt) {
-    return false;
-  }
-
-  const canonicalPaths = [...values.photoPaths].sort();
-  const payload = `${values.storageFolder}|${canonicalPaths.join(",")}|${expiresAt}`;
-
-  const expected = crypto
-    .createHmac("sha256", secret)
-    .update(payload)
-    .digest("base64url");
-
-  try {
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expected),
-    );
-  } catch {
-    return false;
-  }
-}
-
-function isValidCalendarDayMonth(day: number, month: number) {
-  const date = new Date(Date.UTC(2024, month - 1, day));
-
-  return (
-    date.getUTCFullYear() === 2024 &&
-    date.getUTCMonth() === month - 1 &&
-    date.getUTCDate() === day
-  );
-}
-
 function getCalendarTypeLabel(type: "basic" | "premium" | "business") {
   const labels = {
     basic: "Basic",
@@ -134,7 +96,7 @@ function getCalendarTypeLabel(type: "basic" | "premium" | "business") {
 
 export async function POST(request: Request) {
   const ip = getClientIp(request);
-  const rate = consumeRateLimit("orders-create", ip, {
+  const rate = await consumeRateLimit("orders-create", ip, {
     windowMs: 10 * 60 * 1000,
     max: 5,
   });
@@ -202,6 +164,22 @@ export async function POST(request: Request) {
     }
   }
 
+  if (
+    !isStorageFolderForOrderNumber(values.storageFolder, values.orderNumber)
+  ) {
+    return NextResponse.json(
+      {
+        message: "Invalid order payload",
+        errors: {
+          fieldErrors: {
+            orderNumber: ["Neplatné číslo objednávky pre úložisko fotiek."],
+          },
+        },
+      },
+      { status: 400 },
+    );
+  }
+
   for (const photo of values.photos) {
     if (!photo.path.startsWith(`${values.storageFolder}/`)) {
       return NextResponse.json(
@@ -235,6 +213,8 @@ export async function POST(request: Request) {
   if (
     !verifyFinalizeToken({
       storageFolder: values.storageFolder,
+      orderNumber: values.orderNumber,
+      orderCode: values.orderCode,
       photoPaths: values.photos.map((photo) => photo.path),
       token: values.finalizeToken,
     })
@@ -251,6 +231,9 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+
+  const birthdays = values.type === "premium" ? values.birthdays : [];
+  const namedays = values.type === "premium" ? values.namedays : [];
 
   const quantityOption = getQuantityOptionFromQuantity(values.quantity);
 
@@ -299,8 +282,8 @@ export async function POST(request: Request) {
       payment_status: "pending",
 
       photos: values.photos,
-      birthdays: values.birthdays,
-      namedays: values.namedays,
+      birthdays,
+      namedays,
 
       delivery_method: values.deliveryMethod,
       delivery_price: deliveryPrice,
@@ -327,55 +310,44 @@ export async function POST(request: Request) {
     );
   }
 
-  const checkoutSession = await stripe.checkout.sessions.create({
-    mode: "payment",
-    customer_email: values.email,
-    client_reference_id: data.id,
-
-    line_items: [
-      {
-        quantity: 1,
-        price_data: {
-          currency: "eur",
-          unit_amount: Math.round(finalTotalPrice * 100),
-          product_data: {
-            name: "Personalizovaný A3 nástenný kalendár",
-            description: `${getCalendarTypeLabel(values.type)} · ${
-              values.quantity
-            } ks · ${values.deliveryMethod === "packeta" ? "Packeta" : "Osobný odber KE"} · ${
-              data.order_code
-            }`,
-          },
-        },
-      },
-    ],
-
-    metadata: {
-      orderId: data.id,
-      orderCode: data.order_code,
+  const checkoutResult = await getOrCreateOrderCheckoutSession({
+    order: {
+      id: data.id,
+      order_code: data.order_code,
+      email: values.email,
+      calendar_type: values.type,
+      quantity: values.quantity,
+      total_price: finalTotalPrice,
+      delivery_method: values.deliveryMethod,
+      stripe_checkout_session_id: null,
     },
-
-    success_url: `${appUrl}/objednavka/dakujeme?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${appUrl}/objednavka/platba-zrusena?order=${encodeURIComponent(
-      data.order_code,
-    )}`,
-
-    after_expiration: {
-      recovery: {
-        enabled: true,
-      },
-    },
+    appUrl,
+    productDescription: `${getCalendarTypeLabel(values.type)} · ${
+      values.quantity
+    } ks · ${values.deliveryMethod === "packeta" ? "Packeta" : "Osobný odber KE"} · ${
+      data.order_code
+    }`,
   });
 
-  const { error: paymentUpdateError } = await supabaseAdmin
-    .from("orders")
-    .update({
-      stripe_checkout_session_id: checkoutSession.id,
-    })
-    .eq("id", data.id);
+  if (checkoutResult.status !== "ok") {
+    console.error("CREATE_ORDER_CHECKOUT_ERROR:", checkoutResult);
 
-  if (paymentUpdateError) {
-    console.error("STRIPE_SESSION_UPDATE_ERROR:", paymentUpdateError);
+    const { error: cleanupError } = await supabaseAdmin
+      .from("orders")
+      .delete()
+      .eq("id", data.id)
+      .eq("payment_status", "pending");
+
+    if (cleanupError) {
+      console.error("CREATE_ORDER_CHECKOUT_CLEANUP_ERROR:", cleanupError);
+    }
+
+    return NextResponse.json(
+      {
+        message: "Platbu sa nepodarilo spustiť. Skúste to prosím znova.",
+      },
+      { status: 500 },
+    );
   }
 
   try {
@@ -394,8 +366,8 @@ export async function POST(request: Request) {
       calendarType: values.type,
       quantity: values.quantity,
       photoCount: values.photos.length,
-      birthdaysCount: values.birthdays.length,
-      namedaysCount: values.namedays.length,
+      birthdaysCount: birthdays.length,
+      namedaysCount: namedays.length,
       note: values.note?.trim() || null,
       paymentUrl,
       delivery: {
@@ -419,6 +391,6 @@ export async function POST(request: Request) {
     orderId: data.id,
     orderCode: data.order_code,
     storageFolder: data.storage_folder,
-    checkoutUrl: checkoutSession.url,
+    checkoutUrl: checkoutResult.url,
   });
 }

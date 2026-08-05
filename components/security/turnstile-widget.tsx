@@ -1,7 +1,13 @@
 "use client";
 
 import Script from "next/script";
-import { useEffect, useId, useRef } from "react";
+import {
+  forwardRef,
+  useEffect,
+  useId,
+  useImperativeHandle,
+  useRef,
+} from "react";
 
 declare global {
   interface Window {
@@ -31,16 +37,28 @@ type TurnstileWidgetProps = {
   className?: string;
 };
 
-export function TurnstileWidget({
-  siteKey,
-  onToken,
-  onExpired,
-  onError,
-  className,
-}: TurnstileWidgetProps) {
+export type TurnstileWidgetHandle = {
+  reset: () => void;
+};
+
+export const TurnstileWidget = forwardRef<
+  TurnstileWidgetHandle,
+  TurnstileWidgetProps
+>(function TurnstileWidget(
+  { siteKey, onToken, onExpired, onError, className },
+  ref,
+) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const widgetIdRef = useRef<string | null>(null);
   const renderId = useId();
+
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      if (widgetIdRef.current && window.turnstile) {
+        window.turnstile.reset(widgetIdRef.current);
+      }
+    },
+  }));
 
   useEffect(() => {
     const container = containerRef.current;
@@ -81,4 +99,4 @@ export function TurnstileWidget({
       <div ref={containerRef} />
     </div>
   );
-}
+});

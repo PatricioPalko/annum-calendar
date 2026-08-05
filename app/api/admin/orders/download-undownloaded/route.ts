@@ -2,7 +2,7 @@ import JSZip from "jszip";
 import { NextResponse } from "next/server";
 import sharp from "sharp";
 
-import { isAdminEmail } from "@/lib/auth/admin";
+import { isAdminEmail, isAdminMutationOriginAllowed } from "@/lib/auth/admin";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -55,7 +55,11 @@ async function convertImageToJpg(input: ArrayBuffer) {
   };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  if (!isAdminMutationOriginAllowed(request)) {
+    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
+  }
+
   const supabase = await createSupabaseServerClient();
 
   const {

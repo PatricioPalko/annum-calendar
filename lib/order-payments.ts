@@ -2,6 +2,7 @@ import type Stripe from "stripe";
 
 import { sendOrderPaidEmail } from "@/lib/order-emails";
 import { syncPacketaPacketForOrder } from "@/lib/packeta";
+import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 type PaidOrderRow = {
@@ -23,6 +24,7 @@ type PaidOrderRow = {
   packeta_point_address: string | null;
   tracking_number: string | null;
   payment_status: string | null;
+  stripe_checkout_session_id: string | null;
   discount_code: string | null;
   discount_amount: number | string | null;
   photos: unknown[] | null;
@@ -49,12 +51,102 @@ const paidOrderSelect = `
   packeta_point_address,
   tracking_number,
   payment_status,
+  stripe_checkout_session_id,
   discount_code,
   discount_amount,
   photos,
   birthdays,
   namedays
 `;
+
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+function isAlreadyRefundedError(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const stripeError = error as { code?: string; message?: string };
+
+  if (stripeError.code === "charge_already_refunded") {
+    return true;
+  }
+
+  return (
+    typeof stripeError.message === "string" &&
+    stripeError.message.toLowerCase().includes("already been refunded")
+  );
+}
+
+/**
+ * Refunds a duplicate paid Checkout session.
+ * Returns false when refund could not be confirmed — caller should fail the
+ * webhook so Stripe retries.
+ */
+async function refundDuplicateCheckoutPayment(
+  session: Stripe.Checkout.Session,
+): Promise<boolean> {
+  const paymentIntentId =
+    typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : session.payment_intent?.id;
+
+  if (!paymentIntentId) {
+    console.error("DUPLICATE_PAYMENT_REFUND_SKIPPED:", {
+      sessionId: session.id,
+      reason: "missing_payment_intent",
+    });
+
+    return false;
+  }
+
+  const maxAttempts = 3;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await stripe.refunds.create(
+        {
+          payment_intent: paymentIntentId,
+          reason: "duplicate",
+          metadata: {
+            orderId: session.metadata?.orderId ?? "",
+            checkoutSessionId: session.id,
+          },
+        },
+        {
+          idempotencyKey: `duplicate-refund:${session.id}`,
+        },
+      );
+
+      return true;
+    } catch (error) {
+      if (isAlreadyRefundedError(error)) {
+        return true;
+      }
+
+      if (attempt === maxAttempts) {
+        console.error("DUPLICATE_PAYMENT_REFUND_FAILED:", {
+          sessionId: session.id,
+          paymentIntentId,
+          orderId: session.metadata?.orderId ?? null,
+          attempts: maxAttempts,
+          action: "stripe_webhook_retry",
+          error,
+        });
+
+        return false;
+      }
+
+      await sleep(250 * 2 ** (attempt - 1));
+    }
+  }
+
+  return false;
+}
 
 export type MarkOrderPaidResult =
   | {
@@ -190,9 +282,26 @@ export async function markOrderPaidFromCheckoutSession(
   }
 
   if (existingOrder.payment_status === "paid") {
+    const paidOrder = existingOrder as PaidOrderRow;
+
+    // A second Checkout session was paid after the order was already marked paid.
+    if (
+      session.payment_status === "paid" &&
+      session.id !== paidOrder.stripe_checkout_session_id
+    ) {
+      const refunded = await refundDuplicateCheckoutPayment(session);
+
+      if (!refunded) {
+        return {
+          status: "error",
+          message: "Duplicate payment refund failed.",
+        };
+      }
+    }
+
     return {
       status: "already_paid",
-      order: existingOrder as PaidOrderRow,
+      order: paidOrder,
     };
   }
 
@@ -253,9 +362,24 @@ export async function markOrderPaidFromCheckoutSession(
       .maybeSingle();
 
     if (currentOrder?.payment_status === "paid") {
+      const paidOrder = currentOrder as PaidOrderRow;
+
+      // Concurrent mark-paid race: another session already won — refund this one
+      // when it is a different paid Checkout session.
+      if (session.id !== paidOrder.stripe_checkout_session_id) {
+        const refunded = await refundDuplicateCheckoutPayment(session);
+
+        if (!refunded) {
+          return {
+            status: "error",
+            message: "Duplicate payment refund failed.",
+          };
+        }
+      }
+
       return {
         status: "already_paid",
-        order: currentOrder as PaidOrderRow,
+        order: paidOrder,
       };
     }
 

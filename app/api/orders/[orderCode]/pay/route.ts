@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 
 import { getDeliveryLabel } from "@/helpers/delivery";
+import { getOrCreateOrderCheckoutSession } from "@/lib/order-checkout";
 import { verifyOrderPaymentToken } from "@/lib/order-payment-token";
 import {
   consumeRateLimit,
   getClientIp,
   rateLimitResponse,
 } from "@/lib/rate-limit";
-import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 type RouteParams = {
@@ -31,7 +31,7 @@ function getCalendarTypeLabel(type: string) {
 
 export async function GET(request: Request, { params }: RouteParams) {
   const ip = getClientIp(request);
-  const rate = consumeRateLimit("orders-pay", ip, {
+  const rate = await consumeRateLimit("orders-pay", ip, {
     windowMs: 10 * 60 * 1000,
     max: 10,
   });
@@ -57,18 +57,15 @@ export async function GET(request: Request, { params }: RouteParams) {
   const { data: order, error } = await supabaseAdmin
     .from("orders")
     .select(
-      "id, order_code, email, calendar_type, quantity, total_price, payment_status, delivery_method",
+      "id, order_code, email, calendar_type, quantity, total_price, payment_status, delivery_method, stripe_checkout_session_id",
     )
     .eq("order_code", orderCode)
     .single();
 
-  if (error || !order) {
-    return NextResponse.redirect(
-      new URL("/objednavka?payment=order-not-found", request.url),
-    );
-  }
-
+  // Same redirect for missing order and bad token — avoid order_code oracle.
   if (
+    error ||
+    !order ||
     !verifyOrderPaymentToken(order.id, order.order_code ?? orderCode, token)
   ) {
     return NextResponse.redirect(
@@ -100,60 +97,41 @@ export async function GET(request: Request, { params }: RouteParams) {
     );
   }
 
-  const checkoutSession = await stripe.checkout.sessions.create({
-    mode: "payment",
-    customer_email: order.email,
-    client_reference_id: order.id,
-
-    line_items: [
-      {
-        quantity: 1,
-        price_data: {
-          currency: "eur",
-          unit_amount: Math.round(Number(order.total_price) * 100),
-          product_data: {
-            name: "Personalizovaný A3 nástenný kalendár",
-            description: `${getCalendarTypeLabel(order.calendar_type)} · ${
-              order.quantity
-            } ks · ${getDeliveryLabel(order.delivery_method)} · ${order.order_code}`,
-          },
-        },
-      },
-    ],
-
-    metadata: {
-      orderId: order.id,
-      orderCode: order.order_code,
+  const checkoutResult = await getOrCreateOrderCheckoutSession({
+    order: {
+      id: order.id,
+      order_code: order.order_code ?? orderCode,
+      email: order.email,
+      calendar_type: order.calendar_type,
+      quantity: order.quantity,
+      total_price: Number(order.total_price),
+      delivery_method: order.delivery_method,
+      stripe_checkout_session_id: order.stripe_checkout_session_id,
     },
-
-    success_url: `${appUrl}/objednavka/dakujeme?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${appUrl}/objednavka/platba-zrusena?order=${encodeURIComponent(
-      order.order_code,
-    )}`,
-
-    after_expiration: {
-      recovery: {
-        enabled: true,
-      },
-    },
+    appUrl,
+    productDescription: `${getCalendarTypeLabel(order.calendar_type)} · ${
+      order.quantity
+    } ks · ${
+      order.delivery_method === "packeta" || order.delivery_method === "pickup"
+        ? getDeliveryLabel(order.delivery_method)
+        : "Doručenie"
+    } · ${order.order_code}`,
   });
 
-  const { error: updateError } = await supabaseAdmin
-    .from("orders")
-    .update({
-      stripe_checkout_session_id: checkoutSession.id,
-    })
-    .eq("id", order.id);
-
-  if (updateError) {
-    console.error("STRIPE_RETRY_SESSION_UPDATE_ERROR:", updateError);
+  if (checkoutResult.status === "already_paid") {
+    return NextResponse.redirect(
+      new URL(
+        `/objednavka/dakujeme?order=${encodeURIComponent(order.order_code)}`,
+        request.url,
+      ),
+    );
   }
 
-  if (!checkoutSession.url) {
+  if (checkoutResult.status !== "ok") {
     return NextResponse.redirect(
       new URL("/objednavka?payment=session-error", request.url),
     );
   }
 
-  return NextResponse.redirect(checkoutSession.url);
+  return NextResponse.redirect(checkoutResult.url);
 }

@@ -1,6 +1,7 @@
 import { CookiebotScript } from "@/components/cookiebot/cookiebot-script";
 import { Footer } from "@/components/sections/footer";
 import Navigation from "@/components/sections/navigation";
+import { SiteShell } from "@/components/site-shell";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Fraunces, Manrope } from "next/font/google";
@@ -8,13 +9,13 @@ import "./globals.css";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
-  weight: ["600", "700", "800", "900"],
+  weight: ["700", "800"],
   variable: "--font-fraunces",
 });
 
 const manrope = Manrope({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
   variable: "--font-manrope",
 });
 
@@ -52,7 +53,6 @@ export const metadata: Metadata = {
   publisher: "Annum",
 
   alternates: {
-    canonical: "/",
     languages: {
       sk: "/",
     },
@@ -129,9 +129,9 @@ export default function RootLayout({
         <CookiebotScript />
       </head>
       <body className="min-h-full flex flex-col">
-        <Navigation />
-        {children}
-        <Footer />
+        <SiteShell navigation={<Navigation />} footer={<Footer />}>
+          {children}
+        </SiteShell>
       </body>
     </html>
   );

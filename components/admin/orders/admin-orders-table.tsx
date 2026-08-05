@@ -45,8 +45,6 @@ export function AdminOrdersTable({
   currentSort,
   currentDir,
 }: AdminOrdersTableProps) {
-  let previousDate: string | null = null;
-
   if (orders.length === 0) {
     return (
       <p className="px-4 py-10 text-center text-[#3E0F28]/60">
@@ -54,6 +52,19 @@ export function AdminOrdersTable({
       </p>
     );
   }
+
+  const tableRows = orders.map((order, index) => {
+    const orderDate = formatDate(order.created_at);
+    const previousDate =
+      index > 0 ? formatDate(orders[index - 1]!.created_at) : null;
+
+    return {
+      order,
+      index,
+      orderDate,
+      shouldRenderDateSeparator: orderDate !== previousDate,
+    };
+  });
 
   return (
     <>
@@ -117,12 +128,8 @@ export function AdminOrdersTable({
           </thead>
 
           <tbody className="divide-y divide-[#EAD6DE]">
-            {orders.map((order, index) => {
-              const orderDate = formatDate(order.created_at);
-              const shouldRenderDateSeparator = orderDate !== previousDate;
-              previousDate = orderDate;
-
-              return (
+            {tableRows.map(
+              ({ order, index, orderDate, shouldRenderDateSeparator }) => (
                 <Fragment key={order.id}>
                   {shouldRenderDateSeparator && (
                     <tr>
@@ -137,8 +144,8 @@ export function AdminOrdersTable({
 
                   <AdminOrderRow order={order} index={index} />
                 </Fragment>
-              );
-            })}
+              ),
+            )}
           </tbody>
         </table>
       </div>
