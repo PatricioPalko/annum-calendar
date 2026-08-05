@@ -1,0 +1,13 @@
+---
+description: Preserve SEO metadata and crawlable public content
+globs: app/page.tsx,app/layout.tsx,app/**/page.tsx,app/sitemap.ts,app/robots.ts,app/manifest.ts,components/seo/**/*.{ts,tsx}
+alwaysApply: false
+---
+
+# SEO and public pages
+
+- Preserve existing `metadata` / `metadataBase`, sitemap, robots, and JSON-LD unless the task explicitly changes SEO.
+- Keep public marketing/order pages crawlable: meaningful headings, links, and server-rendered content where already used.
+- Prefer updating `components/seo` helpers over duplicating structured data inline.
+- Do not block indexing of public pages or add `noindex` unless explicitly requested.
+- When changing visible copy or sections, keep heading hierarchy coherent (`h1` → `h2`…).

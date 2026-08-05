@@ -1,0 +1,14 @@
+---
+description: Server boundaries for API routes and external providers
+globs: app/api/**/*.{ts,tsx},lib/**/*.{ts,tsx},middleware.ts
+alwaysApply: false
+---
+
+# API and integrations
+
+- Keep Stripe, Supabase admin, Resend, Packeta, and upload signing behind existing server-side modules in `lib/`.
+- Do not call private external APIs or use service-role keys from React client components.
+- Validate request bodies and external inputs with Zod at the server boundary.
+- Reuse existing patterns: `NextResponse`, rate limiting in `lib/rate-limit`, admin auth in `lib/auth/admin`.
+- Prefer extending the nearest existing adapter (`lib/stripe.ts`, `lib/packeta.ts`, `lib/resend.ts`, `lib/supabase/*`) over creating a parallel integration layer.
+- Return stable, minimal error messages to clients; keep sensitive details server-side only.

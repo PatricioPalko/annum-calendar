@@ -1,0 +1,51 @@
+---
+description: Minimal-change guardrails for every task in this repo
+alwaysApply: true
+---
+
+# Project guardrails
+
+## Scope
+
+- Inspect the relevant existing implementation before editing.
+- Make only the minimal code changes required for the requested functionality.
+- Modify only files directly required by the task.
+- Do not refactor, rename, move, reformat, or clean up unrelated working code.
+- Preserve existing behavior and public APIs unless the task explicitly requires a change.
+- Do not implement speculative features, abstractions, or future-proofing.
+- Do not create fallback implementations that were not requested.
+- Prefer extending existing code over adding new modules, hooks, or helpers.
+
+## Quality checklist
+
+- Prefer changes that improve or preserve security, performance, accessibility, and SEO when they are relevant to the task.
+- Security: validate inputs, keep secrets server-side, avoid leaking PII, respect auth boundaries.
+- Performance: avoid unnecessary client JS, large payloads, redundant fetches, or heavy re-renders.
+- Accessibility: semantic HTML, labels, keyboard use, focus, contrast; reuse accessible `components/ui` primitives.
+- SEO: preserve metadata, headings, links, and crawlable content on public pages unless the task changes them.
+
+## Dependencies
+
+- Prefer the existing stack, dependencies, and project patterns.
+- Do not install, remove, or update packages without explicit approval.
+- Do not modify `package.json` or lockfiles unless explicitly approved.
+- Do not introduce a library when the existing stack can do the job safely.
+
+## Secrets and customer data
+
+- Never read, print, search, copy, modify, or expose `.env*` files, credentials, tokens, private keys, or service-account files.
+- Never include real secrets in code, prompts, logs, tests, fixtures, or docs.
+- Never log complete customer phone numbers, personal data, or full order payloads.
+- Use environment variable names only, never their values.
+- Never expose server-side credentials to client components.
+- Never prefix a secret with `NEXT_PUBLIC_`.
+
+## Editing workflow
+
+- For multi-file changes, briefly state the plan and expected file list first.
+- Do not edit files outside that list unless necessary; explain why first.
+- After implementation, verify the changed functionality still works (run/check the relevant flow or path).
+- Then run lint on the touched scope (`npm run lint` or the narrowest equivalent) and fix issues you introduced.
+- Do not fix unrelated lint, formatting, or type errors.
+- After implementation, report exactly which files changed and what you verified.
+- Stop when the requested task is complete.

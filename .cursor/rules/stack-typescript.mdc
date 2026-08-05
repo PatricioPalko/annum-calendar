@@ -1,0 +1,33 @@
+---
+description: Stick to the existing TypeScript / Next.js stack and conventions
+alwaysApply: true
+---
+
+# Stack and TypeScript
+
+## Locked stack
+
+- Next.js App Router (see `AGENTS.md` / `node_modules/next/dist/docs/` before using Next APIs)
+- React 19 + TypeScript (`strict`)
+- Tailwind CSS 4 + existing tokens/utilities in `app/globals.css`
+- UI: shadcn / Radix (`components/ui`) + `lucide-react` icons + `cn()` from `@/lib/utils`
+- Forms: `react-hook-form` + Zod (`zod` / `@hookform/resolvers`)
+- Backend integrations already in repo: Supabase, Stripe, Resend, Packeta
+
+Do not introduce alternate UI kits, state libraries, CSS frameworks, ORMs, or form libraries.
+
+## TypeScript
+
+- Write TypeScript only for app code; do not add new plain JS modules.
+- Keep `strict` typing; avoid `any`. Prefer existing types in `app/types`, Zod schemas, and inferred types.
+- Use path alias `@/` for imports.
+- Prefer narrowing and Zod validation over type assertions.
+- Reuse helpers in `helpers/` and `lib/` before creating new utilities.
+
+## UI and copy
+
+- Follow existing component structure (`components/sections`, `components/ui`, `components/admin`).
+- Prefer Server Components; add `"use client"` only when interactivity or browser APIs require it.
+- Keep user-facing copy in Slovak unless asked otherwise.
+- Match existing spacing, color, and typography patterns; do not restyle unrelated UI.
+- Extract a reusable component only when the same UI/logic is clearly needed in more than one place, or when it cleanly mirrors an existing pattern. Prefer extending `components/ui` or nearby section components over inventing a parallel abstraction.

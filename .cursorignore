@@ -1,0 +1,20 @@
+# Secrets and env
+.env
+.env.*
+!.env.example
+
+# Build and deps
+.next/
+node_modules/
+out/
+build/
+.vercel/
+
+# Locks and noise
+package-lock.json
+*.tsbuildinfo
+next-env.d.ts
+
+# Local / OS
+.DS_Store
+*.pem

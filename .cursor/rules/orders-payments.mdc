@@ -1,0 +1,14 @@
+---
+description: Order creation, pricing, and Stripe payment safety
+globs: app/api/orders/**/*.ts,app/api/stripe/**/*.ts,lib/order*.ts,lib/order/**/*.ts,lib/stripe.ts,helpers/discount-codes.ts,helpers/delivery.ts
+alwaysApply: false
+---
+
+# Orders and payments
+
+- Keep server-side price calculation as the source of truth. Never trust client-submitted totals, delivery fees, or discount amounts.
+- Reuse existing helpers: `getCalendarPrice`, `getDeliveryPrice`, `getDiscountAmount`, `lib/order-payments`, `lib/order-payment-token`.
+- Preserve Zod validation, rate limiting, finalize-token checks, and Turnstile where the flow already uses them.
+- Stripe webhooks must verify `stripe-signature` via `constructEvent` before any order mutation.
+- Do not weaken payment status transitions or mark orders paid outside the existing Stripe/payment helpers.
+- Return minimal client errors; keep payment secrets and full payloads server-side only.

@@ -1,0 +1,14 @@
+---
+description: Admin auth and privileged order mutations
+globs: app/admin/**/*.{ts,tsx},app/api/admin/**/*.ts,lib/auth/**/*.ts,middleware.ts
+alwaysApply: false
+---
+
+# Admin auth
+
+- Gate admin pages/APIs with existing `requireAdmin` / `isAdminEmail` and middleware matcher for `/admin`.
+- Never add temporary auth bypasses, hardcoded admin emails in client code, or alternate admin cookies.
+- Keep privileged actions (download, complete, delete, Packeta, notify) in `app/api/admin/**`; do not move them to client-only logic.
+- Use `supabaseAdmin` only on the server; browser/client Supabase must stay on the publishable key.
+- Preserve redirect-to-login behavior for unauthenticated or non-admin users.
+- Do not log full order payloads or customer PII in admin tooling.
