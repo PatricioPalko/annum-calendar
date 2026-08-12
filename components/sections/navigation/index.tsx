@@ -1,5 +1,9 @@
-import Link from "next/link";
+"use client";
 
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+
+import { AdminLogoutButton } from "@/components/admin/admin-logout-button";
 import { MobileNavMenu } from "@/components/sections/navigation/mobile-nav-menu";
 import { SectionLink } from "@/components/sections/navigation/section-link";
 import { Button } from "@/components/ui/button";
@@ -24,6 +28,10 @@ const navigationItems = [
 ];
 
 export default function Navigation() {
+  const pathname = usePathname();
+  const isAdminRoute =
+    pathname.startsWith("/admin") && pathname !== "/admin/login";
+
   return (
     <header className="fixed inset-x-0 top-0 z-50 border-b border-[#EAD6DE] bg-[#FFF7F4]/95 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
@@ -51,25 +59,34 @@ export default function Navigation() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button
-            variant="lime"
-            asChild
-            size="sm"
-            className="hidden min-[420px]:inline-flex sm:size-default"
-          >
-            <Link href="/objednavka">Vytvoriť kalendár</Link>
-          </Button>
+          {isAdminRoute ? (
+            <AdminLogoutButton className="hidden sm:inline-flex" />
+          ) : (
+            <>
+              <Button
+                variant="lime"
+                asChild
+                size="sm"
+                className="hidden min-[420px]:inline-flex sm:size-default"
+              >
+                <Link href="/objednavka">Vytvoriť kalendár</Link>
+              </Button>
 
-          <Button
-            variant="lime"
-            asChild
-            size="sm"
-            className="min-[420px]:hidden"
-          >
-            <Link href="/objednavka">Objednať</Link>
-          </Button>
+              <Button
+                variant="lime"
+                asChild
+                size="sm"
+                className="min-[420px]:hidden"
+              >
+                <Link href="/objednavka">Objednať</Link>
+              </Button>
+            </>
+          )}
 
-          <MobileNavMenu items={navigationItems} />
+          <MobileNavMenu
+            items={navigationItems}
+            showLogout={isAdminRoute}
+          />
         </div>
       </div>
     </header>

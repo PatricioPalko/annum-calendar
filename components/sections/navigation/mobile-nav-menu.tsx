@@ -4,14 +4,16 @@ import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
+import { AdminLogoutButton } from "@/components/admin/admin-logout-button";
 import { SectionLink } from "@/components/sections/navigation/section-link";
 import { Button } from "@/components/ui/button";
 
 type MobileNavMenuProps = {
   items: Array<{ label: string; sectionId: string }>;
+  showLogout?: boolean;
 };
 
-export function MobileNavMenu({ items }: MobileNavMenuProps) {
+export function MobileNavMenu({ items, showLogout = false }: MobileNavMenuProps) {
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -61,9 +63,13 @@ export function MobileNavMenu({ items }: MobileNavMenuProps) {
             </SectionLink>
           ))}
 
-          <Button variant="lime" asChild className="mt-2 w-full">
-            <Link href="/objednavka">Vytvoriť kalendár</Link>
-          </Button>
+          {showLogout ? (
+            <AdminLogoutButton className="mt-2 w-full sm:hidden" />
+          ) : (
+            <Button variant="lime" asChild className="mt-2 w-full">
+              <Link href="/objednavka">Vytvoriť kalendár</Link>
+            </Button>
+          )}
         </div>
       </nav>
     </details>

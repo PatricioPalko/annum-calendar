@@ -11,9 +11,9 @@ type SiteShellProps = {
 
 export function SiteShell({ navigation, footer, children }: SiteShellProps) {
   const pathname = usePathname();
-  const isAdminRoute = pathname.startsWith("/admin");
+  const isAdminLogin = pathname === "/admin/login";
 
-  if (isAdminRoute) {
+  if (isAdminLogin) {
     return children;
   }
 
@@ -22,7 +22,7 @@ export function SiteShell({ navigation, footer, children }: SiteShellProps) {
       {navigation}
       <div className="h-16 shrink-0" aria-hidden="true" />
       {children}
-      {footer}
+      {!pathname.startsWith("/admin") && footer}
     </>
   );
 }
