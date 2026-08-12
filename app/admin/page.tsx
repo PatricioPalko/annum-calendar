@@ -1,15 +1,20 @@
-import { AdminBulkDownloadButton } from "@/components/admin/admin-bulk-download-button";
+import { AdminOrdersFilterPersistence } from "@/components/admin/orders/admin-orders-filter-persistence";
+import { AdminOrdersFilters } from "@/components/admin/orders/admin-orders-filters";
 import { AdminOrdersSummary } from "@/components/admin/orders/admin-orders-summary";
 import { AdminOrdersTable } from "@/components/admin/orders/admin-orders-table";
 import { getOrderDiscountAmount } from "@/helpers/admin-orders";
-import { sortOrders } from "@/helpers/admin-table";
+import {
+  filterAdminOrders,
+  getAvailableYears,
+  sortOrders,
+} from "@/helpers/admin-table";
 import { requireAdmin } from "@/lib/auth/admin";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
-import { AdminMarkDownloadedCompletedButton } from "@/components/admin/admin-mark-downloaded-completed-button";
 import { OrderRow, SearchParams, SortKey } from "../types/types";
 
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Admin objednávky",
@@ -30,6 +35,10 @@ export default async function AdminOrdersPage({
 
   const currentSort: SortKey = params.sort ?? "created_at";
   const currentDir: "asc" | "desc" = params.dir ?? "desc";
+  const currentYear = params.year ?? "all";
+  const currentMonth = params.month ?? "all";
+  const currentCalendar = params.calendar ?? "all";
+  const currentDelivery = params.delivery ?? "all";
 
   const { data, error } = await supabaseAdmin.from("orders").select("*");
 
@@ -37,8 +46,15 @@ export default async function AdminOrdersPage({
     throw new Error(error.message);
   }
 
+  const allOrders = (data ?? []) as OrderRow[];
+  const availableYears = getAvailableYears(allOrders);
   const orders = sortOrders(
-    (data ?? []) as OrderRow[],
+    filterAdminOrders(allOrders, {
+      year: currentYear,
+      month: currentMonth,
+      calendar: currentCalendar,
+      delivery: currentDelivery,
+    }),
     currentSort,
     currentDir,
   );
@@ -96,7 +112,7 @@ export default async function AdminOrdersPage({
       className="min-h-screen bg-[#FFF7F4] px-4 py-8 sm:px-6 sm:py-10"
     >
       <div className="mx-auto max-w-7xl">
-        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="mb-8">
           <div>
             <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#FC5A61]">
               Admin
@@ -111,19 +127,32 @@ export default async function AdminOrdersPage({
               · zaplatené {paidCount}
             </p>
           </div>
+        </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row">
-            <AdminBulkDownloadButton disabled={undownloadedCount === 0} />
-            <AdminMarkDownloadedCompletedButton />
-          </div>
+        <div className="mb-6">
+          <Suspense fallback={null}>
+            <AdminOrdersFilterPersistence />
+            <AdminOrdersFilters
+              availableYears={availableYears}
+              currentYear={currentYear}
+              currentMonth={currentMonth}
+              currentCalendar={currentCalendar}
+              currentDelivery={currentDelivery}
+              undownloadedCount={undownloadedCount}
+            />
+          </Suspense>
         </div>
 
         <div className="overflow-hidden rounded-2xl border border-[#EAD6DE] bg-white shadow-xl shadow-[#3E0F28]/10">
           <AdminOrdersTable
-              orders={orders}
-              currentSort={currentSort}
-              currentDir={currentDir}
-            />
+            orders={orders}
+            currentSort={currentSort}
+            currentDir={currentDir}
+            currentYear={currentYear}
+            currentMonth={currentMonth}
+            currentCalendar={currentCalendar}
+            currentDelivery={currentDelivery}
+          />
           <AdminOrdersSummary
             ordersCount={orders.length}
             paidCount={paidCount}

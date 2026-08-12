@@ -5,17 +5,22 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type AdminDownloadButtonProps = {
   orderId: string;
   fileName: string;
   disabled?: boolean;
+  labeled?: boolean;
+  label?: string;
 };
 
 export function AdminDownloadButton({
   orderId,
   fileName,
   disabled = false,
+  labeled = false,
+  label = "Stiahnuť podklady",
 }: AdminDownloadButtonProps) {
   const router = useRouter();
   const [isDownloading, setIsDownloading] = useState(false);
@@ -60,6 +65,26 @@ export function AdminDownloadButton({
     }
   }
 
+  if (labeled) {
+    return (
+      <Button
+        type="button"
+        variant="default"
+        size="sm"
+        onClick={handleDownload}
+        disabled={disabled || isDownloading}
+        className="h-6 gap-1.5 px-2 text-[10px] tracking-normal normal-case"
+      >
+        {isDownloading ? (
+          <Loader2 className="size-2.5 animate-spin" />
+        ) : (
+          <DownloadIcon className="size-2.5" />
+        )}
+        {label}
+      </Button>
+    );
+  }
+
   return (
     <Button
       type="button"
@@ -69,12 +94,12 @@ export function AdminDownloadButton({
       disabled={disabled || isDownloading}
       title="Stiahnuť podklady"
       aria-label="Stiahnuť podklady"
-      className="size-8 rounded-md"
+      className={cn("size-5 rounded-md p-0 [&_svg]:size-2.5")}
     >
       {isDownloading ? (
-        <Loader2 className="size-4 animate-spin" />
+        <Loader2 className="size-2.5 animate-spin" />
       ) : (
-        <DownloadIcon className="size-4" />
+        <DownloadIcon className="size-2.5" />
       )}
     </Button>
   );

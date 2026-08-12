@@ -30,7 +30,7 @@ export function getDeliveryLabel(method?: string | null) {
       return "Packeta";
     case "pickup":
     default:
-      return "Osobný odber";
+      return "Odber";
   }
 }
 

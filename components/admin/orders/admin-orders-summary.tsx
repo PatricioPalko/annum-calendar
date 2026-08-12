@@ -24,7 +24,7 @@ export function AdminOrdersSummary({
   customPriceCount,
 }: AdminOrdersSummaryProps) {
   return (
-    <div className="mt-12 border-t border-[#EAD6DE] bg-white shadow-lg shadow-[#3E0F28]/5">
+    <div className="border-t border-[#EAD6DE] bg-white shadow-lg shadow-[#3E0F28]/5">
       <div className="grid md:grid-cols-4">
         <div className="p-5">
           <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#FC5A61]">

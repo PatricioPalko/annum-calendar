@@ -255,6 +255,10 @@ export type SortKey =
 export type SearchParams = Promise<{
   sort?: SortKey;
   dir?: "asc" | "desc";
+  year?: string;
+  month?: string;
+  calendar?: string;
+  delivery?: string;
 }>;
 
 export type OrderRow = {

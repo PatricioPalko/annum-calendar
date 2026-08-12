@@ -10,7 +10,6 @@ type AdminOrderDeliveryProps = {
 
 export function AdminOrderDelivery({ order }: AdminOrderDeliveryProps) {
   const isPacketa = order.delivery_method === "packeta";
-  const deliveryPrice = Number(order.delivery_price ?? 0);
 
   return (
     <div className="max-w-52 space-y-1.5 text-xs font-semibold text-[#3E0F28]/70">

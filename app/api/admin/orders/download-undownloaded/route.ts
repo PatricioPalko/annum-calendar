@@ -75,6 +75,7 @@ export async function GET(request: Request) {
     .from("orders")
     .select("*")
     .eq("payment_status", "paid")
+    .is("downloaded_at", null)
     .neq("status", "completed")
     .order("created_at", { ascending: true });
 

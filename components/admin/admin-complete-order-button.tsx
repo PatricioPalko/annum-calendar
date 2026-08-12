@@ -5,15 +5,20 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type AdminCompleteOrderButtonProps = {
   orderId: string;
   disabled?: boolean;
+  labeled?: boolean;
+  label?: string;
 };
 
 export function AdminCompleteOrderButton({
   orderId,
   disabled = false,
+  labeled = false,
+  label = "Označiť vybavené",
 }: AdminCompleteOrderButtonProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -53,6 +58,26 @@ export function AdminCompleteOrderButton({
     }
   }
 
+  if (labeled) {
+    return (
+      <Button
+        type="button"
+        variant="default"
+        size="sm"
+        onClick={handleClick}
+        disabled={disabled || isSubmitting}
+        className="h-6 gap-1.5 px-2 text-[10px] tracking-normal normal-case"
+      >
+        {isSubmitting ? (
+          <Loader2 className="size-2.5 animate-spin" />
+        ) : (
+          <CheckCheck className="size-2.5" />
+        )}
+        {label}
+      </Button>
+    );
+  }
+
   return (
     <Button
       type="button"
@@ -62,12 +87,12 @@ export function AdminCompleteOrderButton({
       disabled={disabled || isSubmitting}
       title="Označiť ako vybavené"
       aria-label="Označiť ako vybavené"
-      className="size-8 rounded-md"
+      className={cn("size-5 rounded-md p-0 [&_svg]:size-2.5")}
     >
       {isSubmitting ? (
-        <Loader2 className="size-4 animate-spin" />
+        <Loader2 className="size-2.5 animate-spin" />
       ) : (
-        <CheckCheck className="size-4" />
+        <CheckCheck className="size-2.5" />
       )}
     </Button>
   );

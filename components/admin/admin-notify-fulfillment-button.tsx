@@ -5,12 +5,15 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type AdminNotifyFulfillmentButtonProps = {
   orderId: string;
   deliveryMethod?: string | null;
   trackingNumber?: string | null;
   disabled?: boolean;
+  labeled?: boolean;
+  label?: string;
 };
 
 export function AdminNotifyFulfillmentButton({
@@ -18,6 +21,8 @@ export function AdminNotifyFulfillmentButton({
   deliveryMethod,
   trackingNumber,
   disabled = false,
+  labeled = false,
+  label,
 }: AdminNotifyFulfillmentButtonProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -67,10 +72,31 @@ export function AdminNotifyFulfillmentButton({
     }
   }
 
-  const label =
-    deliveryMethod === "packeta"
+  const actionLabel =
+    label ??
+    (deliveryMethod === "packeta"
       ? "Odoslať info o odoslaní"
-      : "Odoslať info o odbere";
+      : "Odoslať info o odberu");
+
+  if (labeled) {
+    return (
+      <Button
+        type="button"
+        variant="default"
+        size="sm"
+        onClick={handleClick}
+        disabled={disabled || isSubmitting}
+        className="h-6 gap-1.5 px-2 text-[10px] tracking-normal normal-case"
+      >
+        {isSubmitting ? (
+          <Loader2 className="size-2.5 animate-spin" />
+        ) : (
+          <MailCheck className="size-2.5" />
+        )}
+        {actionLabel}
+      </Button>
+    );
+  }
 
   return (
     <Button
@@ -79,14 +105,14 @@ export function AdminNotifyFulfillmentButton({
       size="icon"
       onClick={handleClick}
       disabled={disabled || isSubmitting}
-      title={label}
-      aria-label={label}
-      className="size-8 rounded-md"
+      title={actionLabel}
+      aria-label={actionLabel}
+      className={cn("size-5 rounded-md p-0 [&_svg]:size-2.5")}
     >
       {isSubmitting ? (
-        <Loader2 className="size-4 animate-spin" />
+        <Loader2 className="size-2.5 animate-spin" />
       ) : (
-        <MailCheck className="size-4" />
+        <MailCheck className="size-2.5" />
       )}
     </Button>
   );

@@ -12,15 +12,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 
 type AdminDeleteOrderButtonProps = {
   orderId: string;
   orderCode: string;
+  variant?: "icon" | "link";
 };
 
 export function AdminDeleteOrderButton({
   orderId,
   orderCode,
+  variant = "icon",
 }: AdminDeleteOrderButtonProps) {
   const router = useRouter();
 
@@ -48,16 +51,26 @@ export function AdminDeleteOrderButton({
 
   return (
     <>
-      <Button
-        type="button"
-        variant="destructive"
-        size="icon"
-        onClick={() => setOpen(true)}
-        aria-label="Zmazať objednávku"
-        className="size-8 rounded-md"
-      >
-        <Trash2 className="size-4" />
-      </Button>
+      {variant === "link" ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="cursor-pointer text-[#3E0F28]/45 transition hover:text-red-600"
+        >
+          Zmazať
+        </button>
+      ) : (
+        <Button
+          type="button"
+          variant="destructive"
+          size="icon"
+          onClick={() => setOpen(true)}
+          aria-label="Zmazať objednávku"
+          className={cn("size-5 rounded-md p-0 sm:size-5 [&_svg]:size-2.5")}
+        >
+          <Trash2 className="size-2.5" />
+        </Button>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="rounded-2xl border border-[#EAD6DE] bg-white p-6 shadow-2xl sm:max-w-md">
@@ -78,6 +91,7 @@ export function AdminDeleteOrderButton({
               variant="secondary"
               onClick={() => setOpen(false)}
               disabled={isDeleting}
+              className="h-8 px-3 text-xs sm:h-8 sm:px-3 sm:text-xs"
             >
               Zrušiť
             </Button>
@@ -87,10 +101,11 @@ export function AdminDeleteOrderButton({
               variant="destructive"
               onClick={handleDelete}
               disabled={isDeleting}
+              className="h-8 px-3 text-xs sm:h-8 sm:px-3 sm:text-xs"
             >
               {isDeleting ? (
                 <>
-                  <Loader2 className="size-4 animate-spin" />
+                  <Loader2 className="size-3 animate-spin" />
                   Mažem...
                 </>
               ) : (

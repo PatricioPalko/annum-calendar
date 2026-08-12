@@ -47,7 +47,6 @@ export async function POST(request: Request, { params }: RouteParams) {
         last_name,
         email,
         phone,
-        note,
         quantity,
         total_price,
         delivery_price,
@@ -112,7 +111,6 @@ export async function POST(request: Request, { params }: RouteParams) {
       addressId: order.packeta_point_id,
       value: goodsValue,
       weight: Math.max(0.3, Number((0.35 * order.quantity + 0.25).toFixed(2))),
-      note: order.note,
     });
 
     const { error: updateError } = await supabaseAdmin

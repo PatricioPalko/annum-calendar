@@ -49,12 +49,12 @@ export function AdminBulkDownloadButton({
       size="sm"
       onClick={handleDownload}
       disabled={disabled || isDownloading}
-      className="gap-2 tracking-normal px-3"
+      className="h-9 w-full gap-1.5 px-3 text-sm whitespace-nowrap sm:w-auto"
     >
       {isDownloading ? (
-        <Loader2 className="size-4 animate-spin" />
+        <Loader2 className="size-4 shrink-0 animate-spin" />
       ) : (
-        <Download className="size-4" />
+        <Download className="size-4 shrink-0" />
       )}
 
       {isDownloading ? "Pripravujem ZIP..." : "Stiahnuť všetky nestiahnuté"}

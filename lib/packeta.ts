@@ -12,7 +12,6 @@ type CreatePacketaPacketInput = {
   addressId: string;
   value: number;
   weight: number;
-  note?: string | null;
 };
 
 export function toPacketaPacketNumber(input: {
@@ -41,10 +40,6 @@ export function toPacketaPacketNumber(input: {
 
 function sanitizePacketaName(value: string) {
   return value.trim().slice(0, 32);
-}
-
-function sanitizePacketaNote(value: string) {
-  return value.replace(/[";]/g, " ").trim().slice(0, 128);
 }
 
 export type PacketaPacketResult = {
@@ -236,9 +231,6 @@ export async function createPacketaPacket(
     `<currency>EUR</currency>`,
     `<weight>${input.weight.toFixed(2)}</weight>`,
     `<eshop>${escapeXml(config.eshop)}</eshop>`,
-    input.note
-      ? `<note>${escapeXml(sanitizePacketaNote(input.note))}</note>`
-      : "",
   ]
     .filter(Boolean)
     .join("");
@@ -306,7 +298,6 @@ type SyncPacketaPacketForOrderInput = {
   packetaPointId: string;
   goodsValue: number;
   quantity: number;
-  note?: string | null;
   existingTrackingNumber?: string | null;
 };
 
@@ -333,7 +324,6 @@ export async function syncPacketaPacketForOrder(
       addressId: input.packetaPointId,
       value: input.goodsValue,
       weight: estimatePacketaWeight(input.quantity),
-      note: input.note,
     });
 
     const { error } = await supabaseAdmin

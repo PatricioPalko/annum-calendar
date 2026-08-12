@@ -190,7 +190,6 @@ async function runPostPaymentSideEffects(
         Number(order.total_price ?? 0) - Number(order.delivery_price ?? 0),
       ),
       quantity: order.quantity,
-      note: order.note,
       existingTrackingNumber: order.tracking_number,
     });
   }

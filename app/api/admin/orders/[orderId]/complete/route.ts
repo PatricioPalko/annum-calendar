@@ -30,7 +30,7 @@ export async function POST(request: Request, { params }: RouteParams) {
 
   const { data: order, error: orderError } = await supabaseAdmin
     .from("orders")
-    .select("id, payment_status, status")
+    .select("id, payment_status, status, delivery_method")
     .eq("id", orderId)
     .single();
 
@@ -49,7 +49,27 @@ export async function POST(request: Request, { params }: RouteParams) {
   }
 
   if (order.status === "completed") {
-    return NextResponse.json({ ok: true });
+    const revertedStatus =
+      order.delivery_method === "packeta" ? "shipped" : "ready";
+
+    const { error: revertError } = await supabaseAdmin
+      .from("orders")
+      .update({
+        status: revertedStatus,
+        completed_at: null,
+      })
+      .eq("id", order.id);
+
+    if (revertError) {
+      console.error("ORDER_UNCOMPLETE_ERROR:", revertError);
+
+      return NextResponse.json(
+        { message: "Nepodarilo sa odznačiť objednávku ako vybavenú." },
+        { status: 500 },
+      );
+    }
+
+    return NextResponse.json({ ok: true, uncompleted: true });
   }
 
   const { error: updateError } = await supabaseAdmin

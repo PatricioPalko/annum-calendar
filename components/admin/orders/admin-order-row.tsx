@@ -1,27 +1,15 @@
-import { AdminDownloadButton } from "@/components/admin/admin-download-button";
-import { formatPrice } from "@/helpers/admin-order-price";
-import {
-  getOrderDiscountAmount,
-  getOrderOriginalPrice,
-  hasOrderDiscount,
-  truncateText,
-} from "@/helpers/admin-orders";
-import {
-  getCalendarTypeBadgeClass,
-  getCalendarTypeDotClass,
-  getCalendarTypeLabel,
-} from "@/helpers/admin-table";
+import { truncateText } from "@/helpers/admin-orders";
 import { formatDateOnly, formatTimeOnly } from "@/helpers/format-date-time";
 import { cn } from "@/lib/utils";
 
 import { OrderRow } from "@/app/types/types";
-import { AdminCompleteOrderButton } from "../admin-complete-order-button";
-import { AdminCreatePacketaPacketButton } from "../admin-create-packeta-packet-button";
-import { AdminNotifyFulfillmentButton } from "../admin-notify-fulfillment-button";
-import { AdminOrderActionsMenu } from "./admin-order-actions-menu";
+import { isOrderFullyProcessed } from "@/helpers/admin-order-workflow";
+import { AdminOrderCustomer } from "./admin-order-customer";
+import { AdminOrderCalendarSummary } from "./admin-order-calendar-summary";
+import { AdminOrderMetaLinks } from "./admin-order-meta-links";
+import { AdminOrderPayment } from "./admin-order-payment";
+import { AdminOrderWorkflow } from "./admin-order-workflow";
 import { AdminOrderDelivery } from "./admin-order-delivery";
-import { AdminOrderStatusBadge } from "./admin-order-status-badge";
-import { AdminPaymentStatusBadge } from "./admin-payment-status-badge";
 
 type AdminOrderRowProps = {
   order: OrderRow;
@@ -29,15 +17,17 @@ type AdminOrderRowProps = {
 };
 
 export function AdminOrderRow({ order, index }: AdminOrderRowProps) {
-  const orderHasDiscount = hasOrderDiscount(order);
-  const discountAmount = getOrderDiscountAmount(order);
-  const originalPrice = getOrderOriginalPrice(order);
+  const isFullyProcessed = isOrderFullyProcessed(order);
 
   return (
     <tr
       className={cn(
         "relative text-[#3E0F28]",
-        index % 2 === 0 ? "bg-[#FFF7F4]" : "bg-white",
+        isFullyProcessed
+          ? "bg-emerald-50/90"
+          : index % 2 === 0
+            ? "bg-[#FFF7F4]"
+            : "bg-white",
       )}
     >
       <td className="px-3 py-3 align-top font-bold text-[#3E0F28]/50">
@@ -57,86 +47,31 @@ export function AdminOrderRow({ order, index }: AdminOrderRowProps) {
             {formatDateOnly(order.created_at)} ·{" "}
             {formatTimeOnly(order.created_at)}
           </p>
+
+          <AdminOrderMetaLinks
+            orderId={order.id}
+            orderCode={order.order_code ?? order.id}
+            order={order}
+          />
         </div>
       </td>
 
       <td className="px-3 py-3 align-top">
-        <div className="space-y-1">
-          <p className="font-bold">
-            {order.first_name} {order.last_name}
-          </p>
-
-          <p className="truncate text-xs font-medium text-[#3E0F28]/65 max-w-44 lg:max-w-none">
-            {order.email}
-          </p>
-
-          <p className="text-xs font-medium text-[#3E0F28]/55">
-            {order.phone ?? "Bez telefónu"}
-          </p>
-        </div>
+        <AdminOrderCustomer order={order} />
       </td>
 
-      <td className="w-70 max-w-50 px-3 py-3 align-top">
-        <div className="space-y-1">
-          <span
-            className={cn(
-              "inline-flex items-center gap-2 rounded-md py-1 text-xs font-extrabold uppercase tracking-wide",
-              getCalendarTypeBadgeClass(order.calendar_type),
-            )}
-          >
-            <span
-              className={cn(
-                "size-2 rounded-md",
-                getCalendarTypeDotClass(order.calendar_type),
-              )}
-            />
-
-            {getCalendarTypeLabel(order.calendar_type)}
-          </span>
-
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-[#3E0F28]/65">
-            <span>{order.quantity} ks</span>
-
-            <span>
-              {order.total_price !== null && order.total_price !== undefined ? (
-                <span className="inline-flex items-center gap-1.5">
-                  {orderHasDiscount && originalPrice !== null && (
-                    <span className="text-[#3E0F28]/40 line-through">
-                      {formatPrice(originalPrice)}
-                    </span>
-                  )}
-
-                  <span className="font-bold text-[#3E0F28]">
-                    {formatPrice(Number(order.total_price))}
-                  </span>
-                </span>
-              ) : (
-                "Cena na mieru"
-              )}
-            </span>
-
-            <span>{order.photos?.length ?? 0} fotiek</span>
-          </div>
-
-          {orderHasDiscount && (
-            <div className="inline-flex w-fit items-center gap-1.5 text-xs font-bold text-[#3E0F28]">
-              <span>{order.discount_code}</span>
-              <span className="text-[#3E0F28]/45">|</span>
-              <span>-{formatPrice(discountAmount)}</span>
-            </div>
-          )}
+      <td className="min-w-36 px-3 py-3 align-top">
+        <div className="space-y-2">
+          <AdminOrderCalendarSummary order={order} />
 
           {order.note && (
-            <div className="max-w-50 rounded-md border border-[#FC5A61]/20 bg-white px-3 py-2">
+            <div className="max-w-28 rounded-md border border-[#FC5A61]/20 bg-white/80 px-2 py-1.5">
               <p className="text-[10px] font-extrabold uppercase text-[#FC5A61]">
                 Poznámka
               </p>
-
-              <div className="mt-1 max-h-20 overflow-y-auto pr-2 text-xs font-semibold leading-5 text-[#3E0F28]/80">
-                <p className="whitespace-pre-wrap wrap-break-words">
-                  {truncateText(order.note, 220)}
-                </p>
-              </div>
+              <p className="mt-0.5 max-h-14 overflow-y-auto break-words text-[11px] font-semibold leading-4 text-[#3E0F28]/80">
+                {truncateText(order.note, 100)}
+              </p>
             </div>
           )}
         </div>
@@ -147,58 +82,11 @@ export function AdminOrderRow({ order, index }: AdminOrderRowProps) {
       </td>
 
       <td className="px-3 py-3 align-top">
-        <div className="space-y-1.5">
-          <AdminPaymentStatusBadge status={order.payment_status} />
-
-          {order.paid_at && (
-            <p className="text-xs font-medium text-[#3E0F28]/50">
-              {formatDateOnly(order.paid_at)} · {formatTimeOnly(order.paid_at)}
-            </p>
-          )}
-        </div>
+        <AdminOrderPayment order={order} />
       </td>
 
-      <td className="px-3 py-3 align-top">
-        <AdminOrderStatusBadge order={order} />
-      </td>
-
-      <td className="px-3 py-3 align-top text-right">
-        <div className="flex items-center justify-end gap-1">
-          <AdminDownloadButton
-            orderId={order.id}
-            fileName={order.order_code ?? order.id}
-            disabled={order.payment_status !== "paid"}
-          />
-
-          <AdminCreatePacketaPacketButton
-            orderId={order.id}
-            deliveryMethod={order.delivery_method}
-            trackingNumber={order.tracking_number}
-            disabled={order.payment_status !== "paid"}
-          />
-
-          <AdminNotifyFulfillmentButton
-            orderId={order.id}
-            deliveryMethod={order.delivery_method}
-            trackingNumber={order.tracking_number}
-            disabled={
-              order.payment_status !== "paid" ||
-              order.status === "ready" ||
-              order.status === "shipped" ||
-              order.status === "completed"
-            }
-          />
-          <AdminCompleteOrderButton
-            orderId={order.id}
-            disabled={
-              order.payment_status !== "paid" ||
-              order.status === "completed" ||
-              (order.status !== "ready" && order.status !== "shipped")
-            }
-          />
-
-          <AdminOrderActionsMenu order={order} />
-        </div>
+      <td className="min-w-56 px-3 py-3 align-top">
+        <AdminOrderWorkflow order={order} align="start" />
       </td>
     </tr>
   );

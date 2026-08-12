@@ -11,7 +11,7 @@ const PAYMENT_CONFIG: Record<string, BadgeConfig> = {
   paid: {
     label: "Zaplatené",
     icon: CheckCircle2,
-    className: "border-[#3E0F28]/70 bg-[#C8FF3D]/40 text-[#3E0F28]",
+    className: "border-emerald-300 bg-emerald-50 text-emerald-900",
   },
   pending: {
     label: "Čaká",
@@ -42,7 +42,7 @@ export function AdminPaymentStatusBadge({
 
   return (
     <span
-      className={`inline-flex h-7 items-center gap-1.5 rounded-md border px-2.5 text-xs font-bold ${className}`}
+      className={`inline-flex h-7 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md border px-2.5 text-xs font-bold ${className}`}
     >
       <Icon className="size-3.5 shrink-0" />
       {label}

@@ -5,12 +5,15 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type AdminCreatePacketaPacketButtonProps = {
   orderId: string;
   deliveryMethod?: string | null;
   trackingNumber?: string | null;
   disabled?: boolean;
+  labeled?: boolean;
+  label?: string;
 };
 
 export function AdminCreatePacketaPacketButton({
@@ -18,6 +21,8 @@ export function AdminCreatePacketaPacketButton({
   deliveryMethod,
   trackingNumber,
   disabled = false,
+  labeled = false,
+  label = "Vytvoriť štítok",
 }: AdminCreatePacketaPacketButtonProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,6 +63,26 @@ export function AdminCreatePacketaPacketButton({
     }
   }
 
+  if (labeled) {
+    return (
+      <Button
+        type="button"
+        variant="default"
+        size="sm"
+        onClick={handleClick}
+        disabled={disabled || isSubmitting}
+        className="h-6 gap-1.5 px-2 text-[10px] tracking-normal normal-case"
+      >
+        {isSubmitting ? (
+          <Loader2 className="size-2.5 animate-spin" />
+        ) : (
+          <Tag className="size-2.5" />
+        )}
+        {label}
+      </Button>
+    );
+  }
+
   return (
     <Button
       type="button"
@@ -67,12 +92,12 @@ export function AdminCreatePacketaPacketButton({
       disabled={disabled || isSubmitting}
       title="Vytvoriť štítok Packety"
       aria-label="Vytvoriť štítok Packety"
-      className="size-8 rounded-md"
+      className={cn("size-5 rounded-md p-0 [&_svg]:size-2.5")}
     >
       {isSubmitting ? (
-        <Loader2 className="size-4 animate-spin" />
+        <Loader2 className="size-2.5 animate-spin" />
       ) : (
-        <Tag className="size-4" />
+        <Tag className="size-2.5" />
       )}
     </Button>
   );

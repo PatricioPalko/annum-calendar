@@ -12,18 +12,31 @@ function SortLink({
   sort,
   currentSort,
   currentDir,
+  currentYear,
+  currentMonth,
+  currentCalendar,
+  currentDelivery,
   children,
 }: {
   sort: SortKey;
   currentSort: SortKey;
   currentDir: "asc" | "desc";
+  currentYear?: string;
+  currentMonth?: string;
+  currentCalendar?: string;
+  currentDelivery?: string;
   children: React.ReactNode;
 }) {
   const isActive = sort === currentSort;
 
   return (
     <Link
-      href={getSortHref(sort, currentSort, currentDir)}
+      href={getSortHref(sort, currentSort, currentDir, {
+        year: currentYear,
+        month: currentMonth,
+        calendar: currentCalendar,
+        delivery: currentDelivery,
+      })}
       className="inline-flex items-center gap-1 font-bold transition hover:text-[#FC5A61]"
     >
       {children}
@@ -38,18 +51,34 @@ type AdminOrdersTableProps = {
   orders: OrderRow[];
   currentSort: SortKey;
   currentDir: "asc" | "desc";
+  currentYear?: string;
+  currentMonth?: string;
+  currentCalendar?: string;
+  currentDelivery?: string;
 };
 
 export function AdminOrdersTable({
   orders,
   currentSort,
   currentDir,
+  currentYear,
+  currentMonth,
+  currentCalendar,
+  currentDelivery,
 }: AdminOrdersTableProps) {
   if (orders.length === 0) {
+    const hasActiveFilters =
+      currentYear !== "all" ||
+      currentMonth !== "all" ||
+      currentCalendar !== "all" ||
+      currentDelivery !== "all";
+
+    const emptyMessage = hasActiveFilters
+      ? "Pre zvolené filtre nemáte žiadne objednávky."
+      : "Zatiaľ nemáte žiadne objednávky.";
+
     return (
-      <p className="px-4 py-10 text-center text-[#3E0F28]/60">
-        Zatiaľ nemáte žiadne objednávky.
-      </p>
+      <p className="px-4 py-10 text-center text-[#3E0F28]/60">{emptyMessage}</p>
     );
   }
 
@@ -75,7 +104,7 @@ export function AdminOrdersTable({
       </div>
 
       <div className="hidden overflow-x-auto md:block">
-        <table className="w-full min-w-[960px] border-collapse text-sm">
+        <table className="w-full min-w-[1040px] border-collapse text-sm">
           <thead className="bg-[#FFF7F4] text-left text-[#3E0F28]">
             <tr>
               <th className="w-12 px-4 py-3 font-bold">#</th>
@@ -85,6 +114,10 @@ export function AdminOrdersTable({
                   sort="order_code"
                   currentSort={currentSort}
                   currentDir={currentDir}
+                  currentYear={currentYear}
+                  currentMonth={currentMonth}
+                  currentCalendar={currentCalendar}
+                  currentDelivery={currentDelivery}
                 >
                   Objednávka
                 </SortLink>
@@ -95,6 +128,10 @@ export function AdminOrdersTable({
                   sort="customer"
                   currentSort={currentSort}
                   currentDir={currentDir}
+                  currentYear={currentYear}
+                  currentMonth={currentMonth}
+                  currentCalendar={currentCalendar}
+                  currentDelivery={currentDelivery}
                 >
                   Zákazník
                 </SortLink>
@@ -105,6 +142,10 @@ export function AdminOrdersTable({
                   sort="calendar_type"
                   currentSort={currentSort}
                   currentDir={currentDir}
+                  currentYear={currentYear}
+                  currentMonth={currentMonth}
+                  currentCalendar={currentCalendar}
+                  currentDelivery={currentDelivery}
                 >
                   Kalendár
                 </SortLink>
@@ -113,17 +154,7 @@ export function AdminOrdersTable({
               <th className="px-4 py-3 font-bold">Doručenie</th>
               <th className="px-4 py-3 font-bold">Platba</th>
 
-              <th className="px-4 py-3">
-                <SortLink
-                  sort="downloaded"
-                  currentSort={currentSort}
-                  currentDir={currentDir}
-                >
-                  Stav
-                </SortLink>
-              </th>
-
-              <th className="px-4 py-3 text-right font-bold">Akcie</th>
+              <th className="min-w-56 px-4 py-3 font-bold">Spracovanie</th>
             </tr>
           </thead>
 
@@ -134,7 +165,7 @@ export function AdminOrdersTable({
                   {shouldRenderDateSeparator && (
                     <tr>
                       <td
-                        colSpan={8}
+                        colSpan={7}
                         className="bg-[#3E0F28] px-4 py-2 text-xs font-extrabold uppercase tracking-tighter text-[#FFF7F4]"
                       >
                         {orderDate}
