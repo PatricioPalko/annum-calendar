@@ -7,7 +7,7 @@ import { Check } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { Heading, Text } from "@/components/ui/typography";
+import { Heading, SectionLabel, Text } from "@/components/ui/typography";
 import { ORDER_SHARED_INCLUSIONS } from "@/lib/order/config";
 
 const basicPlan = calendarTypes.find((plan) => plan.value === "basic")!;
@@ -57,12 +57,7 @@ export function PricingSection() {
       className="scroll-mt-24 mx-auto mt-8 max-w-6xl overflow-hidden rounded-xl border-2 border-[#EAD6DE] bg-white px-3 py-8 text-primary shadow-2xl shadow-[#3E0F28]/20 sm:px-4 sm:py-12"
     >
       <div className="mb-10 text-center">
-        <Text
-          variant="caption"
-          className="text-sm font-extrabold uppercase tracking-[0.2em] text-secondary"
-        >
-          Cenník
-        </Text>
+        <SectionLabel>Cenník</SectionLabel>
 
         <Heading as="h2" className="mt-3">
           Vyberte si typ kalendára
@@ -167,9 +162,7 @@ export function PricingSection() {
       </div>
 
       <div className="mx-2 mt-4 rounded-xl border border-[#EAD6DE] bg-[#FFF7F4] px-4 py-5 sm:mx-4 sm:px-6">
-        <Text className="text-sm font-extrabold uppercase tracking-[0.14em] text-[#FC5A61]">
-          V každej objednávke
-        </Text>
+        <SectionLabel>V každej objednávke</SectionLabel>
 
         <ul className="mt-4 space-y-2">
           {sharedInclusions.map((item) => (

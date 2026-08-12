@@ -15,7 +15,7 @@ const fraunces = Fraunces({
 
 const manrope = Manrope({
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
   variable: "--font-manrope",
 });
 
@@ -122,7 +122,7 @@ export default function RootLayout({
         "antialiased",
         fraunces.variable,
         manrope.variable,
-        "font-sans",
+        "font-body",
       )}
     >
       <head>

@@ -1,5 +1,7 @@
 import { AdminLoginForm } from "./admin-login-form";
 
+import { SectionLabel } from "@/components/ui/typography";
+
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -14,12 +16,10 @@ export default function AdminLoginPage() {
   return (
     <main
       id="main-content"
-      className="flex min-h-screen items-center justify-center bg-[#FFF7F4] px-4"
+      className="font-body flex min-h-screen items-center justify-center bg-[#FFF7F4] px-4"
     >
       <div className="w-full max-w-md rounded-2xl border border-[#EAD6DE] bg-white p-6 shadow-xl shadow-[#3E0F28]/10">
-        <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#FC5A61]">
-          Admin
-        </p>
+        <SectionLabel>Admin</SectionLabel>
 
         <h1 className="mt-2 font-heading text-2xl font-bold text-[#3E0F28] sm:text-3xl">
           Prihlásenie

@@ -1,6 +1,6 @@
 import { CalendarCheck, Images, MailCheck } from "lucide-react";
 
-import { Heading, Text } from "@/components/ui/typography";
+import { Heading, SectionLabel, Text } from "@/components/ui/typography";
 
 import { MIN_PHOTOS } from "@/lib/order/config";
 const steps = [
@@ -28,9 +28,7 @@ export function AboutSection() {
     <section id="ako-to-funguje" className="scroll-mt-24 py-8 sm:py-20">
       <div className="mx-auto max-w-6xl px-0 md:px-6">
         <div className="mx-auto max-w-2xl text-center">
-          <Text variant="caption" as="span">
-            Objednávka krok za krokom
-          </Text>
+          <SectionLabel>Objednávka krok za krokom</SectionLabel>
 
           <Heading as="h2" className="mt-2">
             Vlastný fotokalendár bez zložitého editora

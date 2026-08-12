@@ -6,7 +6,7 @@ import {
 } from "@/app/types/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Heading, Text } from "@/components/ui/typography";
+import { Heading, SectionLabel } from "@/components/ui/typography";
 import { getDeliveryLabel, getDeliveryPrice } from "@/helpers/delivery";
 import { getDiscountAmount } from "@/helpers/discount-codes";
 import { formatEuroPrice } from "@/helpers/format-euro-price";
@@ -132,9 +132,7 @@ export function PriceSummary({
     <>
       {/* ── Header ── */}
       <div className="border-b border-[#EAD6DE] bg-[#FFF7F4] px-3 py-3 text-center sm:px-5 sm:py-5">
-        <Text variant="caption" as="span" className="text-xs">
-          Súhrn objednávky
-        </Text>
+        <SectionLabel>Súhrn objednávky</SectionLabel>
         <Heading as="h3" className="mt-2">
           Váš kalendár
         </Heading>

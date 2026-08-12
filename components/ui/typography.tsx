@@ -28,6 +28,21 @@ export function Heading({
   );
 }
 
+const sectionLabelClassName =
+  "block font-body text-sm font-extrabold uppercase tracking-[0.18em] text-[#FC5A61]";
+
+type SectionLabelProps = React.ComponentProps<"span"> & {
+  as?: "span" | "p";
+};
+
+export function SectionLabel({
+  as: Comp = "span",
+  className,
+  ...props
+}: SectionLabelProps) {
+  return <Comp className={cn(sectionLabelClassName, className)} {...props} />;
+}
+
 type TextVariant = "body" | "lead" | "small" | "muted" | "caption";
 
 type TextProps = React.ComponentProps<"p"> & {
@@ -40,8 +55,7 @@ const textVariants: Record<TextVariant, string> = {
   lead: "text-sm font-semibold leading-6 tracking-normal text-primary/70 sm:text-base sm:leading-7 md:text-[17px] md:leading-8",
   small: "text-xs font-medium leading-5 tracking-normal text-[#3E0F28]/68 sm:text-sm sm:leading-6",
   muted: "text-xs font-medium leading-5 tracking-normal text-[#3E0F28]/55 sm:text-sm sm:leading-6",
-  caption:
-    "text-[11px] font-bold uppercase leading-5 tracking-[0.14em] text-secondary sm:text-xs md:text-md md:tracking-[0.16em]",
+  caption: sectionLabelClassName,
 };
 
 export function Text({

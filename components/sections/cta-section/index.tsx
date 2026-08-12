@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Heading, Text } from "@/components/ui/typography";
+import { Heading, SectionLabel, Text } from "@/components/ui/typography";
 import Link from "next/link";
 
 export function CTASection() {
@@ -11,9 +11,7 @@ export function CTASection() {
 
         <div className="relative flex flex-col gap-8 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
-            <Text variant="caption" className="text-sm text-lime">
-              Jednoduché objednanie
-            </Text>
+            <SectionLabel className="text-lime">Jednoduché objednanie</SectionLabel>
 
             <Heading
               as="h2"

@@ -12,7 +12,7 @@ import {
   FieldError,
   FieldGroup,
 } from "@/components/ui/field";
-import { Heading, Text } from "@/components/ui/typography";
+import { Heading, SectionLabel, Text } from "@/components/ui/typography";
 import { getDiscountCode } from "@/helpers/discount-codes";
 import { getFinalQuantity } from "@/helpers/form";
 import {
@@ -288,9 +288,7 @@ export default function OrderForm() {
   return (
     <div className="mx-auto mt-6 max-w-7xl rounded-xl border border-[#EAD6DE] bg-white px-3 py-8 text-primary shadow-2xl shadow-[#3E0F28]/10 sm:px-4 md:px-6 lg:pb-10">
       <div className="my-8 text-center">
-        <Text variant="caption" as="span">
-          Konfigurátor
-        </Text>
+        <SectionLabel>Konfigurátor</SectionLabel>
 
         <Heading as="h2" className="mt-2">
           Nástenný A3 kalendár

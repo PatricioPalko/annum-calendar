@@ -5,7 +5,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { JsonLd } from "@/components/seo/json-ld";
-import { Heading, Text } from "@/components/ui/typography";
+import { Heading, SectionLabel, Text } from "@/components/ui/typography";
 
 import { MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
 
@@ -116,9 +116,7 @@ export function FaqSection() {
     <section className="mx-auto my-16 max-w-4xl scroll-mt-24 px-4" id="faq">
       <JsonLd data={faqJsonLd} />
       <div className="mb-8 text-center">
-        <Text variant="caption" as="span">
-          FAQ
-        </Text>
+        <SectionLabel>FAQ</SectionLabel>
 
         <Heading as="h2" className="mt-2">
           Časté otázky
