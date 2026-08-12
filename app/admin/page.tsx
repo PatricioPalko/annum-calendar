@@ -91,7 +91,10 @@ export default async function AdminOrdersPage({
   ).length;
 
   return (
-    <main className="min-h-screen bg-[#FFF7F4] px-4 py-8 sm:px-6 sm:py-10">
+    <main
+      id="main-content"
+      className="min-h-screen bg-[#FFF7F4] px-4 py-8 sm:px-6 sm:py-10"
+    >
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
@@ -99,11 +102,11 @@ export default async function AdminOrdersPage({
               Admin
             </p>
 
-            <h1 className="mt-2 font-heading text-3xl font-bold text-[#3E0F28] sm:text-4xl">
+            <h1 className="mt-2 font-heading text-2xl font-bold text-[#3E0F28] sm:text-4xl">
               Objednávky
             </h1>
 
-            <p className="mt-2 text-sm font-medium text-[#3E0F28]/60">
+            <p className="mt-2 break-words text-sm font-medium text-[#3E0F28]/60">
               Spolu {orders.length} objednávok · nestiahnuté {undownloadedCount}{" "}
               · zaplatené {paidCount}
             </p>

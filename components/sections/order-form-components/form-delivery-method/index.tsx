@@ -22,14 +22,14 @@ const deliveryOptions = [
     value: "pickup",
     label: "Osobný odber",
     description: "Kalendár si prevezmete osobne po dohode.",
-    price: "0 €",
+    price: "0\u00A0€",
     icon: MapPin,
   },
   {
     value: "packeta",
     label: "Packeta",
     description: "Vyberiete si výdajné miesto alebo Z-BOX.",
-    price: "3,90 €",
+    price: "3,90\u00A0€",
     icon: Package,
   },
 ] as const;
@@ -78,7 +78,7 @@ export function FormDeliveryMethod({ control }: DeliveryMethodFieldProps) {
                           <div className="flex items-center gap-2">
                             <Icon className="size-4 text-secondary" />
 
-                            <FieldTitle className="text-md font-bold text-foreground">
+                            <FieldTitle className="font-bold normal-case text-foreground">
                               {option.label}
                             </FieldTitle>
                           </div>
@@ -95,7 +95,7 @@ export function FormDeliveryMethod({ control }: DeliveryMethodFieldProps) {
                     <p className="text-sm font-semibold text-primary">
                       Cena doručenia
                     </p>
-                    <span className="font-heading text-xl font-bold text-secondary">
+                    <span className="whitespace-nowrap font-heading text-lg font-bold text-secondary sm:text-xl">
                       {option.price}
                     </span>
                   </div>

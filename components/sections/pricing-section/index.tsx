@@ -1,8 +1,8 @@
 import {
   calendarTypes,
-  formatUnitPrice,
   getLowestUnitPrice,
 } from "@/app/types/types";
+import { formatEuroPrice } from "@/helpers/format-euro-price";
 import { Check } from "lucide-react";
 import Link from "next/link";
 
@@ -64,14 +64,11 @@ export function PricingSection() {
           Cenník
         </Text>
 
-        <Heading
-          as="h2"
-          className="mt-3 font-heading text-4xl font-bold tracking-tight md:text-5xl"
-        >
+        <Heading as="h2" className="mt-3">
           Vyberte si typ kalendára
         </Heading>
 
-        <Text className="mx-auto mt-4 max-w-2xl text-base leading-7 text-[#3E0F28]/70">
+        <Text className="mx-auto mt-4 max-w-2xl">
           Presnú sumu uvidíte v konfigurátore podľa zvoleného typu a počtu
           kusov.
         </Text>
@@ -94,7 +91,7 @@ export function PricingSection() {
               ].join(" ")}
             >
               {isPremium && (
-                <Text className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-md bg-[#C8FF3D] px-4 py-1.5 text-xs font-extrabold uppercase tracking-[0.16em] text-[#3E0F28] shadow-sm">
+                <Text className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-md bg-[#C8FF3D] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] text-[#3E0F28] shadow-sm">
                   Najobľúbenejší
                 </Text>
               )}
@@ -117,18 +114,15 @@ export function PricingSection() {
 
               {lowestUnitPrice !== null && (
                 <div className="mt-6 flex flex-wrap items-end gap-1">
-                  <span className="pb-0.5 text-lg font-bold text-primary sm:text-xl">
+                  <span className="pb-0.5 text-base font-bold text-primary sm:text-xl">
                     od
                   </span>
 
-                  <span className="font-body text-5xl font-bold leading-none tracking-tight text-primary sm:text-6xl md:text-7xl">
-                    {formatUnitPrice(lowestUnitPrice)}
-                    <span className="ml-1 text-4xl sm:text-5xl md:text-6xl">
-                      €
-                    </span>
+                  <span className="whitespace-nowrap font-body text-3xl font-bold leading-none tracking-tight text-primary sm:text-5xl md:text-7xl">
+                    {formatEuroPrice(lowestUnitPrice)}
                   </span>
 
-                  <span className="pb-1 pl-1 text-lg font-bold text-primary sm:text-xl">
+                  <span className="pb-1 pl-1 text-base font-bold text-primary sm:text-xl">
                     / ks
                   </span>
                 </div>
@@ -144,13 +138,17 @@ export function PricingSection() {
               <ul className="mt-8 grow space-y-3">
                 {features.map((feature) => (
                   <li key={feature} className="flex items-start gap-3">
-                    <span
-                      className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full text-white ${accentClassName}`}
-                    >
-                      <Check className="size-3 stroke-3" />
+                    <span className="flex h-6 shrink-0 items-center mt-0.5">
+                      <span
+                        className={`flex size-5 items-center justify-center rounded-full text-white ${accentClassName}`}
+                      >
+                        <Check className="size-3 stroke-3" />
+                      </span>
                     </span>
 
-                    <Text>{feature}</Text>
+                    <Text as="span" variant="body" className="block min-w-0 flex-1">
+                      {feature}
+                    </Text>
                   </li>
                 ))}
               </ul>
@@ -179,7 +177,9 @@ export function PricingSection() {
               key={item}
               className="flex items-start gap-2 text-sm font-medium leading-6 text-[#3E0F28]/80"
             >
-              <Check className="mt-1 size-4 shrink-0 text-[#FC5A61]" />
+              <span className="flex h-6 w-4 shrink-0 items-center justify-center text-[#FC5A61]">
+                <Check className="size-4" />
+              </span>
               {item}
             </li>
           ))}

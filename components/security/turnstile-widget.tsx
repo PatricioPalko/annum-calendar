@@ -7,7 +7,10 @@ import {
   useId,
   useImperativeHandle,
   useRef,
+  useState,
 } from "react";
+
+import { cn } from "@/lib/utils";
 
 declare global {
   interface Window {
@@ -20,11 +23,12 @@ declare global {
           "expired-callback"?: () => void;
           "error-callback"?: () => void;
           theme?: "light" | "dark" | "auto";
-          size?: "normal" | "compact";
+          size?: "normal" | "compact" | "flexible";
           appearance?: "always" | "execute" | "interaction-only";
         },
       ) => string;
       reset: (widgetId?: string) => void;
+      remove?: (widgetId?: string) => void;
     };
   }
 }
@@ -35,6 +39,8 @@ type TurnstileWidgetProps = {
   onExpired?: () => void;
   onError?: () => void;
   className?: string;
+  responsive?: boolean;
+  size?: "normal" | "compact" | "flexible";
 };
 
 export type TurnstileWidgetHandle = {
@@ -45,12 +51,21 @@ export const TurnstileWidget = forwardRef<
   TurnstileWidgetHandle,
   TurnstileWidgetProps
 >(function TurnstileWidget(
-  { siteKey, onToken, onExpired, onError, className },
+  {
+    siteKey,
+    onToken,
+    onExpired,
+    onError,
+    className,
+    responsive = false,
+    size = "normal",
+  },
   ref,
 ) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const widgetIdRef = useRef<string | null>(null);
   const renderId = useId();
+  const [isMobile, setIsMobile] = useState(false);
 
   useImperativeHandle(ref, () => ({
     reset: () => {
@@ -61,12 +76,45 @@ export const TurnstileWidget = forwardRef<
   }));
 
   useEffect(() => {
+    if (!responsive) {
+      setIsMobile(size === "compact" || size === "flexible");
+      return;
+    }
+
+    const mediaQuery = window.matchMedia("(max-width: 639px)");
+    const updateSize = () => setIsMobile(mediaQuery.matches);
+
+    updateSize();
+    mediaQuery.addEventListener("change", updateSize);
+
+    return () => mediaQuery.removeEventListener("change", updateSize);
+  }, [responsive, size]);
+
+  const widgetSize = responsive
+    ? isMobile
+      ? "flexible"
+      : "normal"
+    : size;
+
+  useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
+    const removeWidget = () => {
+      if (!widgetIdRef.current || !window.turnstile) {
+        widgetIdRef.current = null;
+        return;
+      }
+
+      window.turnstile.remove?.(widgetIdRef.current);
+      widgetIdRef.current = null;
+      container.replaceChildren();
+    };
+
     const maybeRender = () => {
       if (!window.turnstile) return false;
-      if (widgetIdRef.current) return true;
+
+      removeWidget();
 
       widgetIdRef.current = window.turnstile.render(container, {
         sitekey: siteKey,
@@ -74,12 +122,15 @@ export const TurnstileWidget = forwardRef<
         "expired-callback": () => onExpired?.(),
         "error-callback": () => onError?.(),
         theme: "light",
+        size: widgetSize,
       });
 
       return true;
     };
 
-    if (maybeRender()) return;
+    if (maybeRender()) {
+      return removeWidget;
+    }
 
     const interval = window.setInterval(() => {
       if (maybeRender()) {
@@ -87,16 +138,22 @@ export const TurnstileWidget = forwardRef<
       }
     }, 100);
 
-    return () => window.clearInterval(interval);
-  }, [onError, onExpired, onToken, siteKey, renderId]);
+    return () => {
+      window.clearInterval(interval);
+      removeWidget();
+    };
+  }, [onError, onExpired, onToken, renderId, siteKey, widgetSize]);
 
   return (
-    <div className={className}>
+    <div className={cn("w-full", className)}>
       <Script
         src="https://challenges.cloudflare.com/turnstile/v0/api.js"
         strategy="afterInteractive"
       />
-      <div ref={containerRef} />
+      <div
+        ref={containerRef}
+        className="w-full [&>div]:w-full [&_iframe]:w-full"
+      />
     </div>
   );
 });

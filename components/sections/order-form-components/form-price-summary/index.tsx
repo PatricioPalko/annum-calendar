@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Heading, Text } from "@/components/ui/typography";
 import { getDeliveryLabel, getDeliveryPrice } from "@/helpers/delivery";
 import { getDiscountAmount } from "@/helpers/discount-codes";
+import { formatEuroPrice } from "@/helpers/format-euro-price";
 import { ORDER_NOTE_ACCESSORY_LABEL } from "@/lib/order/config";
 import { Check, Tag, X } from "lucide-react";
 
@@ -28,10 +29,6 @@ type PriceSummaryProps = {
   onDiscountCodeApply?: () => void;
   onDiscountCodeClear?: () => void;
 };
-
-function formatPrice(value: number) {
-  return value.toFixed(2).replace(".", ",");
-}
 
 export function PriceSummary({
   type,
@@ -126,7 +123,7 @@ export function PriceSummary({
       label: "Doručenie",
       value:
         deliveryPrice > 0
-          ? `${deliveryLabel} · ${formatPrice(deliveryPrice)} €`
+          ? `${deliveryLabel} · ${formatEuroPrice(deliveryPrice)}`
           : deliveryLabel,
     },
   ];
@@ -134,7 +131,7 @@ export function PriceSummary({
   return (
     <>
       {/* ── Header ── */}
-      <div className="bg-[#FFF7F4] px-5 py-5 text-center border-b border-[#EAD6DE]">
+      <div className="border-b border-[#EAD6DE] bg-[#FFF7F4] px-3 py-3 text-center sm:px-5 sm:py-5">
         <Text variant="caption" as="span" className="text-xs">
           Súhrn objednávky
         </Text>
@@ -144,17 +141,17 @@ export function PriceSummary({
       </div>
 
       {/* ── Order details ── */}
-      <div className="px-5 py-4">
+      <div className="px-3 py-3 sm:px-5 sm:py-4">
         <div className="space-y-2.5">
           {summaryItems.map((item) => (
             <div
               key={item.label}
               className="flex items-start justify-between gap-4"
             >
-              <span className="text-sm font-medium text-primary/60">
+              <span className="min-w-0 shrink text-sm font-medium text-primary/60">
                 {item.label}
               </span>
-              <span className="text-right text-sm font-bold text-primary">
+              <span className="max-w-[55%] shrink-0 text-right text-sm font-bold break-words text-primary">
                 {item.value}
               </span>
             </div>
@@ -163,19 +160,19 @@ export function PriceSummary({
       </div>
 
       {/* ── Price section ── */}
-      <div className="bg-surface-soft px-5 pt-1 pb-5 space-y-3">
+      <div className="space-y-3 bg-surface-soft px-3 pb-4 pt-1 sm:px-5 sm:pb-5">
         {/* Price breakdown OR simple total */}
         {showBreakdown ? (
           /* When there are savings / discounts → show a clean breakdown list */
-          <div className="rounded-xl border border-border bg-white px-4 py-3 space-y-2">
+          <div className="space-y-2 rounded-xl border border-border bg-white px-3 py-2.5 sm:px-4 sm:py-3">
             {/* Reference price (before any discounts) */}
             {referencePrice !== null && (
               <div className="flex justify-between text-sm">
                 <span className="text-primary/50 font-medium">
                   Pôvodná cena
                 </span>
-                <span className="text-primary/50 font-medium">
-                  {formatPrice(referencePrice)} €
+                <span className="whitespace-nowrap text-primary/50 font-medium">
+                  {formatEuroPrice(referencePrice)}
                 </span>
               </div>
             )}
@@ -186,8 +183,8 @@ export function PriceSummary({
                 <span className="text-emerald-700 font-medium">
                   Množstevná zľava
                 </span>
-                <span className="text-emerald-700 font-semibold">
-                  −{formatPrice(savedAmount)} €
+                <span className="whitespace-nowrap text-emerald-700 font-semibold">
+                  −{formatEuroPrice(savedAmount)}
                 </span>
               </div>
             )}
@@ -199,8 +196,8 @@ export function PriceSummary({
                   <Tag className="size-3.5" />
                   Kód {discount.code}
                 </span>
-                <span className="text-emerald-700 font-semibold">
-                  −{formatPrice(discount.discountAmount)} €
+                <span className="whitespace-nowrap text-emerald-700 font-semibold">
+                  −{formatEuroPrice(discount.discountAmount)}
                 </span>
               </div>
             )}
@@ -211,8 +208,8 @@ export function PriceSummary({
                 <span className="text-primary/50 font-medium">
                   {deliveryLabel}
                 </span>
-                <span className="text-primary/70 font-semibold">
-                  +{formatPrice(deliveryPrice)} €
+                <span className="whitespace-nowrap text-primary/70 font-semibold">
+                  +{formatEuroPrice(deliveryPrice)}
                 </span>
               </div>
             )}
@@ -223,16 +220,16 @@ export function PriceSummary({
                 <span className="font-heading text-xl font-semibold text-secondary">
                   Spolu
                 </span>
-                <span className="font-heading text-3xl font-bold leading-none text-secondary">
-                  {displayTotal !== null
-                    ? `${formatPrice(displayTotal)} €`
-                    : "—"}
+                <span className="whitespace-nowrap font-heading text-2xl font-bold leading-none text-secondary sm:text-3xl">
+                  {displayTotal !== null ? formatEuroPrice(displayTotal) : "—"}
                 </span>
               </div>
 
               {showPricePerPiece && effectivePricePerPiece !== null && (
                 <p className="mt-0.5 text-right text-xs font-medium text-primary/40">
-                  {formatPrice(effectivePricePerPiece)} € za 1 ks
+                  <span className="whitespace-nowrap">
+                    {formatEuroPrice(effectivePricePerPiece)} za 1 ks
+                  </span>
                 </p>
               )}
             </div>
@@ -240,15 +237,15 @@ export function PriceSummary({
         ) : (
           /* When there are no discounts → simple, large total */
           <div className="flex items-end justify-between gap-4 pt-3">
-            <p className="font-heading text-4xl font-semibold text-secondary">
+            <p className="font-heading text-2xl font-semibold text-secondary sm:text-4xl">
               Spolu
             </p>
             <div className="text-right">
-              <p className="font-heading text-4xl font-bold leading-none text-secondary">
+              <p className="whitespace-nowrap font-heading text-2xl font-bold leading-none text-secondary sm:text-4xl">
                 {displayTotal !== null
-                  ? `${formatPrice(displayTotal)} €`
+                  ? formatEuroPrice(displayTotal)
                   : computedTotalPrice !== null
-                    ? `${formatPrice(computedTotalPrice)} €`
+                    ? formatEuroPrice(computedTotalPrice)
                     : "—"}
               </p>
 
@@ -260,7 +257,9 @@ export function PriceSummary({
 
               {showPricePerPiece && effectivePricePerPiece !== null && (
                 <p className="mt-0.5 text-xs font-medium text-primary/40">
-                  {formatPrice(effectivePricePerPiece)} € za 1 ks
+                  <span className="whitespace-nowrap">
+                    {formatEuroPrice(effectivePricePerPiece)} za 1 ks
+                  </span>
                 </p>
               )}
             </div>
@@ -282,7 +281,7 @@ export function PriceSummary({
                       Kód {discount.code}
                     </p>
                     <p className="text-xs font-medium text-emerald-600">
-                      Zľava −{formatPrice(discount.discountAmount)} €
+                      Zľava −{formatEuroPrice(discount.discountAmount)}
                     </p>
                   </div>
                 </div>

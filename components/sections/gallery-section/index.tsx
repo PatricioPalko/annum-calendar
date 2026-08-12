@@ -27,8 +27,8 @@ export function GallerySection() {
 
   return (
     <section id="ukazka-kalendara" className="scroll-mt-24 bg-[#FFF7F4] py-12 sm:py-20">
-      <div className="mx-auto max-w-6xl px-4 md:px-6">
-        <div className="mb-18 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+      <div className="mx-auto max-w-6xl px-0 md:px-6">
+        <div className="mb-10 flex flex-col gap-5 md:mb-12 md:flex-row md:items-end md:justify-between">
           <div className="max-w-2xl">
             <Text variant="caption" as="span">
               Ukážka kalendára
@@ -70,12 +70,12 @@ export function GallerySection() {
           <div className="grid gap-6 sm:grid-cols-3 lg:grid-cols-1">
             {detailImages.map((image) => (
               <article key={image.src} className="relative">
-                <Text
-                  variant="caption"
-                  className="absolute left-0 bottom-14 z-10 rounded-md bg-lime px-3.5 py-2 text-xs font-extrabold uppercase tracking-widest text-primary shadow-md"
-                >
-                  {image.label}
-                </Text>
+              <Text
+                variant="caption"
+                className="absolute left-2 bottom-3 z-10 max-w-[calc(100%-1rem)] rounded-md bg-lime px-2.5 py-1.5 text-[10px] font-extrabold uppercase tracking-widest text-primary shadow-md sm:left-0 sm:bottom-14 sm:px-3.5 sm:text-xs"
+              >
+                {image.label}
+              </Text>
 
                 <div className="relative min-h-45 sm:min-h-55 lg:min-h-62.5">
                   <Image
@@ -90,8 +90,8 @@ export function GallerySection() {
             ))}
           </div>
         </div>
-        <div className="mt-10 flex justify-center">
-          <Button variant="default" size="lg" asChild>
+        <div className="mt-8 flex justify-center px-4 sm:mt-10 md:px-0">
+          <Button variant="default" size="lg" asChild className="w-full sm:w-auto">
             <Link href="/objednavka">Vytvoriť vlastný kalendár</Link>
           </Button>
         </div>

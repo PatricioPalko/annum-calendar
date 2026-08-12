@@ -17,7 +17,7 @@ export function CTASection() {
 
             <Heading
               as="h2"
-              className="mt-3 text-3xl font-bold leading-tight tracking-tight md:text-4xl text-white"
+              className="mt-3 text-white"
             >
               Nahrajte fotky,{" "}
               <span className="text-lime">o zvyšok sa postaráme.</span>
@@ -25,7 +25,7 @@ export function CTASection() {
 
             <Text
               variant="lead"
-              className="mt-4 max-w-xl text-sm font-medium leading-6 text-[#FFF7F4]/75 md:text-base"
+              className="mt-4 max-w-xl text-[#FFF7F4]/75"
             >
               Vyberiete variant, počet kusov a nahráte fotky. Kalendár
               pripravíme tak, aby bol rovno pripravený na tlač.

@@ -4,6 +4,7 @@ import CTASection from "@/components/sections/cta-section";
 import FaqSection from "@/components/sections/faq-section";
 import { GallerySection } from "@/components/sections/gallery-section";
 import { PricingSection } from "@/components/sections/pricing-section";
+import { SectionLink } from "@/components/sections/navigation/section-link";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Button } from "@/components/ui/button";
 import { Heading, Text } from "@/components/ui/typography";
@@ -14,6 +15,12 @@ import Link from "next/link";
 export const metadata: Metadata = {
   alternates: {
     canonical: "/",
+  },
+  openGraph: {
+    title: "Annum | Personalizované A3 nástenné kalendáre z fotiek",
+    description:
+      "Personalizovaný A3 nástenný kalendár z vašich fotiek. Jednoduchá konfigurácia, až 52 fotiek, Premium variant s meninami a narodeninami.",
+    url: "https://www.annum.sk",
   },
 };
 
@@ -44,11 +51,37 @@ const productJsonLd = {
   },
 };
 
+const organizationJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "Annum",
+  url: "https://www.annum.sk",
+  logo: "https://www.annum.sk/icon-512.png",
+  email: "info@annum.sk",
+};
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "Annum",
+  url: "https://www.annum.sk",
+  inLanguage: "sk-SK",
+  publisher: {
+    "@type": "Organization",
+    name: "Annum",
+  },
+};
+
 export default function Home() {
   return (
     <>
       <JsonLd data={productJsonLd} />
-      <main className="font-body min-h-screen bg-[#FFF7F4] px-4 py-6 text-[#3E0F28] sm:px-6">
+      <JsonLd data={organizationJsonLd} />
+      <JsonLd data={websiteJsonLd} />
+      <main
+        id="main-content"
+        className="font-body min-h-screen bg-[#FFF7F4] px-4 py-6 text-[#3E0F28] sm:px-6"
+      >
         <section className="mx-auto max-w-6xl py-4 sm:py-8">
           <div className="grid gap-6 md:grid-cols-[1fr_1fr] md:items-center">
             <div>
@@ -68,10 +101,7 @@ export default function Home() {
                 <span className="block text-secondary">po celý rok.</span>
               </Heading>
 
-              <Text
-                variant="lead"
-                className="mt-6 max-w-xl text-lg leading-8 text-primary"
-              >
+              <Text variant="lead" className="mt-6 max-w-xl">
                 Personalizovaný kalendár z vašich fotiek, narodenín a menín —
                 pripravený jednoducho, bez zložitého editora.
               </Text>
@@ -82,7 +112,7 @@ export default function Home() {
                 </Button>
 
                 <Button variant="secondary" size="lg" asChild>
-                  <Link href="#cennik">Pozrieť cenník</Link>
+                  <SectionLink sectionId="cennik">Pozrieť cenník</SectionLink>
                 </Button>
               </div>
             </div>

@@ -4,6 +4,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { JsonLd } from "@/components/seo/json-ld";
 import { Heading, Text } from "@/components/ui/typography";
 
 import { MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
@@ -95,9 +96,25 @@ const faqSections = [
   },
 ];
 
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqSections.flatMap((section) =>
+    section.items.map((item) => ({
+      "@type": "Question",
+      name: item.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.answer,
+      },
+    })),
+  ),
+};
+
 export function FaqSection() {
   return (
-    <section className="mx-auto my-16 max-w-4xl px-4 scroll-mt-24" id="faq">
+    <section className="mx-auto my-16 max-w-4xl scroll-mt-24 px-4" id="faq">
+      <JsonLd data={faqJsonLd} />
       <div className="mb-8 text-center">
         <Text variant="caption" as="span">
           FAQ
@@ -116,7 +133,7 @@ export function FaqSection() {
       <div className="space-y-8">
         {faqSections.map((section, sectionIndex) => (
           <div key={section.title}>
-            <h3 className="mb-3 font-heading text-xl font-bold text-primary">
+            <h3 className="mb-3 font-heading text-lg font-bold text-primary sm:text-xl">
               {section.title}
             </h3>
 
@@ -127,11 +144,11 @@ export function FaqSection() {
                   value={`section-${sectionIndex}-item-${itemIndex}`}
                   className="rounded-xl border border-soft bg-white px-4 shadow-sm"
                 >
-                  <AccordionTrigger className="text-left text-md font-bold text-primary hover:no-underline hover:cursor-pointer">
+                  <AccordionTrigger className="text-left text-sm font-bold text-primary hover:no-underline hover:cursor-pointer sm:text-base">
                     {item.question}
                   </AccordionTrigger>
 
-                  <AccordionContent className="pr-8 text-sm font-semibold leading-6 tracking-wide text-[#3E0F28]/70">
+                  <AccordionContent className="break-words pr-2 text-sm font-semibold leading-6 tracking-wide text-[#3E0F28]/70 sm:pr-8">
                     {item.answer}
                   </AccordionContent>
                 </AccordionItem>

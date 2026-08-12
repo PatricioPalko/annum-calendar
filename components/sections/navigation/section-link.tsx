@@ -11,16 +11,23 @@ type SectionLinkProps = {
   onClick?: () => void;
 };
 
-function scrollToSection(sectionId: string) {
+const HEADER_OFFSET_PX = 64;
+
+export function scrollToSection(sectionId: string) {
   const startedAt = Date.now();
 
   function tryScroll() {
     const element = document.getElementById(sectionId);
 
     if (element) {
-      element.scrollIntoView({
+      const top =
+        element.getBoundingClientRect().top +
+        window.scrollY -
+        HEADER_OFFSET_PX;
+
+      window.scrollTo({
+        top: Math.max(0, top),
         behavior: "smooth",
-        block: "start",
       });
 
       return;
@@ -79,9 +86,7 @@ export function SectionLink({
       scroll: false,
     });
 
-    window.setTimeout(() => {
-      scrollToSection(sectionId);
-    }, 50);
+    scrollToSection(sectionId);
   }
 
   return (

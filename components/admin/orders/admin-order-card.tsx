@@ -116,7 +116,7 @@ export function AdminOrderCard({ order, index }: AdminOrderCardProps) {
             <p className="text-[10px] font-extrabold uppercase text-[#FC5A61]">
               Poznámka
             </p>
-            <p className="mt-1 text-xs font-semibold leading-5 text-[#3E0F28]/80">
+            <p className="mt-1 break-words text-xs font-semibold leading-5 text-[#3E0F28]/80">
               {truncateText(order.note, 220)}
             </p>
           </div>

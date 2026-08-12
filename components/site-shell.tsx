@@ -20,6 +20,7 @@ export function SiteShell({ navigation, footer, children }: SiteShellProps) {
   return (
     <>
       {navigation}
+      <div className="h-16 shrink-0" aria-hidden="true" />
       {children}
       {footer}
     </>

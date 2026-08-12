@@ -5,6 +5,8 @@ import {
   type QuantityOption,
 } from "@/app/types/types";
 
+import { formatEuroPrice } from "@/helpers/format-euro-price";
+
 function isFixedQuantity(quantity: number): quantity is 1 | 3 | 5 {
   return quantity === 1 || quantity === 3 || quantity === 5;
 }
@@ -26,8 +28,4 @@ export function getAdminOrderPrice(values: {
   });
 }
 
-export function formatPrice(value: number) {
-  return Number.isInteger(value)
-    ? `${value} €`
-    : `${value.toFixed(2).replace(".", ",")} €`;
-}
+export { formatEuroPrice as formatPrice };

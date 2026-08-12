@@ -68,7 +68,7 @@ export default async function PaymentCancelledPage({
           Platba nebola dokončená
         </p>
 
-        <h1 className="mt-3 font-heading text-3xl font-bold sm:text-4xl">
+        <h1 className="mt-3 font-heading text-2xl font-bold sm:text-4xl">
           Objednávku máte uloženú
         </h1>
 

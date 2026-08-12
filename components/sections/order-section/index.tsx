@@ -21,12 +21,7 @@ export default function OrderSection({
         </div>
 
         <div className="min-w-0">
-          <Heading
-            as="h4"
-            className="font-heading text-xl font-bold text-[#3E0F28] sm:text-2xl"
-          >
-            {title}
-          </Heading>
+          <Heading as="h3">{title}</Heading>
 
           {description && <Text>{description}</Text>}
         </div>

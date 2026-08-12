@@ -8,6 +8,7 @@ import {
 } from "@/app/types/types";
 import { Field, FieldError } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { formatEuroPrice } from "@/helpers/format-euro-price";
 import type { OrderFormValues } from "@/lib/schema";
 import { cn } from "@/lib/utils";
 import { BadgeCheck } from "lucide-react";
@@ -20,11 +21,6 @@ type QuantityFieldProps = {
   selectedCalendarType: OrderFormValues["types"];
 };
 
-function formatPrice(value: number) {
-  return Number.isInteger(value)
-    ? `${value} €`
-    : `${value.toFixed(2).replace(".", ",")} €`;
-}
 
 export function FormQuantity({
   control,
@@ -152,13 +148,13 @@ export function FormQuantity({
 
                             <div className="mt-1 flex items-baseline gap-2">
                               {hasDiscount && singlePiecePrice !== null && (
-                                <span className="text-sm font-semibold text-primary/60 line-through">
-                                  {formatPrice(singlePiecePrice)}
+                                <span className="whitespace-nowrap text-sm font-semibold text-primary/60 line-through">
+                                  {formatEuroPrice(singlePiecePrice)}
                                 </span>
                               )}
 
-                              <span className="font-heading text-lg font-bold text-primary">
-                                {formatPrice(pricePerPiece)}
+                              <span className="whitespace-nowrap font-heading text-lg font-bold text-primary">
+                                {formatEuroPrice(pricePerPiece)}
                               </span>
                             </div>
                           </div>
@@ -171,8 +167,8 @@ export function FormQuantity({
                                 Spolu
                               </span>
 
-                              <span className="font-heading text-2xl font-bold text-secondary">
-                                {formatPrice(totalPrice)}
+                              <span className="whitespace-nowrap font-heading text-xl font-bold text-secondary sm:text-2xl">
+                                {formatEuroPrice(totalPrice)}
                               </span>
                             </div>
                           </div>

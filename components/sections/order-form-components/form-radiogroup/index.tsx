@@ -13,6 +13,7 @@ import {
   FieldTitle,
 } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { formatEuroPrice } from "@/helpers/format-euro-price";
 import type { OrderFormValues } from "@/lib/schema";
 import { cn } from "@/lib/utils";
 import { BadgeCheck } from "lucide-react";
@@ -24,11 +25,6 @@ type RadioGroupFieldProps = {
   options: CalendarTypesOption[];
 };
 
-function formatPrice(value: number) {
-  return Number.isInteger(value)
-    ? `${value} €`
-    : `${value.toFixed(2).replace(".", ",")} €`;
-}
 
 export function FormRadioGroup({
   control,
@@ -60,13 +56,13 @@ export function FormRadioGroup({
                   htmlFor={id}
                   data-selected={isSelected ? "true" : "false"}
                   className={cn(
-                    "relative flex min-h-50 cursor-pointer flex-col  rounded-md border border-[#EAD6DE] bg-white p-4 shadow-sm transition-all duration-200",
+                    "relative flex cursor-pointer flex-col rounded-md border border-[#EAD6DE] bg-white p-3 shadow-sm transition-all duration-200",
                     "hover:border-[#FC5A61]/50 hover:bg-[#FFF7F4] hover:shadow-md",
-                    "data-[selected=true]:border-secondary  data-[selected=true]:bg-[#FFF7F4] data-[selected=true]:shadow-md",
+                    "data-[selected=true]:border-secondary data-[selected=true]:bg-[#FFF7F4] data-[selected=true]:shadow-md",
                   )}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-start gap-2.5">
                       <RadioGroupItem
                         id={id}
                         value={plan.value}
@@ -74,13 +70,13 @@ export function FormRadioGroup({
                         className="mt-0.5"
                       />
 
-                      <Field orientation="vertical" className="gap-1">
+                      <Field orientation="vertical" className="gap-0.5">
                         <FieldContent>
-                          <FieldTitle className="text-md font-bold text-foreground">
+                          <FieldTitle className="font-bold normal-case text-foreground">
                             {plan.label}
                           </FieldTitle>
 
-                          <FieldDescription className="mt-1 text-sm leading-6 text-muted-foreground">
+                          <FieldDescription className="mt-0.5 text-sm leading-5 text-muted-foreground">
                             {plan.description}
                           </FieldDescription>
                         </FieldContent>
@@ -89,23 +85,20 @@ export function FormRadioGroup({
                     {plan.value === "premium" && (
                       <span
                         className={cn(
-                          "absolute -top-4 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-[#C8FF3D] px-3 py-1.5 text-xs font-extrabold uppercase tracking-[0.16em] text-[#3E0F28] shadow-sm",
-                          plan.value === "premium"
-                            ? "bg-lime text-[#3E0F28]"
-                            : "bg-soft/60 text-[#3E0F28]",
+                          "absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-[#C8FF3D] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#3E0F28] shadow-sm",
                         )}
                       >
-                        <BadgeCheck className="size-3.5" />
+                        <BadgeCheck className="size-3" />
                         {plan.badge}
                       </span>
                     )}
                   </div>
-                  <div className="mt-auto border-t border-[#EAD6DE] pt-2">
+                  <div className="mt-3 border-t border-[#EAD6DE] pt-2">
                     {lowestUnitPrice !== null ? (
                       <p className="text-sm font-semibold text-primary">
                         od{" "}
-                        <span className="font-heading text-2xl font-bold text-secondary">
-                          {formatPrice(lowestUnitPrice)}
+                        <span className="whitespace-nowrap font-heading text-xl font-bold text-secondary sm:text-2xl">
+                          {formatEuroPrice(lowestUnitPrice)}
                         </span>{" "}
                         / ks
                       </p>

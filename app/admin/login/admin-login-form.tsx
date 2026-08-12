@@ -48,27 +48,49 @@ export function AdminLoginForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-      <Input
-        type="email"
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-        placeholder="E-mail"
-        autoComplete="email"
-        required
-      />
+    <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
+      <div>
+        <label htmlFor="admin-email" className="sr-only">
+          E-mail
+        </label>
+        <Input
+          id="admin-email"
+          type="email"
+          value={email}
+          onChange={(event) => setEmail(event.target.value)}
+          placeholder="E-mail"
+          autoComplete="email"
+          required
+          aria-invalid={Boolean(errorMessage)}
+          aria-describedby={errorMessage ? "admin-login-error" : undefined}
+        />
+      </div>
 
-      <Input
-        type="password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        placeholder="Heslo"
-        autoComplete="current-password"
-        required
-      />
+      <div>
+        <label htmlFor="admin-password" className="sr-only">
+          Heslo
+        </label>
+        <Input
+          id="admin-password"
+          type="password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          placeholder="Heslo"
+          autoComplete="current-password"
+          required
+          aria-invalid={Boolean(errorMessage)}
+          aria-describedby={errorMessage ? "admin-login-error" : undefined}
+        />
+      </div>
 
       {errorMessage && (
-        <p className="text-sm font-semibold text-[#FC5A61]">{errorMessage}</p>
+        <p
+          id="admin-login-error"
+          role="alert"
+          className="text-sm font-semibold text-[#FC5A61]"
+        >
+          {errorMessage}
+        </p>
       )}
 
       <Button type="submit" className="w-full" disabled={isLoading}>

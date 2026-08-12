@@ -305,11 +305,11 @@ export default function OrderForm() {
       <form
         onSubmit={form.handleSubmit(onSubmit, scrollToErrorSection)}
         id="order-form"
-        className="grid gap-4 pb-24 lg:grid-cols-[1fr_360px] lg:pb-0 lg:pt-8"
+        className="grid gap-4 pb-[calc(4.25rem+env(safe-area-inset-bottom))] lg:grid-cols-[minmax(0,1fr)_360px] lg:pb-0 lg:pt-8"
       >
         <fieldset
           disabled={isSubmitting}
-          className="space-y-8 disabled:pointer-events-none disabled:opacity-60"
+          className="min-w-0 space-y-8 disabled:pointer-events-none disabled:opacity-60"
         >
           <OrderSection
             step="1"
@@ -484,7 +484,7 @@ export default function OrderForm() {
 
         <aside
           id="order-summary"
-          className="scroll-mt-24 overflow-hidden rounded-md bg-white text-primary shadow-xl shadow-primary/10 ring-1 ring-soft lg:sticky lg:top-20 lg:self-start"
+          className="min-w-0 scroll-mt-24 overflow-hidden rounded-md bg-white text-primary shadow-xl shadow-primary/10 ring-1 ring-soft lg:sticky lg:top-20 lg:self-start"
         >
           <div className="space-y-2">
             <PriceSummary
@@ -534,24 +534,28 @@ export default function OrderForm() {
               deliveryMethod={selectedDeliveryMethod}
             />
             <div data-error-section={hasTermsError ? "true" : undefined}>
-              <FormConsentCheckbox control={form.control} className="px-5" />
+              <FormConsentCheckbox control={form.control} className="px-3 sm:px-5" />
             </div>
 
             {turnstileConfigured ? (
               <div
                 data-error-section={hasTurnstileError ? "true" : undefined}
-                className="px-6"
+                className="px-3 sm:px-5"
               >
                 <TurnstileWidget
                   ref={turnstileRef}
                   siteKey={turnstileSiteKey}
+                  responsive
                   onToken={(token) => setTurnstileToken(token)}
                   onExpired={() => setTurnstileToken("")}
                   onError={() => setTurnstileToken("")}
                 />
 
                 {hasTurnstileError && (
-                  <p className="mt-2 text-sm font-semibold text-[#FC5A61]">
+                  <p
+                    role="alert"
+                    className="mt-2 text-sm font-semibold text-[#FC5A61]"
+                  >
                     Prosím potvrďte, že nie ste robot.
                   </p>
                 )}
@@ -583,9 +587,10 @@ export default function OrderForm() {
             </div>
             {hasSubmitError && (
               <p
+                role="alert"
                 data-submit-error="true"
                 data-error-section="true"
-                className="mx-5 mb-6 rounded-md border border-[#FC5A61]/30 bg-[#FFF7F4] p-3 text-sm font-semibold text-[#FC5A61]"
+                className="mx-3 mb-6 rounded-md border border-[#FC5A61]/30 bg-[#FFF7F4] p-3 text-sm font-semibold text-[#FC5A61] sm:mx-5"
               >
                 {submitError}
               </p>

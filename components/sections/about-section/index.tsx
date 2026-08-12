@@ -25,8 +25,8 @@ const steps = [
 
 export function AboutSection() {
   return (
-    <section id="ako-to-funguje" className="scroll-mt-24 py-12 sm:py-20">
-      <div className="mx-auto max-w-6xl px-4 md:px-6">
+    <section id="ako-to-funguje" className="scroll-mt-24 py-8 sm:py-20">
+      <div className="mx-auto max-w-6xl px-0 md:px-6">
         <div className="mx-auto max-w-2xl text-center">
           <Text variant="caption" as="span">
             Objednávka krok za krokom
@@ -47,31 +47,26 @@ export function AboutSection() {
           </Text>
         </div>
 
-        <div className="mt-10 grid gap-4 md:grid-cols-3">
+        <div className="mt-8 grid gap-3 sm:mt-10 sm:gap-4 md:grid-cols-3">
           {steps.map((step, index) => {
             const Icon = step.icon;
 
             return (
               <div
                 key={step.title}
-                className="relative rounded-xl border border-[#EAD6DE] bg-white p-6 shadow-md"
+                className="relative rounded-xl border border-[#EAD6DE] bg-white p-4 shadow-md sm:p-6"
               >
-                <div className="mb-5 flex items-center justify-between">
-                  <div className="flex size-12 items-center justify-center rounded-xl bg-[#FFF7F4] text-[#FC5A61]">
-                    <Icon className="size-6" />
+                <div className="mb-4 flex items-center justify-between sm:mb-5">
+                  <div className="flex size-10 items-center justify-center rounded-xl bg-[#FFF7F4] text-[#FC5A61] sm:size-12">
+                    <Icon className="size-5 sm:size-6" />
                   </div>
 
-                  <span className="font-heading text-4xl font-bold text-soft">
+                  <span className="font-heading text-2xl font-bold text-soft sm:text-4xl">
                     0{index + 1}
                   </span>
                 </div>
 
-                <Heading
-                  as="h3"
-                  className="font-heading text-2xl font-bold text-[#3E0F28]"
-                >
-                  {step.title}
-                </Heading>
+                <Heading as="h3">{step.title}</Heading>
 
                 <Text variant="body" className="mt-3 font-medium">
                   {step.description}

@@ -79,7 +79,7 @@ export default async function OrderThankYouPage({ searchParams }: PageProps) {
           Ďakujeme
         </p>
 
-        <h1 className="mt-3 font-heading text-3xl font-bold sm:text-4xl">
+        <h1 className="mt-3 font-heading text-2xl font-bold sm:text-4xl">
           Objednávka bola prijatá
         </h1>
 

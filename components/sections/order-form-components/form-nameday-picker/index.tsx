@@ -62,13 +62,14 @@ export function NamedayPicker({
 
   return (
     <div className="space-y-5">
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5 sm:gap-2">
         <Button
           type="button"
           onClick={() => setLetter("all")}
           aria-pressed={letter === "all"}
           variant={letter === "all" ? "default" : "secondary"}
-          className="h-10 min-w-10 px-3"
+          size="sm"
+          className="h-8 px-2 text-xs sm:h-10 sm:px-3 sm:text-sm"
         >
           Všetky
         </Button>
@@ -81,9 +82,10 @@ export function NamedayPicker({
               key={item}
               type="button"
               variant={isSelected ? "default" : "secondary"}
+              size="sm"
               onClick={() => setLetter(item)}
               aria-pressed={isSelected}
-              className="h-10 min-w-10 px-3"
+              className="h-8 min-w-8 px-1.5 text-xs sm:h-10 sm:min-w-10 sm:px-3 sm:text-sm"
             >
               {item}
             </Button>
@@ -104,7 +106,7 @@ export function NamedayPicker({
           </span>
         </div>
 
-        <ul className="grid max-h-67 grid-cols-2 gap-2 overflow-y-auto pr-1 sm:grid-cols-4 lg:grid-cols-6">
+        <ul className="grid max-h-67 grid-cols-3 gap-1.5 overflow-y-auto pr-1 sm:grid-cols-4 sm:gap-2 lg:grid-cols-6">
           {names.map((name) => {
             const isSelected = selectedNameIndex.has(name);
 
@@ -116,8 +118,9 @@ export function NamedayPicker({
                   aria-pressed={isSelected}
                   className={cn(
                     [
-                      "flex w-full items-center justify-between gap-2 rounded-md border px-3 py-2",
-                      "text-left text-sm font-semibold transition-all duration-200",
+                      "flex w-full items-center justify-between gap-1.5 rounded-md border px-2 py-1.5",
+                      "text-left text-xs font-semibold transition-all duration-200",
+                      "sm:gap-2 sm:px-3 sm:py-2 sm:text-sm",
                       "outline-none",
                       "focus-visible:border-[#FC5A61] focus-visible:ring-4 focus-visible:ring-[#FC5A61]/15",
                       "hover:cursor-pointer",

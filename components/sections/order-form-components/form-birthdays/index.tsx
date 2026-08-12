@@ -42,6 +42,11 @@ type BirthdaysFieldArrayProps = {
   trigger: UseFormTrigger<OrderFormInput>;
 };
 
+const birthdayControlClass =
+  "h-8! min-h-8 py-0! sm:h-9! sm:min-h-9 md:h-11! md:min-h-11";
+const birthdayDayColumnClass = "w-[45px] shrink-0";
+const birthdayMonthColumnClass = "w-[100px] shrink-0";
+
 export function BirthdaysFieldArray({
   control,
   trigger,
@@ -66,125 +71,173 @@ export function BirthdaysFieldArray({
         {fields.map((item, index) => (
           <div
             key={item.id}
-            className="grid gap-2 py-1 md:grid-cols-[120px_160px_1fr]"
+            className="grid grid-cols-[45px_100px_minmax(0,1fr)] items-end gap-1 py-1 md:gap-2"
           >
             <Controller
               name={`birthdays.${index}.day`}
               control={control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel className={index === 0 ? "" : "sr-only"}>
-                    Deň
-                  </FieldLabel>
-                  <Select
-                    value={field.value ? String(field.value) : ""}
-                    onValueChange={async (value) => {
-                      field.onChange(Number(value));
-                      await validateBirthdayRow(index);
-                    }}
-                  >
-                    <SelectTrigger aria-invalid={fieldState.invalid}>
-                      <SelectValue placeholder="Deň" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {days.map((day) => (
-                        <SelectItem key={day} value={String(day)}>
-                          {day}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              render={({ field, fieldState }) => {
+                const fieldId = `birthday-${index}-day`;
+                const errorId = `${fieldId}-error`;
 
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
+                return (
+                  <Field
+                    data-invalid={fieldState.invalid}
+                    className={birthdayDayColumnClass}
+                  >
+                    <FieldLabel
+                      htmlFor={fieldId}
+                      className={index === 0 ? "" : "sr-only"}
+                    >
+                      Deň
+                    </FieldLabel>
+                    <Select
+                      value={field.value ? String(field.value) : ""}
+                      onValueChange={async (value) => {
+                        field.onChange(Number(value));
+                        await validateBirthdayRow(index);
+                      }}
+                    >
+                      <SelectTrigger
+                        id={fieldId}
+                        className={`${birthdayControlClass} ${birthdayDayColumnClass} gap-0 px-1! [&_svg]:size-3 md:px-1.5! md:[&_svg]:size-4`}
+                        aria-invalid={fieldState.invalid}
+                        aria-describedby={
+                          fieldState.invalid ? errorId : undefined
+                        }
+                      >
+                        <SelectValue placeholder="Deň" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {days.map((day) => (
+                          <SelectItem key={day} value={String(day)}>
+                            {day}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {fieldState.invalid && (
+                      <FieldError id={errorId} errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                );
+              }}
             />
 
             <Controller
               name={`birthdays.${index}.month`}
               control={control}
-              render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
-                  <FieldLabel className={index === 0 ? "" : "sr-only"}>
-                    Mesiac
-                  </FieldLabel>
-                  <Select
-                    value={field.value ? String(field.value) : ""}
-                    onValueChange={async (value) => {
-                      field.onChange(Number(value));
-                      await validateBirthdayRow(index);
-                    }}
-                  >
-                    <SelectTrigger aria-invalid={fieldState.invalid}>
-                      <SelectValue placeholder="Mesiac" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {months.map((month) => (
-                        <SelectItem
-                          key={month.value}
-                          value={String(month.value)}
-                        >
-                          {month.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              render={({ field, fieldState }) => {
+                const fieldId = `birthday-${index}-month`;
+                const errorId = `${fieldId}-error`;
 
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
+                return (
+                  <Field
+                    data-invalid={fieldState.invalid}
+                    className={birthdayMonthColumnClass}
+                  >
+                    <FieldLabel
+                      htmlFor={fieldId}
+                      className={index === 0 ? "" : "sr-only"}
+                    >
+                      Mesiac
+                    </FieldLabel>
+                    <Select
+                      value={field.value ? String(field.value) : ""}
+                      onValueChange={async (value) => {
+                        field.onChange(Number(value));
+                        await validateBirthdayRow(index);
+                      }}
+                    >
+                      <SelectTrigger
+                        id={fieldId}
+                        className={`${birthdayControlClass} ${birthdayMonthColumnClass} gap-0 px-1! md:px-2! [&_svg]:size-3 md:[&_svg]:size-4`}
+                        aria-invalid={fieldState.invalid}
+                        aria-describedby={
+                          fieldState.invalid ? errorId : undefined
+                        }
+                      >
+                        <SelectValue placeholder="Mesiac" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {months.map((month) => (
+                          <SelectItem
+                            key={month.value}
+                            value={String(month.value)}
+                          >
+                            {month.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+
+                    {fieldState.invalid && (
+                      <FieldError id={errorId} errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                );
+              }}
             />
 
             <Controller
               name={`birthdays.${index}.name`}
               control={control}
-              render={({ field, fieldState }) => (
-                <Field
-                  data-invalid={fieldState.invalid}
-                  className="min-w-0 gap-1.5"
-                >
-                  <FieldLabel className={index === 0 ? "" : "sr-only"}>
-                    Meno
-                  </FieldLabel>
+              render={({ field, fieldState }) => {
+                const fieldId = `birthday-${index}-name`;
+                const errorId = `${fieldId}-error`;
 
-                  <div className="flex items-center gap-2">
-                    <Input
-                      {...field}
-                      value={field.value ?? ""}
-                      placeholder="Napr. Martin"
-                      className="min-w-0 flex-1"
-                      aria-invalid={fieldState.invalid}
-                      onChange={(event) => {
-                        field.onChange(event.target.value);
-                        void trigger(`birthdays.${index}.name`);
-                      }}
-                      onBlur={() => {
-                        field.onBlur();
-                        void trigger(`birthdays.${index}.name`);
-                      }}
-                    />
-
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      size="icon"
-                      onClick={() => remove(index)}
-                      aria-label="Odstrániť narodeniny"
-                      className="size-8 shrink-0"
+                return (
+                  <Field
+                    data-invalid={fieldState.invalid}
+                    className="min-w-0 gap-1.5"
+                  >
+                    <FieldLabel
+                      htmlFor={fieldId}
+                      className={index === 0 ? "" : "sr-only"}
                     >
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </div>
+                      Meno
+                    </FieldLabel>
 
-                  {fieldState.invalid && (
-                    <FieldError errors={[fieldState.error]} />
-                  )}
-                </Field>
-              )}
+                    <div className="flex min-w-0 items-stretch gap-2">
+                      <Input
+                        {...field}
+                        id={fieldId}
+                        value={field.value ?? ""}
+                        placeholder="Napr. Martin"
+                        className={`${birthdayControlClass} min-w-0 flex-1 px-2.5 sm:px-4`}
+                        aria-invalid={fieldState.invalid}
+                        aria-describedby={
+                          fieldState.invalid ? errorId : undefined
+                        }
+                        onChange={(event) => {
+                          field.onChange(event.target.value);
+                          void trigger(`birthdays.${index}.name`);
+                        }}
+                        onBlur={() => {
+                          field.onBlur();
+                          void trigger(`birthdays.${index}.name`);
+                        }}
+                      />
+
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="icon"
+                        onClick={() => remove(index)}
+                      aria-label="Odstrániť narodeniny"
+                        className={`${birthdayControlClass} aspect-square shrink-0 px-0`}
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
+
+                    {fieldState.invalid && (
+                      <FieldError id={errorId} errors={[fieldState.error]} />
+                    )}
+                  </Field>
+                );
+              }}
             />
           </div>
         ))}

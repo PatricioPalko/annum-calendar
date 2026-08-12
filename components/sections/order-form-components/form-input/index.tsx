@@ -29,22 +29,30 @@ export function FormInput({
     <Controller
       name={name}
       control={control}
-      render={({ field, fieldState }) => (
-        <Field data-invalid={fieldState.invalid}>
-          <FieldLabel htmlFor={`form-${name}`}>{label}</FieldLabel>
+      render={({ field, fieldState }) => {
+        const inputId = `form-${name}`;
+        const errorId = `${inputId}-error`;
 
-          <Input
-            {...field}
-            id={`form-${name}`}
-            aria-invalid={fieldState.invalid}
-            autoComplete={autoComplete}
-            type={type}
-            placeholder={placeholder}
-          />
+        return (
+          <Field data-invalid={fieldState.invalid}>
+            <FieldLabel htmlFor={inputId}>{label}</FieldLabel>
 
-          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
-        </Field>
-      )}
+            <Input
+              {...field}
+              id={inputId}
+              aria-invalid={fieldState.invalid}
+              aria-describedby={fieldState.invalid ? errorId : undefined}
+              autoComplete={autoComplete}
+              type={type}
+              placeholder={placeholder}
+            />
+
+            {fieldState.invalid && (
+              <FieldError id={errorId} errors={[fieldState.error]} />
+            )}
+          </Field>
+        );
+      }}
     />
   );
 }
