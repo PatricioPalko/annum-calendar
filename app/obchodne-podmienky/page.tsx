@@ -70,7 +70,8 @@ export default function TermsPage() {
             <Text>
               Prostredníctvom objednávkového formulára si môžete objednať
               personalizovaný A3 nástenný kalendár pripravený z vašich fotiek,
-              zadaných údajov a podľa zvoleného variantu.
+              zadaných údajov a podľa zvoleného variantu. Ku každej objednávke
+              patrí aj klinček a pero na zapisovanie poznámok.
             </Text>
 
             <Text>

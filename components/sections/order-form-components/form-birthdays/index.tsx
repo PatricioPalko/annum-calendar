@@ -1,7 +1,12 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
-import { Control, Controller, useFieldArray } from "react-hook-form";
+import {
+  Control,
+  Controller,
+  UseFormTrigger,
+  useFieldArray,
+} from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
@@ -13,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
 import type { OrderFormInput } from "@/lib/schema";
 
 const days = Array.from({ length: 31 }, (_, index) => index + 1);
@@ -35,28 +39,34 @@ const months = [
 
 type BirthdaysFieldArrayProps = {
   control: Control<OrderFormInput>;
+  trigger: UseFormTrigger<OrderFormInput>;
 };
 
-export function BirthdaysFieldArray({ control }: BirthdaysFieldArrayProps) {
+export function BirthdaysFieldArray({
+  control,
+  trigger,
+}: BirthdaysFieldArrayProps) {
   const { fields, append, remove } = useFieldArray({
     control,
     name: "birthdays",
   });
 
+  async function validateBirthdayRow(index: number) {
+    await trigger([
+      `birthdays.${index}.day`,
+      `birthdays.${index}.month`,
+      `birthdays.${index}.name`,
+      `birthdays.${index}`,
+    ]);
+  }
+
   return (
     <div className="space-y-4">
-      {/* <div>
-        <h3 className="text-lg font-medium">Narodeniny</h3>
-        <p className="mt-1 text-left tracking-wide leading-normal font-normal text-muted-foreground">
-          Pridajte dátumy narodenín, ktoré chcete označiť v kalendári.
-        </p>
-      </div> */}
-
       <div className="space-y-2">
         {fields.map((item, index) => (
           <div
             key={item.id}
-            className="grid gap-2 py-1 md:grid-cols-[120px_160px_1fr_auto]"
+            className="grid gap-2 py-1 md:grid-cols-[120px_160px_1fr]"
           >
             <Controller
               name={`birthdays.${index}.day`}
@@ -68,7 +78,10 @@ export function BirthdaysFieldArray({ control }: BirthdaysFieldArrayProps) {
                   </FieldLabel>
                   <Select
                     value={field.value ? String(field.value) : ""}
-                    onValueChange={(value) => field.onChange(Number(value))}
+                    onValueChange={async (value) => {
+                      field.onChange(Number(value));
+                      await validateBirthdayRow(index);
+                    }}
                   >
                     <SelectTrigger aria-invalid={fieldState.invalid}>
                       <SelectValue placeholder="Deň" />
@@ -99,7 +112,10 @@ export function BirthdaysFieldArray({ control }: BirthdaysFieldArrayProps) {
                   </FieldLabel>
                   <Select
                     value={field.value ? String(field.value) : ""}
-                    onValueChange={(value) => field.onChange(Number(value))}
+                    onValueChange={async (value) => {
+                      field.onChange(Number(value));
+                      await validateBirthdayRow(index);
+                    }}
                   >
                     <SelectTrigger aria-invalid={fieldState.invalid}>
                       <SelectValue placeholder="Mesiac" />
@@ -127,16 +143,42 @@ export function BirthdaysFieldArray({ control }: BirthdaysFieldArrayProps) {
               name={`birthdays.${index}.name`}
               control={control}
               render={({ field, fieldState }) => (
-                <Field data-invalid={fieldState.invalid}>
+                <Field
+                  data-invalid={fieldState.invalid}
+                  className="min-w-0 gap-1.5"
+                >
                   <FieldLabel className={index === 0 ? "" : "sr-only"}>
                     Meno
                   </FieldLabel>
-                  <Input
-                    {...field}
-                    value={field.value ?? ""}
-                    placeholder="Napr. Martin"
-                    aria-invalid={fieldState.invalid}
-                  />
+
+                  <div className="flex items-center gap-2">
+                    <Input
+                      {...field}
+                      value={field.value ?? ""}
+                      placeholder="Napr. Martin"
+                      className="min-w-0 flex-1"
+                      aria-invalid={fieldState.invalid}
+                      onChange={(event) => {
+                        field.onChange(event.target.value);
+                        void trigger(`birthdays.${index}.name`);
+                      }}
+                      onBlur={() => {
+                        field.onBlur();
+                        void trigger(`birthdays.${index}.name`);
+                      }}
+                    />
+
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="icon"
+                      onClick={() => remove(index)}
+                      aria-label="Odstrániť narodeniny"
+                      className="size-8 shrink-0"
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
 
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
@@ -144,19 +186,6 @@ export function BirthdaysFieldArray({ control }: BirthdaysFieldArrayProps) {
                 </Field>
               )}
             />
-
-            <div className="flex items-end">
-              <Button
-                type="button"
-                variant="secondary"
-                size="icon"
-                onClick={() => remove(index)}
-                aria-label="Odstrániť narodeniny"
-                className="size-8"
-              >
-                <Trash2 className="size-4" />
-              </Button>
-            </div>
           </div>
         ))}
       </div>

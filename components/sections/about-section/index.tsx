@@ -42,7 +42,8 @@ export function AboutSection() {
           </Text> */}
           <Text variant="lead" className="mx-auto mt-4 max-w-2xl text-center">
             Vyberiete si typ kalendára, nahráte fotky a odošlete objednávku. My
-            z Vašich podkladov pripravíme nástenný kalendár so špirálou.
+            z Vašich podkladov pripravíme nástenný kalendár so špirálou — ku
+            každej objednávke pridáme klinček a pero na poznámky.
           </Text>
         </div>
 

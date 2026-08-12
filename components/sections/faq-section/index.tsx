@@ -89,7 +89,7 @@ const faqSections = [
       {
         question: "Čo je zahrnuté v cene kalendára?",
         answer:
-          "Cena zahŕňa spracovanie objednávky, prípravu kalendára z nahraných fotiek, tlač, zabalenie a základnú úpravu rozloženia podľa zvoleného variantu. Pri variante Premium je zahrnuté aj zvýraznenie vybraných menín a narodenín. Doručenie sa účtuje samostatne podľa zvoleného spôsobu doručenia.",
+          "Cena zahŕňa spracovanie objednávky, prípravu kalendára z nahraných fotiek, tlač, zabalenie, klinček a pero na zapisovanie poznámok a základnú úpravu rozloženia podľa zvoleného variantu. Pri variante Premium je zahrnuté aj zvýraznenie vybraných menín a narodenín. Doručenie sa účtuje samostatne podľa zvoleného spôsobu doručenia.",
       },
     ],
   },

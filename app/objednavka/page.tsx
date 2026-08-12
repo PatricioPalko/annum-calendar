@@ -23,7 +23,8 @@ export default function KalendarPage() {
 
             <p className="mt-6 max-w-xl text-lg leading-8 text-primary font-medium">
               Vyber typ kalendára, počet kusov a nahraj fotky. Pri Premium
-              variante môžeš doplniť aj narodeniny, meniny alebo výročia.
+              variante môžeš doplniť aj narodeniny, meniny alebo výročia. Ku
+              každej objednávke patrí klinček a pero na poznámky.
               <span className="block font-semibold text-secondary">
                 {" "}
                 Všetko ostatné nechaj na nás.

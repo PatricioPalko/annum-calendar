@@ -1,7 +1,11 @@
 import { calendarTypesValues, CUSTOM_QUANTITY_VALUE } from "@/app/types/types";
 import { isValidCalendarDayMonth } from "@/helpers/calendar-date";
 import { normalizePhone } from "@/helpers/phone";
-import { MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
+import {
+  MAX_BIRTHDAY_NAME_LENGTH,
+  MAX_PHOTOS,
+  MIN_PHOTOS,
+} from "@/lib/order/config";
 import { z } from "zod";
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -9,14 +13,21 @@ const birthdaySchema = z
   .object({
     day: z.number().int().min(1, "Deň je povinný").max(31),
     month: z.number().int().min(1, "Mesiac je povinný").max(12),
-    name: z.string().min(1, "Zadajte meno"),
+    name: z
+      .string()
+      .trim()
+      .min(1, "Zadajte meno")
+      .max(
+        MAX_BIRTHDAY_NAME_LENGTH,
+        `Meno môže mať maximálne ${MAX_BIRTHDAY_NAME_LENGTH} znakov.`,
+      ),
   })
   .superRefine((value, ctx) => {
     if (!isValidCalendarDayMonth(value.day, value.month)) {
       ctx.addIssue({
         code: "custom",
         path: ["day"],
-        message: "Neplatný dátum narodenín.",
+        message: "Neplatný dátum.",
       });
     }
   });

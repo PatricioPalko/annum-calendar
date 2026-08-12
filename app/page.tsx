@@ -1,9 +1,9 @@
+import { businessVolumeTiers, calendarTypes } from "@/app/types/types";
 import { AboutSection } from "@/components/sections/about-section";
 import CTASection from "@/components/sections/cta-section";
 import FaqSection from "@/components/sections/faq-section";
 import { GallerySection } from "@/components/sections/gallery-section";
 import { PricingSection } from "@/components/sections/pricing-section";
-import { businessVolumeTiers, calendarTypes } from "@/app/types/types";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Button } from "@/components/ui/button";
 import { Heading, Text } from "@/components/ui/typography";
@@ -89,7 +89,7 @@ export default function Home() {
 
             <div className="relative ">
               <Image
-                src="/calendar5.png"
+                src="/hero.webp"
                 alt="Ukážka personalizovaného A3 kalendára"
                 width={800}
                 height={1000}

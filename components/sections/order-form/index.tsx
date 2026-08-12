@@ -383,7 +383,10 @@ export default function OrderForm() {
                   description="Doplňte narodeniny, ktoré chcete mať v kalendári zvýraznené."
                 >
                   <div className="space-y-8">
-                    <BirthdaysFieldArray control={form.control} />
+                    <BirthdaysFieldArray
+                      control={form.control}
+                      trigger={form.trigger}
+                    />
                   </div>
                 </OrderSection>
               </div>

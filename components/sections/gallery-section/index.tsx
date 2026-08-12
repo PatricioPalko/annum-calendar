@@ -6,7 +6,7 @@ import { Heading, Text } from "@/components/ui/typography";
 
 const galleryImages = [
   {
-    src: "/detail3.png",
+    src: "/final.webp",
     alt: "Ukážka personalizovaného nástenného kalendára",
     label: "Finálny kalendár",
   },

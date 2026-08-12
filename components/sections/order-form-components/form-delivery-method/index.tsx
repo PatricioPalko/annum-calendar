@@ -91,13 +91,13 @@ export function FormDeliveryMethod({ control }: DeliveryMethodFieldProps) {
                     </div>
                   </div>
 
-                  <div className="mt-auto border-t border-[#EAD6DE] pt-2">
+                  <div className="mt-auto flex items-baseline justify-between gap-4 border-t border-[#EAD6DE] pt-2">
                     <p className="text-sm font-semibold text-primary">
-                      Cena doručenia{" "}
-                      <span className="font-heading text-xl font-bold text-secondary">
-                        {option.price}
-                      </span>
+                      Cena doručenia
                     </p>
+                    <span className="font-heading text-xl font-bold text-secondary">
+                      {option.price}
+                    </span>
                   </div>
                 </label>
               );

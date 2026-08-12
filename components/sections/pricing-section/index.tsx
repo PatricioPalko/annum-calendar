@@ -8,17 +8,13 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { Heading, Text } from "@/components/ui/typography";
+import { ORDER_SHARED_INCLUSIONS } from "@/lib/order/config";
 
 const basicPlan = calendarTypes.find((plan) => plan.value === "basic")!;
 const premiumPlan = calendarTypes.find((plan) => plan.value === "premium")!;
 const businessPlan = calendarTypes.find((plan) => plan.value === "business")!;
 
-const sharedInclusions = [
-  "A3 nástenný kalendár s kovovou väzbou",
-  "Vlastné fotky rozložené do 12 mesiacov (min. 14, odporúčame 30+)",
-  "Grafická príprava, tlač a zabalenie v cene",
-  "Doručenie sa účtuje samostatne — osobný odber v Košiciach alebo Packeta",
-];
+const sharedInclusions = [...ORDER_SHARED_INCLUSIONS];
 
 const plans = [
   {

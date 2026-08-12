@@ -24,7 +24,11 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
-import { MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
+import {
+  MAX_BIRTHDAY_NAME_LENGTH,
+  MAX_PHOTOS,
+  MIN_PHOTOS,
+} from "@/lib/order/config";
 
 const uploadedPhotoSchema = z.object({
   name: z.string(),
@@ -66,7 +70,11 @@ const orderBodySchema = z.object({
     z.object({
       day: z.number().int().min(1).max(31),
       month: z.number().int().min(1).max(12),
-      name: z.string().min(1),
+      name: z
+        .string()
+        .trim()
+        .min(1)
+        .max(MAX_BIRTHDAY_NAME_LENGTH),
     }),
   ),
 
@@ -112,7 +120,9 @@ export async function POST(request: Request) {
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
 
-  if (!appUrl) {
+  if (!appUrl || !process.env.ORDER_PAYMENT_SIGNING_SECRET) {
+    console.error("CREATE_ORDER_CONFIG_ERROR: missing NEXT_PUBLIC_APP_URL or ORDER_PAYMENT_SIGNING_SECRET");
+
     return NextResponse.json(
       { message: "Server nie je správne nakonfigurovaný." },
       { status: 500 },

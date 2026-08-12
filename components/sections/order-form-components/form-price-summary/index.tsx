@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Heading, Text } from "@/components/ui/typography";
 import { getDeliveryLabel, getDeliveryPrice } from "@/helpers/delivery";
 import { getDiscountAmount } from "@/helpers/discount-codes";
+import { ORDER_NOTE_ACCESSORY_LABEL } from "@/lib/order/config";
 import { Check, Tag, X } from "lucide-react";
 
 type DeliveryMethod = "pickup" | "packeta";
@@ -120,6 +121,7 @@ export function PriceSummary({
       label: "Počet nahraných fotiek",
       value: `${selectedPhotosQuantity ?? 0}`,
     },
+    { label: "V balení", value: ORDER_NOTE_ACCESSORY_LABEL },
     {
       label: "Doručenie",
       value:

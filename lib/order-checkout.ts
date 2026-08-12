@@ -186,9 +186,9 @@ export async function getOrCreateOrderCheckoutSession(
     await expireCheckoutSession(expectedPreviousSessionId);
   }
 
-  const cancelUrl = buildCancelUrl(appUrl, order.id, order.order_code);
-
   try {
+    const cancelUrl = buildCancelUrl(appUrl, order.id, order.order_code);
+
     const checkoutSession = await stripe.checkout.sessions.create({
       mode: "payment",
       customer_email: order.email,

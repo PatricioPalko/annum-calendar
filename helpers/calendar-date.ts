@@ -8,3 +8,12 @@ export function isValidCalendarDayMonth(day: number, month: number) {
     date.getUTCDate() === day
   );
 }
+
+/** Days in month for a non-specific year; February allows 29 (leap). */
+export function getDaysInMonth(month: number) {
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    return 31;
+  }
+
+  return new Date(Date.UTC(2024, month, 0)).getUTCDate();
+}

@@ -45,7 +45,7 @@ export function NamedaysFieldArray({ control }: NamedaysFieldArrayProps) {
         selectedNames={selectedNames}
       />
       {sortedSelectedNames.length > 0 && (
-        <div className="rounded-md border border-border bg-surface p-4">
+        <div className="rounded-md border border-secondary bg-[#FFF7F4] p-4 shadow-md">
           <div className="mb-3 flex items-center justify-between gap-4">
             <p className="text-sm font-bold text-foreground">Vybrané meniny</p>
 
