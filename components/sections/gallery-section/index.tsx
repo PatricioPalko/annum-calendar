@@ -6,31 +6,31 @@ import { Heading, SectionLabel, Text } from "@/components/ui/typography";
 import { cn } from "@/lib/utils";
 
 const finalProduct = {
-  src: "/final.webp",
+  src: "/final1.webp",
   alt: "Finálny nástenný A3 kalendár s kovovou väzbou",
   label: "Finálny kalendár",
 };
 
 const layoutExamples = [
   {
-    src: "/detail3.png",
-    alt: "Ukážka mesiaca s jednou dominantnou fotkou",
-    label: "1 hlavná fotka",
+    src: "/detail2.webp",
+    alt: "Ukážka úvodnej strany",
+    label: "Úvodná strana",
   },
   {
-    src: "/detail4.png",
+    src: "/detail3.webp",
     alt: "Ukážka mesiaca so štyrmi fotkami",
-    label: "Až 4 fotky",
+    label: "Až 4 fotky v jednom mesiaci",
   },
   {
-    src: "/f10.png",
+    src: "/detail4.webp",
     alt: "Ukážka mesiaca s kombinovaným rozložením",
-    label: "Kombinované rozloženie",
+    label: "10 rôznych rozložení fotiek",
   },
 ] as const;
 
 const premiumHighlight = {
-  src: "/detail5.png",
+  src: "/detail5.webp",
   alt: "Ukážka vyznačených menín a narodenín v kalendári",
   title: "Vyznačené meniny a narodeniny",
   description:
@@ -69,7 +69,7 @@ function ShowcaseFigure({
           "relative overflow-hidden",
           roundedClassName,
           framed &&
-            "bg-white/70 shadow-lg shadow-[#3E0F28]/8 ring-1 ring-[#EAD6DE]/80",
+          "bg-white/70 shadow-lg shadow-[#3E0F28]/8 ring-1 ring-[#EAD6DE]/80",
           imageClassName,
         )}
       >

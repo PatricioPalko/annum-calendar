@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   },
 
   description:
-    "Personalizovaný A3 nástenný kalendár s kovovou väzbou z vašich fotiek. Jednoduchá konfigurácia, až 52 fotiek, osobný odber v Košiciach a doručenie cez Packetu.",
+    "Personalizovaný A3 nástenný kalendár s kovovou väzbou z vašich fotiek. Jednoduchá konfigurácia, až 52 fotiek a doručenie cez Packetu.",
 
   keywords: [
     "Annum",
@@ -75,7 +75,7 @@ export const metadata: Metadata = {
     siteName: "Annum",
     title: "Annum | Personalizované A3 nástenné kalendáre z fotiek",
     description:
-      "A3 nástenný kalendár s kovovou väzbou z vašich fotiek. Jednoduchá konfigurácia, až 52 fotiek, Premium variant s meninami a narodeninami, osobný odber v Košiciach alebo doručenie cez Packetu.",
+      "A3 nástenný kalendár s kovovou väzbou z vašich fotiek. Jednoduchá konfigurácia, až 52 fotiek, Premium variant s meninami a narodeninami a doručenie cez Packetu.",
     images: [
       {
         url: "/og-image.jpg",

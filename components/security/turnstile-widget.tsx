@@ -4,7 +4,6 @@ import Script from "next/script";
 import {
   forwardRef,
   useEffect,
-  useId,
   useImperativeHandle,
   useRef,
   useState,
@@ -64,8 +63,16 @@ export const TurnstileWidget = forwardRef<
 ) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const widgetIdRef = useRef<string | null>(null);
-  const renderId = useId();
+  const onTokenRef = useRef(onToken);
+  const onExpiredRef = useRef(onExpired);
+  const onErrorRef = useRef(onError);
   const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    onTokenRef.current = onToken;
+    onExpiredRef.current = onExpired;
+    onErrorRef.current = onError;
+  });
 
   useImperativeHandle(ref, () => ({
     reset: () => {
@@ -118,9 +125,9 @@ export const TurnstileWidget = forwardRef<
 
       widgetIdRef.current = window.turnstile.render(container, {
         sitekey: siteKey,
-        callback: onToken,
-        "expired-callback": () => onExpired?.(),
-        "error-callback": () => onError?.(),
+        callback: (token) => onTokenRef.current(token),
+        "expired-callback": () => onExpiredRef.current?.(),
+        "error-callback": () => onErrorRef.current?.(),
         theme: "light",
         size: widgetSize,
       });
@@ -142,7 +149,7 @@ export const TurnstileWidget = forwardRef<
       window.clearInterval(interval);
       removeWidget();
     };
-  }, [onError, onExpired, onToken, renderId, siteKey, widgetSize]);
+  }, [siteKey, widgetSize]);
 
   return (
     <div className={cn("w-full", className)}>

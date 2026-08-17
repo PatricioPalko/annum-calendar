@@ -10,5 +10,5 @@ export const ORDER_SHARED_INCLUSIONS = [
   "Vlastné fotky rozložené do 12 mesiacov (min. 14, odporúčame 30+)",
   "Grafická príprava, tlač a zabalenie v cene",
   ORDER_NOTE_ACCESSORY_LABEL,
-  "Doručenie sa účtuje samostatne — osobný odber v Košiciach alebo Packeta",
+  "Doručenie cez Packetu sa účtuje samostatne",
 ] as const;

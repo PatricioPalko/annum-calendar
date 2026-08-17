@@ -1,4 +1,4 @@
-import { MapPin, Package } from "lucide-react";
+import { getDeliveryPrice } from "@/helpers/delivery";
 import { Control, Controller } from "react-hook-form";
 
 import {
@@ -12,29 +12,37 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { OrderFormValues } from "@/lib/schema";
 import { cn } from "@/lib/utils";
+import { MapPin, Package } from "lucide-react";
 
 type DeliveryMethodFieldProps = {
   control: Control<OrderFormValues>;
+  showPickup?: boolean;
 };
 
-const deliveryOptions = [
-  {
-    value: "pickup",
-    label: "Osobný odber",
-    description: "Kalendár si prevezmete osobne po dohode.",
-    price: "0\u00A0€",
-    icon: MapPin,
-  },
-  {
-    value: "packeta",
-    label: "Packeta",
-    description: "Vyberiete si výdajné miesto alebo Z-BOX.",
-    price: "3,90\u00A0€",
-    icon: Package,
-  },
-] as const;
+const pickupOption = {
+  value: "pickup" as const,
+  label: "Osobný odber",
+  description: "Kalendár si prevezmete osobne v Košiciach po dohode.",
+  price: "0\u00A0€",
+  icon: MapPin,
+};
 
-export function FormDeliveryMethod({ control }: DeliveryMethodFieldProps) {
+const packetaOption = {
+  value: "packeta" as const,
+  label: "Packeta",
+  description: "Vyberiete si výdajné miesto alebo Z-BOX.",
+  price: `${getDeliveryPrice("packeta").toFixed(2).replace(".", ",")}\u00A0€`,
+  icon: Package,
+};
+
+export function FormDeliveryMethod({
+  control,
+  showPickup = false,
+}: DeliveryMethodFieldProps) {
+  const deliveryOptions = showPickup
+    ? [pickupOption, packetaOption]
+    : [packetaOption];
+
   return (
     <Controller
       name="deliveryMethod"
@@ -46,7 +54,10 @@ export function FormDeliveryMethod({ control }: DeliveryMethodFieldProps) {
             value={field.value}
             onValueChange={field.onChange}
             aria-invalid={fieldState.invalid}
-            className="grid gap-3 md:grid-cols-2"
+            className={cn(
+              "grid gap-3",
+              deliveryOptions.length > 1 ? "md:grid-cols-2" : "max-w-md",
+            )}
           >
             {deliveryOptions.map((option) => {
               const id = `delivery-method-${option.value}`;

@@ -12,7 +12,10 @@ export const metadata: Metadata = {
 };
 
 const CONTACT_EMAIL = "info@annum.sk";
-const BUSINESS_NAME = "Ing. Laura Palková - LP GRAPHIC DESIGN";
+const BUSINESS_NAME = "LAETAS s. r. o.";
+const BUSINESS_ICO = "57 810 133";
+const BUSINESS_OR =
+  "zapísaná v Obchodnom registri Okresného súdu Košice I, oddiel: Sro, vložka č. 67076/V";
 
 function LegalSection({
   title,
@@ -49,11 +52,9 @@ export default function PrivacyPolicyPage() {
           <LegalSection title="Prevádzkovateľ">
             <Text>
               Predávajúcim a prevádzkovateľom internetového obchodu Annum je{" "}
-              {BUSINESS_NAME}, IČO: 54943884, miesto podnikania: Trnavská
-              664/16, 040 01 Košice, zapísaný v Živnostenskom registri
-              Slovenskej republiky, číslo živnostenského registra: 820-98934.
-              Annum je obchodná značka, pod ktorou predávajúci ponúka
-              personalizované produkty.
+              {BUSINESS_NAME}, IČO: {BUSINESS_ICO}, so sídlom: Trnavská
+              664/16, 040 01 Košice, {BUSINESS_OR}. Annum je obchodná značka,
+              pod ktorou predávajúci ponúka personalizované produkty.
             </Text>
             <Text>
               V prípade otázok k objednávke, platbe, doručeniu alebo reklamácii
@@ -88,15 +89,14 @@ export default function PrivacyPolicyPage() {
           <LegalSection title="Na čo údaje používame">
             <Text>
               Údaje používame na vytvorenie a spracovanie objednávky, prípravu
-              personalizovaného kalendára, online platbu, doručenie alebo osobný
-              odber, komunikáciu so zákazníkom a administráciu objednávky.
+              personalizovaného kalendára, online platbu, doručenie cez Packetu,
+              komunikáciu so zákazníkom a administráciu objednávky.
             </Text>
 
             <Text>
               E-mail používame na odoslanie informácie o vytvorení objednávky,
               odkazu na dokončenie platby, potvrdenia prijatej platby a
-              informácie o pripravení objednávky na osobný odber alebo o jej
-              odoslaní cez Packetu.
+              informácie o odoslaní zásielky cez Packetu.
             </Text>
 
             <Text>
@@ -151,9 +151,7 @@ export default function PrivacyPolicyPage() {
             </Text>
 
             <Text>
-              Tieto údaje používame na prípravu a odoslanie zásielky. Pri
-              osobnom odbere v Košiciach spracúvame informáciu o tom, že ste si
-              zvolili osobný odber.
+              Tieto údaje používame na prípravu a odoslanie zásielky.
             </Text>
           </LegalSection>
 
@@ -196,8 +194,8 @@ export default function PrivacyPolicyPage() {
           <LegalSection title="Uchovávanie údajov">
             <Text>
               Údaje uchovávame po dobu potrebnú na vybavenie objednávky,
-              doručenie alebo osobný odber, riešenie prípadnej komunikácie a
-              následnú administráciu.
+              doručenie zásielky, riešenie prípadnej komunikácie a následnú
+              administráciu.
             </Text>
 
             <Text>

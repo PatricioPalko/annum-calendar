@@ -69,6 +69,43 @@ export function PricingSection() {
         </Text>
       </div>
 
+      <div className="mx-2 mb-8 overflow-x-auto rounded-xl border border-[#EAD6DE] bg-[#FFF7F4] sm:mx-4">
+        <table className="min-w-[640px] w-full border-collapse text-left text-sm">
+          <thead className="border-b border-[#EAD6DE] bg-white text-[#3E0F28]">
+            <tr>
+              <th className="px-4 py-3 font-bold">Balík</th>
+              <th className="px-4 py-3 font-bold">1 ks</th>
+              <th className="px-4 py-3 font-bold">3 ks</th>
+              <th className="px-4 py-3 font-bold">5+ ks</th>
+              <th className="px-4 py-3 font-bold">10+ ks</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#EAD6DE]">
+            <tr>
+              <td className="px-4 py-3 font-bold">Basic</td>
+              <td className="px-4 py-3">25 €</td>
+              <td className="px-4 py-3">22 €/ks</td>
+              <td className="px-4 py-3">19 €/ks</td>
+              <td className="px-4 py-3 text-[#3E0F28]/35">—</td>
+            </tr>
+            <tr>
+              <td className="px-4 py-3 font-bold">Premium</td>
+              <td className="px-4 py-3">32 €</td>
+              <td className="px-4 py-3">28 €/ks</td>
+              <td className="px-4 py-3">25 €/ks</td>
+              <td className="px-4 py-3 text-[#3E0F28]/35">—</td>
+            </tr>
+            <tr>
+              <td className="px-4 py-3 font-bold">Business Basic</td>
+              <td className="px-4 py-3 text-[#3E0F28]/35">—</td>
+              <td className="px-4 py-3 text-[#3E0F28]/35">—</td>
+              <td className="px-4 py-3 text-[#3E0F28]/35">—</td>
+              <td className="px-4 py-3">20 €/ks</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
       <div className="grid py-4 md:grid-cols-3">
         {plans.map(({ plan, subtitle, features, buttonLabel }) => {
           const isPremium = plan.value === "premium";

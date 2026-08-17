@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Objednávka kalendára | Annum",
     description:
-      "Konfigurátor personalizovaného A3 kalendára. Vyberte typ, počet kusov, nahrajte fotky a objednajte s doručením cez Packetu alebo osobným odberom v Košiciach.",
+      "Konfigurátor personalizovaného A3 kalendára. Vyberte typ, počet kusov, nahrajte fotky a objednajte s doručením cez Packetu.",
     url: "https://www.annum.sk/objednavka",
   },
 };

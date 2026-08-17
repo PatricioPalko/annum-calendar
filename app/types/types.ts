@@ -27,8 +27,8 @@ export const calendarTypes = [
     description: "Kalendár s fotkami bez označených dátumov.",
     prices: {
       1: 25,
-      3: 60,
-      5: 75,
+      3: 66,
+      5: 95,
     },
   },
   {
@@ -38,13 +38,13 @@ export const calendarTypes = [
     description: "Kalendár s fotkami, meninami a narodeninami.",
     prices: {
       1: 32,
-      3: 78,
-      5: 110,
+      3: 84,
+      5: 125,
     },
   },
   {
     value: "business",
-    label: "Business",
+    label: "Business Basic",
     badge: "Pre firmy",
     description: "Kalendáre pre firmy, tímy alebo väčšie darčekové objednávky.",
     prices: {},
@@ -55,9 +55,7 @@ export const calendarTypes = [
 export const BUSINESS_MIN_QUANTITY = 10;
 
 export const businessVolumeTiers = [
-  { minQuantity: 50, unitPrice: 13 },
-  { minQuantity: 20, unitPrice: 14 },
-  { minQuantity: 10, unitPrice: 15 },
+  { minQuantity: 10, unitPrice: 20 },
 ] as const;
 
 export function getBusinessUnitPrice(quantity: number): number | null {

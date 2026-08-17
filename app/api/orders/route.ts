@@ -5,7 +5,7 @@ import {
 } from "@/app/types/types";
 import { isValidCalendarDayMonth } from "@/helpers/calendar-date";
 import { getDeliveryPrice } from "@/helpers/delivery";
-import { getDiscountAmount } from "@/helpers/discount-codes";
+import { getDiscountAmount, discountAllowsPickup } from "@/helpers/discount-codes";
 import { isStorageFolderForOrderNumber } from "@/helpers/order-code";
 import {
   isValidSlovakPhone,
@@ -213,6 +213,25 @@ export async function POST(request: Request) {
         errors: {
           fieldErrors: {
             packetaPoint: ["Vyberte výdajné miesto alebo Z-BOX Packety."],
+          },
+        },
+      },
+      { status: 400 },
+    );
+  }
+
+  if (
+    values.deliveryMethod === "pickup" &&
+    !discountAllowsPickup(values.discountCode)
+  ) {
+    return NextResponse.json(
+      {
+        message: "Invalid order payload",
+        errors: {
+          fieldErrors: {
+            deliveryMethod: [
+              "Osobný odber je dostupný len so zľavovým kódom RODINA15.",
+            ],
           },
         },
       },

@@ -54,7 +54,7 @@ const orderFormDefaultValues: OrderFormValues = {
   termsAccepted: false,
   marketingConsent: false,
   discountCode: "",
-  deliveryMethod: "pickup",
+  deliveryMethod: "packeta",
   packetaPoint: undefined,
 };
 
@@ -88,6 +88,9 @@ export default function OrderForm() {
 
   const discountCode = form.watch("discountCode") ?? "";
   const normalizedDiscountCode = discountCode.trim().toUpperCase();
+
+  const appliedDiscount = getDiscountCode(normalizedDiscountCode);
+  const showPickupOption = Boolean(appliedDiscount?.allowsPickup);
 
   const discountCodeError =
     normalizedDiscountCode && !getDiscountCode(normalizedDiscountCode)
@@ -165,6 +168,19 @@ export default function OrderForm() {
       });
     }
   }, [selectedCalendarType, form]);
+
+  useEffect(() => {
+    if (showPickupOption) {
+      return;
+    }
+
+    if (form.getValues("deliveryMethod") === "pickup") {
+      form.setValue("deliveryMethod", "packeta", {
+        shouldDirty: true,
+        shouldValidate: true,
+      });
+    }
+  }, [showPickupOption, form]);
 
   useEffect(() => {
     if (!submitError) {
@@ -403,9 +419,16 @@ export default function OrderForm() {
             <OrderSection
               step={selectedCalendarType === "premium" ? "6" : "4"}
               title="Doručenie"
-              description="Vyberte, či si kalendár prevezmete osobne v Košiciach alebo cez Packetu."
+              description={
+                showPickupOption
+                  ? "Vyberte, či si kalendár prevezmete osobne v Košiciach alebo cez Packetu."
+                  : "Kalendár vám doručíme cez Packetu na vybrané výdajné miesto alebo Z-BOX."
+              }
             >
-              <FormDeliveryMethod control={form.control} />
+              <FormDeliveryMethod
+                control={form.control}
+                showPickup={showPickupOption}
+              />
 
               {form.watch("deliveryMethod") === "packeta" && (
                 <Controller

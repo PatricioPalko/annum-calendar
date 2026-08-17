@@ -45,7 +45,7 @@ const faqSections = [
       {
         question: "Kedy sa dozviem finálnu cenu?",
         answer:
-          "Cena sa zobrazí priamo v konfigurátore. Pri Basic a Premium ide o cenu za kus podľa počtu rovnakých kalendárov. Pri Business objednávke od 10 kusov sa cena za kus znižuje podľa množstva — napríklad pri 50 kusoch je cena nižšia než pri objednávke 10 kusov.",
+          "Cena sa zobrazí priamo v konfigurátore. Pri Basic a Premium ide o cenu za kus podľa počtu rovnakých kalendárov. Pri Business Basic objednávke od 10 kusov je cena 20 € za kalendár.",
       },
       {
         question: "Ako prebieha platba?",
@@ -65,12 +65,12 @@ const faqSections = [
       {
         question: "Aké možnosti doručenia ponúkate?",
         answer:
-          "Vybrať si môžete osobný odber v Košiciach alebo doručenie cez Packetu. Pri Packete si v objednávke vyberiete výdajné miesto alebo Z-BOX, ktorý Vám najviac vyhovuje.",
+          "Kalendár doručujeme cez Packetu. V objednávke si vyberiete výdajné miesto alebo Z-BOX, ktorý vám najviac vyhovuje.",
       },
       {
         question: "Je doručenie zahrnuté v cene?",
         answer:
-          "Osobný odber v Košiciach je bez poplatku. Pri doručení cez Packetu sa cena doručenia pripočíta k objednávke a zobrazí sa v súhrne ešte pred platbou.",
+          "Doručenie cez Packetu sa účtuje samostatne. Cena doručenia sa pripočíta k objednávke a zobrazí sa v súhrne ešte pred platbou.",
       },
     ],
   },
@@ -85,7 +85,7 @@ const faqSections = [
       {
         question: "Ako zistím, že je kalendár pripravený alebo odoslaný?",
         answer:
-          "Keď bude kalendár pripravený na osobný odber alebo odoslaný cez Packetu, pošleme Vám e-mail. Pri Packete Vám v e-maile zašleme aj informácie k zásielke, ak budú dostupné.",
+          "Keď bude kalendár odoslaný cez Packetu, pošleme vám e-mail. V e-maile zašleme aj informácie k zásielke, ak budú dostupné.",
       },
       {
         question: "Čo je zahrnuté v cene kalendára?",

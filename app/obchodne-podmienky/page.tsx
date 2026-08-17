@@ -10,7 +10,10 @@ export const metadata: Metadata = {
 };
 
 const CONTACT_EMAIL = "info@annum.sk";
-const BUSINESS_NAME = "Ing. Laura Palková - LP GRAPHIC DESIGN";
+const BUSINESS_NAME = "LAETAS s. r. o.";
+const BUSINESS_ICO = "57 810 133";
+const BUSINESS_OR =
+  "zapísaná v Obchodnom registri Okresného súdu Košice I, oddiel: Sro, vložka č. 67076/V";
 
 function LegalSection({
   title,
@@ -47,11 +50,9 @@ export default function TermsPage() {
           <LegalSection title="Predávajúci">
             <Text>
               Predávajúcim a prevádzkovateľom internetového obchodu Annum je{" "}
-              {BUSINESS_NAME}, IČO: 54943884, miesto podnikania: Trnavská
-              664/16, 040 01 Košice, zapísaný v Živnostenskom registri
-              Slovenskej republiky, číslo živnostenského registra: 820-98934.
-              Annum je obchodná značka, pod ktorou predávajúci ponúka
-              personalizované produkty.
+              {BUSINESS_NAME}, IČO: {BUSINESS_ICO}, so sídlom: Trnavská
+              664/16, 040 01 Košice, {BUSINESS_OR}. Annum je obchodná značka,
+              pod ktorou predávajúci ponúka personalizované produkty.
             </Text>
             <Text>
               V prípade otázok k objednávke, platbe, doručeniu alebo reklamácii
@@ -184,23 +185,15 @@ export default function TermsPage() {
             </Text>
           </LegalSection>
 
-          <LegalSection title="Doručenie a osobný odber">
+          <LegalSection title="Doručenie">
             <Text>
-              Pri objednávke si môžete zvoliť osobný odber v Košiciach alebo
-              doručenie cez Packetu.
+              Kalendár doručujeme cez Packetu. V objednávke si vyberiete výdajné
+              miesto alebo Z-BOX.
             </Text>
 
             <Text>
-              Pri osobnom odbere vás budeme informovať e-mailom, keď bude
-              kalendár pripravený na prevzatie. Presný čas a miesto odberu môžu
-              byť dohodnuté individuálne.
-            </Text>
-
-            <Text>
-              Pri doručení cez Packetu si v objednávke vyberiete výdajné miesto
-              alebo Z-BOX. Po odoslaní objednávky vám môžeme zaslať e-mail s
-              informáciou o odoslaní a prípadným sledovacím číslom zásielky, ak
-              je dostupné.
+              Po odoslaní objednávky vám môžeme zaslať e-mail s informáciou o
+              odoslaní a prípadným sledovacím číslom zásielky, ak je dostupné.
             </Text>
           </LegalSection>
 
@@ -211,8 +204,7 @@ export default function TermsPage() {
             </Text>
 
             <Text>
-              O pripravenosti na osobný odber alebo odoslaní cez Packetu vás
-              budeme informovať e-mailom.
+              O odoslaní cez Packetu vás budeme informovať e-mailom.
             </Text>
           </LegalSection>
 

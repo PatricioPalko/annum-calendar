@@ -1,10 +1,10 @@
-import { businessVolumeTiers, calendarTypes } from "@/app/types/types";
+import { calendarTypes, getLowestUnitPrice } from "@/app/types/types";
 import { AboutSection } from "@/components/sections/about-section";
 import CTASection from "@/components/sections/cta-section";
 import FaqSection from "@/components/sections/faq-section";
 import { GallerySection } from "@/components/sections/gallery-section";
-import { PricingSection } from "@/components/sections/pricing-section";
 import { SectionLink } from "@/components/sections/navigation/section-link";
+import { PricingSection } from "@/components/sections/pricing-section";
 import { JsonLd } from "@/components/seo/json-ld";
 import { Button } from "@/components/ui/button";
 import { Heading, Text } from "@/components/ui/typography";
@@ -24,7 +24,11 @@ export const metadata: Metadata = {
   },
 };
 
-const lowestUnitPrice = businessVolumeTiers[0]?.unitPrice ?? 13;
+const lowestUnitPrice = Math.min(
+  ...calendarTypes
+    .map((plan) => getLowestUnitPrice(plan))
+    .filter((price): price is number => price !== null),
+);
 const highestListedPackPrice = Math.max(
   ...calendarTypes.flatMap((plan) => Object.values(plan.prices)),
 );
@@ -119,7 +123,7 @@ export default function Home() {
 
             <div className="relative ">
               <Image
-                src="/hero.webp"
+                src="/hero1.webp"
                 alt="Ukážka personalizovaného A3 kalendára"
                 width={800}
                 height={1000}

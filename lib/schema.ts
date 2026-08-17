@@ -1,5 +1,6 @@
 import { calendarTypesValues, CUSTOM_QUANTITY_VALUE } from "@/app/types/types";
 import { isValidCalendarDayMonth } from "@/helpers/calendar-date";
+import { discountAllowsPickup } from "@/helpers/discount-codes";
 import { normalizePhone } from "@/helpers/phone";
 import {
   MAX_BIRTHDAY_NAME_LENGTH,
@@ -134,6 +135,17 @@ export const orderSchema = z
         code: z.ZodIssueCode.custom,
         path: ["packetaPoint"],
         message: "Vyberte výdajné miesto alebo Z-BOX Packety.",
+      });
+    }
+
+    if (
+      data.deliveryMethod === "pickup" &&
+      !discountAllowsPickup(data.discountCode)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["deliveryMethod"],
+        message: "Osobný odber je dostupný len so zľavovým kódom RODINA15.",
       });
     }
   });

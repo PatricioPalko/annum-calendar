@@ -31,8 +31,8 @@ export function Footer() {
           </Link>
 
           <p className="mt-2 max-w-sm text-sm font-medium leading-6 text-[#3E0F28]/60">
-            Personalizované A3 nástenné fotokalendáre s kovovou väzbou. Osobný
-            odber v Košiciach alebo doručenie cez Packetu.
+            Personalizované A3 nástenné fotokalendáre s kovovou väzbou a
+            doručením cez Packetu.
           </p>
 
           <div className="mt-4 space-y-1 text-sm font-semibold text-[#3E0F28]/65">
@@ -45,8 +45,6 @@ export function Footer() {
                 {contactEmail}
               </a>
             </p>
-
-            <p>Osobný odber: Košice</p>
           </div>
         </div>
 
@@ -88,8 +86,8 @@ export function Footer() {
           </div>
 
           <div className="mt-4 space-y-1 text-xs font-medium leading-5 text-[#3E0F28]/50">
-            <p>Obchodné meno: Ing. Laura Palková - LP GRAPHIC DESIGN</p>
-            <p>IČO: 54943884</p>
+            <p>Obchodné meno: LAETAS s. r. o.</p>
+            <p>IČO: 57 810 133</p>
           </div>
         </div>
       </div>
