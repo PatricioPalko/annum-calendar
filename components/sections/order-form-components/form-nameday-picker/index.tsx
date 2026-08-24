@@ -4,7 +4,6 @@ import { Check } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { UseFieldArrayAppend, UseFieldArrayRemove } from "react-hook-form";
 
-import { Button } from "@/components/ui/button";
 import type { OrderFormValues } from "@/lib/schema";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +15,15 @@ type NamedayPickerProps = {
   remove: UseFieldArrayRemove;
   selectedNames?: string[];
 };
+
+const letterFilterButtonClassName = (isSelected: boolean) =>
+  cn(
+    "inline-flex h-8 min-w-8 cursor-pointer items-center justify-center rounded-md border px-2 text-xs font-bold leading-none transition-colors outline-none",
+    "focus-visible:border-[#FC5A61] focus-visible:ring-2 focus-visible:ring-[#FC5A61]/15",
+    isSelected
+      ? "border-[#FC5A61] bg-[#FC5A61] text-white"
+      : "border-[#EAD6DE] bg-white text-[#3E0F28] hover:border-[#FC5A61]/50 hover:bg-[#FFF7F4]",
+  );
 
 export function NamedayPicker({
   data,
@@ -61,52 +69,51 @@ export function NamedayPicker({
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap gap-1.5 sm:gap-2">
-        <Button
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-1.5">
+        <button
           type="button"
           onClick={() => setLetter("all")}
           aria-pressed={letter === "all"}
-          variant={letter === "all" ? "default" : "secondary"}
-          size="sm"
-          className="h-8 px-2 text-xs sm:h-10 sm:px-3 sm:text-sm"
+          className={cn(
+            letterFilterButtonClassName(letter === "all"),
+            "min-w-14 px-2.5",
+          )}
         >
           Všetky
-        </Button>
+        </button>
 
         {letters.map((item) => {
           const isSelected = letter === item;
 
           return (
-            <Button
+            <button
               key={item}
               type="button"
-              variant={isSelected ? "default" : "secondary"}
-              size="sm"
               onClick={() => setLetter(item)}
               aria-pressed={isSelected}
-              className="h-8 min-w-8 px-1.5 text-xs sm:h-10 sm:min-w-10 sm:px-3 sm:text-sm"
+              className={letterFilterButtonClassName(isSelected)}
             >
               {item}
-            </Button>
+            </button>
           );
         })}
       </div>
 
-      <div className="">
-        <div className="mb-4 flex items-center justify-between gap-4">
-          <p className="text-sm font-bold text-foreground">
+      <div>
+        <div className="mb-2 flex items-center justify-between gap-3">
+          <p className="text-xs font-bold text-foreground sm:text-sm">
             {letter === "all"
               ? "Všetky mená"
-              : `Mená na písmeno ${letter.toUpperCase()}`}
+              : `Mená · ${letter.toUpperCase()}`}
           </p>
 
-          <span className="text-xs font-semibold text-foreground">
+          <span className="text-[11px] font-semibold text-[#3E0F28]/55">
             {names.length} mien
           </span>
         </div>
 
-        <ul className="grid max-h-67 grid-cols-3 gap-1.5 overflow-y-auto pr-1 sm:grid-cols-4 sm:gap-2 lg:grid-cols-6">
+        <ul className="grid max-h-52 grid-cols-3 gap-1 overflow-y-auto pr-0.5 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
           {names.map((name) => {
             const isSelected = selectedNameIndex.has(name);
 
@@ -117,24 +124,18 @@ export function NamedayPicker({
                   onClick={() => toggleName(name)}
                   aria-pressed={isSelected}
                   className={cn(
-                    [
-                      "flex w-full items-center justify-between gap-1.5 rounded-md border px-2 py-1.5",
-                      "text-left text-xs font-semibold transition-all duration-200",
-                      "sm:gap-2 sm:px-3 sm:py-2 sm:text-sm",
-                      "outline-none",
-                      "focus-visible:border-[#FC5A61] focus-visible:ring-4 focus-visible:ring-[#FC5A61]/15",
-                      "hover:cursor-pointer",
-                      isSelected
-                        ? "border-[#FC5A61] bg-[#FFF7F4] text-[#3E0F28] shadow-sm"
-                        : "border-[#EAD6DE] bg-white text-[#3E0F28] hover:border-[#FC5A61]/50 hover:bg-[#FFF7F4] hover:shadow-sm",
-                    ].join(" "),
+                    "flex w-full cursor-pointer items-center justify-between gap-1 rounded border px-2 py-1.5 text-left text-xs font-semibold transition-all duration-150 outline-none sm:text-sm",
+                    "focus-visible:border-[#FC5A61] focus-visible:ring-2 focus-visible:ring-[#FC5A61]/15",
+                    isSelected
+                      ? "border-[#FC5A61] bg-[#FFF7F4] text-[#3E0F28]"
+                      : "border-[#EAD6DE] bg-white text-[#3E0F28] hover:cursor-pointer hover:border-[#FC5A61]/50 hover:bg-[#FFF7F4]",
                   )}
                 >
                   <span className="truncate">{name}</span>
 
-                  {isSelected && (
-                    <Check className="size-4.5 shrink-0 text-[#FC5A61]" />
-                  )}
+                  {isSelected ? (
+                    <Check className="size-3.5 shrink-0 text-[#FC5A61]" aria-hidden />
+                  ) : null}
                 </button>
               </li>
             );

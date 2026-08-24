@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 
 import type { OrderFormValues } from "@/lib/schema";
 
+import { orderFormInputClassName } from "../order-form-styles";
+
 type TextInputName = "firstName" | "lastName" | "email" | "phone";
 type Type = "text" | "email" | "tel";
 
@@ -45,6 +47,7 @@ export function FormInput({
               autoComplete={autoComplete}
               type={type}
               placeholder={placeholder}
+              className={orderFormInputClassName}
             />
 
             {fieldState.invalid && (

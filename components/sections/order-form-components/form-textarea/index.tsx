@@ -4,12 +4,15 @@ import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 import type { OrderFormValues } from "@/lib/schema";
 
+import { orderFormTextareaClassName } from "../order-form-styles";
+
 type FormTextareaProps = {
   control: Control<OrderFormValues>;
   name: "note";
   label: string;
   description?: string;
   placeholder?: string;
+  hideLabel?: boolean;
 };
 
 export function FormTextarea({
@@ -18,6 +21,7 @@ export function FormTextarea({
   label,
   description,
   placeholder,
+  hideLabel = false,
 }: FormTextareaProps) {
   return (
     <Controller
@@ -29,7 +33,9 @@ export function FormTextarea({
 
         return (
           <Field data-invalid={fieldState.invalid}>
-            <FieldLabel htmlFor={inputId}>{label}</FieldLabel>
+            <FieldLabel htmlFor={inputId} className={hideLabel ? "sr-only" : undefined}>
+              {label}
+            </FieldLabel>
 
             <Textarea
               id={inputId}
@@ -41,6 +47,7 @@ export function FormTextarea({
               placeholder={placeholder}
               aria-invalid={fieldState.invalid}
               aria-describedby={fieldState.invalid ? errorId : undefined}
+              className={orderFormTextareaClassName}
             />
 
             {description && (

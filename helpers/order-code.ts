@@ -3,6 +3,7 @@ import { randomInt } from "node:crypto";
 const calendarTypeCodes = {
   basic: "b",
   premium: "p",
+  memory: "m",
   business: "u",
 } as const;
 

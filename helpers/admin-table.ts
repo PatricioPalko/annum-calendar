@@ -1,4 +1,5 @@
 import { OrderRow, SortKey } from "@/app/types/types";
+import { MEMORY_SET_LABEL } from "@/lib/order/config";
 
 export function getCalendarTypeBadgeClass(type: string) {
   switch (type) {
@@ -7,6 +8,9 @@ export function getCalendarTypeBadgeClass(type: string) {
 
     case "premium":
       return " text-secondary";
+
+    case "memory":
+      return " text-[#FC5A61]";
 
     case "business":
       return " text-primary";
@@ -24,6 +28,9 @@ export function getCalendarTypeDotClass(type: string) {
     case "premium":
       return "bg-secondary";
 
+    case "memory":
+      return "bg-[#FC5A61]";
+
     case "business":
       return "bg-primary";
 
@@ -38,6 +45,9 @@ export function getCalendarTypeLabel(type: string) {
 
     case "premium":
       return "Premium";
+
+    case "memory":
+      return MEMORY_SET_LABEL;
 
     case "business":
       return "Business";
@@ -54,6 +64,7 @@ export type AdminOrdersFilterParams = {
   month?: string;
   calendar?: string;
   delivery?: string;
+  wave?: string;
 };
 
 export function buildAdminHref(params: AdminOrdersFilterParams) {
@@ -83,6 +94,10 @@ export function buildAdminHref(params: AdminOrdersFilterParams) {
     searchParams.set("delivery", params.delivery);
   }
 
+  if (params.wave && params.wave !== "all") {
+    searchParams.set("wave", params.wave);
+  }
+
   const query = searchParams.toString();
 
   return query ? `/admin?${query}` : "/admin";
@@ -92,7 +107,10 @@ export function getSortHref(
   sort: SortKey,
   currentSort: SortKey,
   currentDir: "asc" | "desc",
-  filters?: Pick<AdminOrdersFilterParams, "year" | "month" | "calendar" | "delivery">,
+  filters?: Pick<
+    AdminOrdersFilterParams,
+    "year" | "month" | "calendar" | "delivery" | "wave"
+  >,
 ) {
   const nextDir = currentSort === sort && currentDir === "asc" ? "desc" : "asc";
 
@@ -103,6 +121,7 @@ export function getSortHref(
     month: filters?.month,
     calendar: filters?.calendar,
     delivery: filters?.delivery,
+    wave: filters?.wave,
   });
 }
 
@@ -132,7 +151,10 @@ export function filterOrdersByPeriod(
 
 export function filterAdminOrders(
   orders: OrderRow[],
-  filters: Pick<AdminOrdersFilterParams, "year" | "month" | "calendar" | "delivery">,
+  filters: Pick<
+    AdminOrdersFilterParams,
+    "year" | "month" | "calendar" | "delivery" | "wave"
+  >,
 ) {
   return orders.filter((order) => {
     const date = new Date(order.created_at);
@@ -167,6 +189,16 @@ export function filterAdminOrders(
       order.delivery_method !== filters.delivery
     ) {
       return false;
+    }
+
+    if (filters.wave && filters.wave !== "all") {
+      if (filters.wave === "none") {
+        if (order.delivery_wave_key) {
+          return false;
+        }
+      } else if (order.delivery_wave_key !== filters.wave) {
+        return false;
+      }
     }
 
     return true;

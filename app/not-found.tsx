@@ -27,7 +27,7 @@ export default function NotFound() {
 
         <Text className="mt-4 text-base leading-7 text-[#3E0F28]/70">
           Odkaz môže byť neplatný, stránka bola presunutá alebo už neexistuje.
-          Skúste sa vrátiť na úvod alebo pokračujte k objednávke kalendára.
+          Skúste sa vrátiť na úvod alebo pokračujte k vytvoreniu spomienok.
         </Text>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
@@ -35,8 +35,8 @@ export default function NotFound() {
             <Link href="/">Späť na úvod</Link>
           </Button>
 
-          <Button asChild variant="outline" size="lg">
-            <Link href="/objednavka">Objednať kalendár</Link>
+          <Button asChild variant="lime" size="lg">
+            <Link href="/objednavka">Vytvoriť spomienky</Link>
           </Button>
         </div>
       </div>

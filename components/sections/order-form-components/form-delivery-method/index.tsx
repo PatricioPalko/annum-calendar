@@ -1,43 +1,177 @@
 import { getDeliveryPrice } from "@/helpers/delivery";
 import { Control, Controller } from "react-hook-form";
+import type { ReactNode } from "react";
 
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldError,
-  FieldSet,
-  FieldTitle,
-} from "@/components/ui/field";
+import { PacketaPicker } from "@/components/delivery/packeta-picker";
+import { Field, FieldError, FieldSet } from "@/components/ui/field";
+import { PriceWithVat } from "@/components/ui/price-with-vat";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import type { OrderFormValues } from "@/lib/schema";
 import { cn } from "@/lib/utils";
 import { MapPin, Package } from "lucide-react";
 
+import {
+  orderFormOptionCardClassName,
+  orderFormPriceClassName,
+  orderFormPriceVatClassName,
+  orderFormRadioClassName,
+} from "../order-form-styles";
+
 type DeliveryMethodFieldProps = {
   control: Control<OrderFormValues>;
   showPickup?: boolean;
+  isSubmitting?: boolean;
 };
 
 const pickupOption = {
   value: "pickup" as const,
   label: "Osobný odber",
-  description: "Kalendár si prevezmete osobne v Košiciach po dohode.",
-  price: "0\u00A0€",
+  description: "Prevezmete v Košiciach po dohode.",
+  priceValue: 0,
   icon: MapPin,
 };
 
 const packetaOption = {
   value: "packeta" as const,
   label: "Packeta",
-  description: "Vyberiete si výdajné miesto alebo Z-BOX.",
-  price: `${getDeliveryPrice("packeta").toFixed(2).replace(".", ",")}\u00A0€`,
+  description: "Výdajné miesto alebo Z-BOX na Slovensku.",
+  priceValue: getDeliveryPrice("packeta"),
   icon: Package,
 };
+
+function DeliveryOptionHeader({
+  icon: Icon,
+  label,
+  description,
+  priceValue,
+}: {
+  icon: typeof MapPin;
+  label: string;
+  description: string;
+  priceValue: number;
+}) {
+  return (
+    <>
+      <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white ring-1 ring-[#EAD6DE]">
+        <Icon className="size-4 text-secondary" aria-hidden />
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="text-base font-bold leading-tight text-foreground">
+          {label}
+        </p>
+        <p className="mt-0.5 text-sm leading-snug text-[#3E0F28]/60">
+          {description}
+        </p>
+      </div>
+
+      <PriceWithVat
+        value={priceValue}
+        className={cn("shrink-0 self-start", orderFormPriceClassName)}
+        vatClassName={orderFormPriceVatClassName}
+      />
+    </>
+  );
+}
+
+function PacketaPointField({
+  control,
+  isSubmitting,
+}: {
+  control: Control<OrderFormValues>;
+  isSubmitting: boolean;
+}) {
+  return (
+    <Controller
+      name="packetaPoint"
+      control={control}
+      render={({ field, fieldState }) => (
+        <Field data-invalid={fieldState.invalid}>
+          <PacketaPicker
+            value={field.value}
+            onChange={field.onChange}
+            disabled={isSubmitting}
+            layout="embedded"
+          />
+
+          {fieldState.error ? (
+            <FieldError errors={[fieldState.error]} />
+          ) : null}
+        </Field>
+      )}
+    />
+  );
+}
+
+type DeliveryOptionCardProps = {
+  id: string;
+  option: typeof pickupOption | typeof packetaOption;
+  isSelected: boolean;
+  showRadio: boolean;
+  invalid?: boolean;
+  children?: ReactNode;
+};
+
+function DeliveryOptionCard({
+  id,
+  option,
+  isSelected,
+  showRadio,
+  invalid,
+  children,
+}: DeliveryOptionCardProps) {
+  return (
+    <label
+      htmlFor={showRadio ? id : undefined}
+      data-selected={isSelected ? "true" : "false"}
+      className={cn(
+        orderFormOptionCardClassName,
+        !showRadio && "cursor-default hover:border-[#EAD6DE] hover:bg-[#FFF7F4]/40",
+        children ? "grid-rows-[auto_auto]" : undefined,
+      )}
+    >
+      {showRadio ? (
+        <RadioGroupItem
+          id={id}
+          value={option.value}
+          aria-invalid={invalid}
+          className={cn(
+            orderFormRadioClassName,
+            "col-start-1 row-start-1 self-start mt-2",
+          )}
+        />
+      ) : null}
+
+      <div
+        className={cn(
+          "col-start-2 row-start-1 flex min-w-0 items-start gap-2.5",
+          !showRadio && "col-span-2",
+        )}
+      >
+        <DeliveryOptionHeader {...option} />
+      </div>
+
+      {children ? (
+        <div
+          className="col-span-2 row-start-2 border-t border-[#EAD6DE]/70 pt-2.5"
+          onClick={(event) => {
+            event.stopPropagation();
+          }}
+          onMouseDown={(event) => {
+            event.stopPropagation();
+          }}
+        >
+          {children}
+        </div>
+      ) : null}
+    </label>
+  );
+}
 
 export function FormDeliveryMethod({
   control,
   showPickup = false,
+  isSubmitting = false,
 }: DeliveryMethodFieldProps) {
   const deliveryOptions = showPickup
     ? [pickupOption, packetaOption]
@@ -48,7 +182,7 @@ export function FormDeliveryMethod({
       name="deliveryMethod"
       control={control}
       render={({ field, fieldState }) => (
-        <FieldSet data-invalid={fieldState.invalid} className="space-y-4">
+        <FieldSet data-invalid={fieldState.invalid} className="gap-3">
           <RadioGroup
             name={field.name}
             value={field.value}
@@ -56,66 +190,38 @@ export function FormDeliveryMethod({
             aria-invalid={fieldState.invalid}
             className={cn(
               "grid gap-3",
-              deliveryOptions.length > 1 ? "md:grid-cols-2" : "max-w-md",
+              deliveryOptions.length > 1 ? "sm:grid-cols-2" : "max-w-lg",
             )}
           >
             {deliveryOptions.map((option) => {
               const id = `delivery-method-${option.value}`;
               const isSelected = field.value === option.value;
-              const Icon = option.icon;
+              const showPacketaPicker =
+                option.value === "packeta" && isSelected;
 
               return (
-                <label
+                <DeliveryOptionCard
                   key={option.value}
-                  htmlFor={id}
-                  data-selected={isSelected ? "true" : "false"}
-                  className={cn(
-                    "relative flex min-h-36 cursor-pointer flex-col rounded-md border border-[#EAD6DE] bg-white p-4 shadow-sm transition-all duration-200",
-                    "hover:border-[#FC5A61]/50 hover:bg-[#FFF7F4] hover:shadow-md",
-                    "data-[selected=true]:border-secondary data-[selected=true]:bg-[#FFF7F4] data-[selected=true]:shadow-md",
-                  )}
+                  id={id}
+                  option={option}
+                  isSelected={isSelected}
+                  showRadio
+                  invalid={fieldState.invalid}
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-start gap-3">
-                      <RadioGroupItem
-                        id={id}
-                        value={option.value}
-                        aria-invalid={fieldState.invalid}
-                        className="mt-0.5"
-                      />
-
-                      <Field orientation="vertical" className="gap-1">
-                        <FieldContent>
-                          <div className="flex items-center gap-2">
-                            <Icon className="size-4 text-secondary" />
-
-                            <FieldTitle className="font-bold normal-case text-foreground">
-                              {option.label}
-                            </FieldTitle>
-                          </div>
-
-                          <FieldDescription className="mt-1 text-sm leading-6 text-muted-foreground">
-                            {option.description}
-                          </FieldDescription>
-                        </FieldContent>
-                      </Field>
-                    </div>
-                  </div>
-
-                  <div className="mt-auto flex items-baseline justify-between gap-4 border-t border-[#EAD6DE] pt-2">
-                    <p className="text-sm font-semibold text-primary">
-                      Cena doručenia
-                    </p>
-                    <span className="whitespace-nowrap font-heading text-lg font-bold text-secondary sm:text-xl">
-                      {option.price}
-                    </span>
-                  </div>
-                </label>
+                  {showPacketaPicker ? (
+                    <PacketaPointField
+                      control={control}
+                      isSubmitting={isSubmitting}
+                    />
+                  ) : null}
+                </DeliveryOptionCard>
               );
             })}
           </RadioGroup>
 
-          {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+          {fieldState.invalid ? (
+            <FieldError errors={[fieldState.error]} />
+          ) : null}
         </FieldSet>
       )}
     />

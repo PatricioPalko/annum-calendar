@@ -22,9 +22,10 @@ create table if not exists public.orders (
   email text not null,
   phone text,
   note text,
+  delivery_wave_key text,
 
   calendar_type text not null
-    check (calendar_type in ('basic', 'premium', 'business')),
+    check (calendar_type in ('basic', 'premium', 'memory', 'business')),
   quantity integer not null check (quantity > 0 and quantity <= 200),
   total_price numeric(10, 2),
   discount_code text,
@@ -56,6 +57,10 @@ create table if not exists public.orders (
   terms_accepted_at timestamptz,
   marketing_consent_at timestamptz,
 
+  memory_set_enabled boolean not null default false,
+  dedications jsonb not null default '[]'::jsonb,
+  dedication text,
+
   constraint orders_order_code_key unique (order_code),
   constraint orders_order_number_key unique (order_number)
 );
@@ -68,6 +73,9 @@ create index if not exists orders_payment_status_idx
 
 create index if not exists orders_status_idx
   on public.orders (status);
+
+create index if not exists orders_delivery_wave_key_idx
+  on public.orders (delivery_wave_key);
 
 alter table public.orders enable row level security;
 
@@ -163,6 +171,21 @@ alter table public.orders
 
 alter table public.orders
   add column if not exists discount_amount numeric(10, 2);
+
+alter table public.orders
+  add column if not exists memory_set_enabled boolean not null default false;
+
+alter table public.orders
+  add column if not exists dedications jsonb not null default '[]'::jsonb;
+
+alter table public.orders
+  add column if not exists dedication text;
+
+alter table public.orders drop constraint if exists orders_calendar_type_check;
+
+alter table public.orders
+  add constraint orders_calendar_type_check
+  check (calendar_type in ('basic', 'premium', 'memory', 'business'));
 
 alter table public.orders
   add column if not exists downloaded_at timestamptz;

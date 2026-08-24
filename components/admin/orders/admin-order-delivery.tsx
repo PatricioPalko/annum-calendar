@@ -1,6 +1,11 @@
 import { MapPin, Package } from "lucide-react";
 
 import { getDeliveryLabel } from "@/helpers/admin-orders";
+import {
+  formatWaveDeadline,
+  formatWaveDeliveryBy,
+  getDeliveryWaveByKey,
+} from "@/lib/order/delivery-waves";
 
 import { OrderRow } from "@/app/types/types";
 
@@ -10,6 +15,7 @@ type AdminOrderDeliveryProps = {
 
 export function AdminOrderDelivery({ order }: AdminOrderDeliveryProps) {
   const isPacketa = order.delivery_method === "packeta";
+  const deliveryWave = getDeliveryWaveByKey(order.delivery_wave_key);
 
   return (
     <div className="max-w-52 space-y-1.5 text-xs font-semibold text-[#3E0F28]/70">
@@ -44,6 +50,21 @@ export function AdminOrderDelivery({ order }: AdminOrderDeliveryProps) {
           {order.tracking_number && (
             <p className="text-[11px] font-bold text-[#3E0F28]/70">
               Štítok: {order.tracking_number}
+            </p>
+          )}
+        </div>
+      )}
+
+      {deliveryWave && (
+        <div className="space-y-0.5 rounded-md border border-[#EAD6DE] bg-white/70 px-2 py-1.5">
+          <p className="text-[10px] font-extrabold uppercase tracking-wide text-[#3E0F28]/45">
+            Várka tlače
+          </p>
+          <p className="font-bold text-[#3E0F28]">{deliveryWave.batchLabel}</p>
+          {deliveryWave.key !== "standard" && (
+            <p className="leading-5 text-[#3E0F28]/55">
+              Do {formatWaveDeadline(deliveryWave)} · doručenie do{" "}
+              {formatWaveDeliveryBy(deliveryWave)}
             </p>
           )}
         </div>

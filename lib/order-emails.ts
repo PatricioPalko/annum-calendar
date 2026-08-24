@@ -1,10 +1,15 @@
+import {
+  formatWaveDeliveryBy,
+  getDeliveryWaveByKey,
+} from "@/lib/order/delivery-waves";
+import { MEMORY_SET_LABEL } from "@/lib/order/config";
 import { resend } from "@/lib/resend";
 
 const emailFrom = process.env.EMAIL_FROM!;
 const adminEmail = process.env.ADMIN_EMAIL!;
 
 type DeliveryMethod = "pickup" | "packeta";
-type CalendarType = "basic" | "premium" | "business";
+type CalendarType = "basic" | "premium" | "memory" | "business";
 
 type DeliveryInfo = {
   method: DeliveryMethod;
@@ -25,9 +30,11 @@ type OrderSummary = {
   discountCode?: string | null;
   discountAmount?: number | null;
   delivery: DeliveryInfo;
+  deliveryWaveKey?: string | null;
   photoCount?: number;
   birthdaysCount?: number;
   namedaysCount?: number;
+  dedications?: string[];
   note?: string | null;
 };
 
@@ -72,6 +79,8 @@ function getCalendarTypeLabel(type: CalendarType | string) {
       return "Basic";
     case "premium":
       return "Premium";
+    case "memory":
+      return MEMORY_SET_LABEL;
     case "business":
       return "Business";
     default:
@@ -149,6 +158,19 @@ function renderDeliveryHtml(delivery: DeliveryInfo) {
   return renderDetailRow("Doručenie", `${safeDeliveryLabel}${deliveryPrice}`);
 }
 
+function renderDeliveryWaveHtml(deliveryWaveKey?: string | null) {
+  const wave = getDeliveryWaveByKey(deliveryWaveKey);
+
+  if (!wave) {
+    return "";
+  }
+
+  return `
+    ${renderDetailRow("Výrobná várka", escapeHtml(wave.customerHeadline))}
+    ${renderDetailRow("Odoslanie do", escapeHtml(formatWaveDeliveryBy(wave)))}
+  `;
+}
+
 function renderOrderSummaryHtml(summary: OrderSummary) {
   const calendarLabel = escapeHtml(getCalendarTypeLabel(summary.calendarType));
   const hasDiscount =
@@ -174,6 +196,7 @@ function renderOrderSummaryHtml(summary: OrderSummary) {
           : ""
       }
       ${renderDeliveryHtml(summary.delivery)}
+      ${renderDeliveryWaveHtml(summary.deliveryWaveKey)}
       ${
         summary.totalPrice !== null
           ? renderDetailRow("Celková suma", formatPrice(summary.totalPrice))
@@ -203,6 +226,7 @@ function renderOrderSummaryHtml(summary: OrderSummary) {
             )
           : ""
       }
+      ${renderDedicationsHtml(summary.dedications)}
       ${
         summary.note
           ? renderDetailRow("Poznámka", escapeHtml(summary.note))
@@ -210,6 +234,39 @@ function renderOrderSummaryHtml(summary: OrderSummary) {
       }
     </div>
   `;
+}
+
+function renderDedicationsHtml(dedications: string[] | undefined) {
+  if (!dedications?.length) {
+    return "";
+  }
+
+  const entries = dedications
+    .map((entry, index) => ({
+      index: index + 1,
+      text: entry.trim(),
+    }))
+    .filter((entry) => entry.text.length > 0);
+
+  if (entries.length === 0) {
+    return "";
+  }
+
+  if (entries.length === 1 && dedications.length === 1) {
+    return renderDetailRow(
+      "Venovanie (na samostatnom papieri)",
+      escapeHtml(entries[0].text),
+    );
+  }
+
+  return entries
+    .map((entry) =>
+      renderDetailRow(
+        `Venovanie ${entry.index} (na samostatnom papieri)`,
+        escapeHtml(entry.text),
+      ),
+    )
+    .join("");
 }
 
 function renderCustomerHtml(customer: CustomerInfo) {
@@ -253,9 +310,11 @@ export async function sendOrderCreatedEmail({
   discountCode,
   discountAmount,
   delivery,
+  deliveryWaveKey,
   photoCount,
   birthdaysCount,
   namedaysCount,
+  dedications,
   note,
 }: SendOrderCreatedEmailParams) {
   const safeFirstName = escapeHtml(firstName);
@@ -269,24 +328,26 @@ export async function sendOrderCreatedEmail({
     discountCode,
     discountAmount,
     delivery,
+    deliveryWaveKey,
     photoCount,
     birthdaysCount,
     namedaysCount,
+    dedications,
     note,
   };
 
   await resend.emails.send({
     from: emailFrom,
     to: email,
-    subject: `Objednávka ${orderCode} bola vytvorená`,
+    subject: `Objednávka ${orderCode} čaká na platbu`,
     html: renderEmailShell(
-      "Objednávka bola vytvorená",
+      "Objednávka čaká na platbu",
       `
         <p>Dobrý deň, ${safeFirstName},</p>
 
         <p>
-          ďakujeme za objednávku. Vašu objednávku sme úspešne prijali.
-          Na spracovanie ju zaradíme hneď po úspešnej platbe.
+          ďakujeme za objednávku kalendára spomienok. Objednávku sme prijali
+          a na prípravu ju zaradíme hneď po úspešnej platbe.
         </p>
 
         ${renderOrderCodeBlock(orderCode)}
@@ -308,7 +369,8 @@ export async function sendOrderCreatedEmail({
         </p>
 
         <p style="margin-top: 20px; font-size: 14px; color: rgba(62, 15, 40, 0.72);">
-          Po prijatí platby Vám pošleme potvrdenie a keď bude kalendár pripravený, dáme Vám vedieť.
+          Po prijatí platby Vám pošleme potvrdenie. Keď bude kalendár pripravený
+          alebo odoslaný, dáme Vám vedieť e-mailom.
         </p>
 
         ${renderSignature()}
@@ -330,9 +392,11 @@ export async function sendOrderPaidEmail({
   discountCode,
   discountAmount,
   delivery,
+  deliveryWaveKey,
   photoCount,
   birthdaysCount,
   namedaysCount,
+  dedications,
   note,
 }: SendOrderPaidEmailParams) {
   const safeFirstName = escapeHtml(firstName);
@@ -345,9 +409,11 @@ export async function sendOrderPaidEmail({
     discountCode,
     discountAmount,
     delivery,
+    deliveryWaveKey,
     photoCount,
     birthdaysCount,
     namedaysCount,
+    dedications,
     note,
   };
   const customer: CustomerInfo = {
@@ -361,22 +427,25 @@ export async function sendOrderPaidEmail({
     resend.emails.send({
       from: emailFrom,
       to: email,
-      subject: `Platba k objednávke ${orderCode} bola prijatá`,
+      subject: `Platba prijatá — objednávka ${orderCode}`,
       html: renderEmailShell(
         "Platba bola prijatá",
         `
           <p>Dobrý deň, ${safeFirstName},</p>
 
           <p>
-            ďakujeme, platbu k objednávke <strong>${escapeHtml(orderCode)}</strong> sme prijali.
-            Vašu objednávku teraz pripravujeme.
+            ďakujeme — platbu k objednávke <strong>${escapeHtml(orderCode)}</strong> sme prijali.
+            Vaše spomienky teraz pripravujeme: rozloženie fotiek, tlač a darčekové
+            zabalenie so setom na zavesenie.
           </p>
 
           ${renderOrderCodeBlock(orderCode)}
           ${renderOrderSummaryHtml(summary)}
 
           <p>
-            Keď bude kalendár hotový, dáme vám vedieť e-mailom.
+            Objednávky spracúvame v spoločných várkach tlače. Keď bude kalendár
+            hotový, dáme Vám vedieť e-mailom — pri Packete aj so sledovacím číslom,
+            pri osobnom odbere s informáciou o prevzatí.
           </p>
 
           ${renderSignature()}
@@ -428,7 +497,6 @@ export async function sendOrderFulfillmentEmail({
   delivery,
   trackingNumber,
 }: SendOrderFulfillmentEmailParams) {
-  const safeOrderCode = escapeHtml(orderCode);
   const safeFirstName = escapeHtml(firstName);
   const safeTrackingNumber = trackingNumber ? escapeHtml(trackingNumber) : null;
 
@@ -438,12 +506,12 @@ export async function sendOrderFulfillmentEmail({
     from: emailFrom,
     to: email,
     subject: isPacketa
-      ? `Objednávka ${orderCode} bola odoslaná`
-      : `Objednávka ${orderCode} je pripravená na odber`,
+      ? `Kalendár spomienok ${orderCode} je na ceste`
+      : `Kalendár spomienok ${orderCode} je pripravený na odber`,
     html: renderEmailShell(
       isPacketa
-        ? "Objednávka bola odoslaná"
-        : "Objednávka je pripravená na odber",
+        ? "Kalendár je na ceste"
+        : "Kalendár je pripravený na odber",
       `
         <p>Dobrý deň, ${safeFirstName},</p>
 
@@ -451,13 +519,18 @@ export async function sendOrderFulfillmentEmail({
           isPacketa
             ? `
               <p>
-                váš kalendár sme odoslali cez Packetu.
+                Váš kalendár spomienok sme odoslali cez Packetu. Je darčekovo
+                zabalený, obsahuje set na zavesenie a je pripravený robiť radosť.
               </p>
             `
             : `
               <p>
-                váš kalendár je pripravený na osobný odber v Košiciach.
-                Pre presný čas odberu vás budeme kontaktovať alebo sa môžete ozvať odpoveďou na tento e-mail.
+                Váš kalendár spomienok je pripravený na osobný odber v Košiciach.
+                Je darčekovo zabalený a obsahuje set na zavesenie.
+              </p>
+              <p>
+                Pre presný čas odberu Vás budeme kontaktovať, alebo sa môžete
+                ozvať odpoveďou na tento e-mail.
               </p>
             `
         }
@@ -472,10 +545,63 @@ export async function sendOrderFulfillmentEmail({
                 Sledovacie číslo zásielky: <strong>${safeTrackingNumber}</strong>
               </p>
             `
-            : ""
+            : isPacketa
+              ? `
+              <p style="margin-top: 20px; font-size: 14px; color: rgba(62, 15, 40, 0.72);">
+                Informácie k zásielke Vám pošle aj Packeta, ak budú dostupné.
+              </p>
+            `
+              : ""
         }
 
         ${renderSignature()}
+      `,
+    ),
+  });
+}
+
+type SendBusinessInquiryEmailParams = {
+  company: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  quantity: number;
+  message?: string | null;
+};
+
+export async function sendBusinessInquiryEmail(
+  params: SendBusinessInquiryEmailParams,
+) {
+  const safeCompany = escapeHtml(params.company);
+  const safeFirstName = escapeHtml(params.firstName);
+  const safeLastName = escapeHtml(params.lastName);
+  const safeEmail = escapeHtml(params.email);
+  const safePhone = escapeHtml(params.phone);
+  const safeQuantity = escapeHtml(String(params.quantity));
+  const safeMessage = escapeHtml(params.message?.trim() || "—").replaceAll(
+    "\n",
+    "<br />",
+  );
+
+  await resend.emails.send({
+    from: emailFrom,
+    to: adminEmail,
+    replyTo: params.email,
+    subject: `Nezáväzná ponuka — ${params.company} (${params.quantity} ks)`,
+    html: renderEmailShell(
+      "Nezáväzná ponuka pre firmu",
+      `
+        <p>Prišiel nový dopyt na firemné kalendáre.</p>
+
+        <div style="margin: 24px 0;">
+          ${renderDetailRow("Firma", safeCompany)}
+          ${renderDetailRow("Meno", `${safeFirstName} ${safeLastName}`)}
+          ${renderDetailRow("E-mail", safeEmail)}
+          ${renderDetailRow("Telefón", safePhone)}
+          ${renderDetailRow("Počet kusov", safeQuantity)}
+          ${renderDetailRow("Správa", safeMessage)}
+        </div>
       `,
     ),
   });

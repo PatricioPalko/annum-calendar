@@ -4,11 +4,14 @@ import { CookieSettingsButton } from "@/components/cookiebot/cookie-settings-but
 import { SectionLink } from "@/components/sections/navigation/section-link";
 
 const footerNavigationLinks = [
-  { label: "Ako to funguje", sectionId: "ako-to-funguje" },
-  { label: "Ukážka kalendára", sectionId: "ukazka-kalendara" },
+  { label: "Pre koho", sectionId: "pre-koho" },
+  { label: "Ako to prebieha", sectionId: "ako-to-funguje" },
+  { label: "Čo je v balení", sectionId: "co-je-v-baleni" },
   { label: "Cenník", sectionId: "cennik" },
   { label: "FAQ", sectionId: "faq" },
 ];
+
+const footerPageLinks = [{ label: "Pre firmy", href: "/pre-firmy" }];
 
 const footerLegalLinks = [
   { label: "Ochrana osobných údajov", href: "/ochrana-osobnych-udajov" },
@@ -53,7 +56,7 @@ export function Footer() {
             Navigácia
           </p>
 
-          <div className="mt-3 flex flex-col gap-2">
+          <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-2">
             {footerNavigationLinks.map((link) => (
               <SectionLink
                 key={link.sectionId}
@@ -62,6 +65,16 @@ export function Footer() {
               >
                 {link.label}
               </SectionLink>
+            ))}
+
+            {footerPageLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="col-span-2 w-fit text-sm font-bold text-[#3E0F28]/65 transition hover:text-[#FC5A61]"
+              >
+                {link.label}
+              </Link>
             ))}
           </div>
         </nav>
@@ -84,11 +97,6 @@ export function Footer() {
 
             <CookieSettingsButton className="w-fit text-left text-sm font-bold text-[#3E0F28]/65 transition hover:text-[#FC5A61]" />
           </div>
-
-          <div className="mt-4 space-y-1 text-xs font-medium leading-5 text-[#3E0F28]/50">
-            <p>Obchodné meno: LAETAS s. r. o.</p>
-            <p>IČO: 57 810 133</p>
-          </div>
         </div>
       </div>
 
@@ -98,7 +106,10 @@ export function Footer() {
             © {new Date().getFullYear()} Annum. Všetky práva vyhradené.
           </p>
 
-          <p>Personalizované kalendáre z fotiek · Košice · Slovensko</p>
+          <p className="text-[11px] text-[#3E0F28]/35">
+            LAETAS s. r. o. · IČO 57 810 133 · Personalizované kalendáre z
+            fotiek · Košice · Slovensko
+          </p>
         </div>
       </div>
     </footer>

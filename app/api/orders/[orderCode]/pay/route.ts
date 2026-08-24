@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getDeliveryLabel } from "@/helpers/delivery";
 import { getOrCreateOrderCheckoutSession } from "@/lib/order-checkout";
+import { MEMORY_SET_LABEL } from "@/lib/order/config";
 import { verifyOrderPaymentToken } from "@/lib/order-payment-token";
 import {
   consumeRateLimit,
@@ -22,6 +23,8 @@ function getCalendarTypeLabel(type: string) {
       return "Basic";
     case "premium":
       return "Premium";
+    case "memory":
+      return MEMORY_SET_LABEL;
     case "business":
       return "Business";
     default:

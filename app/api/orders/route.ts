@@ -13,6 +13,7 @@ import {
 } from "@/helpers/phone";
 import { getOrCreateOrderCheckoutSession } from "@/lib/order-checkout";
 import { sendOrderCreatedEmail } from "@/lib/order-emails";
+import { getDeliveryWaveForDate } from "@/lib/order/delivery-waves";
 import { buildOrderPaymentUrl } from "@/lib/order-payment-token";
 import {
   consumeRateLimit,
@@ -25,8 +26,14 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import {
+  optionalDedicationSchema,
+  optionalDiscountCodeSchema,
+  optionalNoteSchema,
+} from "@/lib/schema";
+import {
   MAX_BIRTHDAY_NAME_LENGTH,
   MAX_PHOTOS,
+  MEMORY_SET_LABEL,
   MIN_PHOTOS,
 } from "@/lib/order/config";
 
@@ -59,9 +66,9 @@ const orderBodySchema = z.object({
     .refine((value) => isValidSlovakPhone(value), {
       message: "Zadajte platné slovenské telefónne číslo.",
     }),
-  note: z.string().optional(),
+  note: optionalNoteSchema,
 
-  type: z.enum(["basic", "premium", "business"]),
+  type: z.enum(["basic", "premium", "memory"]),
   quantity: z.number().int().min(1).max(200),
 
   photos: z.array(uploadedPhotoSchema).min(MIN_PHOTOS).max(MAX_PHOTOS),
@@ -89,13 +96,16 @@ const orderBodySchema = z.object({
 
   termsAccepted: z.literal(true),
   marketingConsent: z.boolean().optional(),
-  discountCode: z.string().max(40).optional(),
+  discountCode: optionalDiscountCodeSchema,
+
+  dedications: z.array(optionalDedicationSchema).optional(),
 });
 
-function getCalendarTypeLabel(type: "basic" | "premium" | "business") {
+function getCalendarTypeLabel(type: "basic" | "premium" | "memory" | "business") {
   const labels = {
     basic: "Basic",
     premium: "Premium",
+    memory: MEMORY_SET_LABEL,
     business: "Business",
   } as const;
 
@@ -143,20 +153,6 @@ export async function POST(request: Request) {
   }
 
   const values = parsed.data;
-
-  if (values.type === "business" && values.quantity < 10) {
-    return NextResponse.json(
-      {
-        message: "Invalid order payload",
-        errors: {
-          fieldErrors: {
-            quantity: ["Business objednávka je dostupná od 10 kusov."],
-          },
-        },
-      },
-      { status: 400 },
-    );
-  }
 
   for (const birthday of values.birthdays) {
     if (!isValidCalendarDayMonth(birthday.day, birthday.month)) {
@@ -261,8 +257,48 @@ export async function POST(request: Request) {
     );
   }
 
-  const birthdays = values.type === "premium" ? values.birthdays : [];
-  const namedays = values.type === "premium" ? values.namedays : [];
+  const hasPremiumFeatures =
+    values.type === "premium" || values.type === "memory";
+  const birthdays = hasPremiumFeatures ? values.birthdays : [];
+  const namedays = hasPremiumFeatures ? values.namedays : [];
+
+  if (
+    values.dedications?.some((entry) => entry.trim().length > 0) &&
+    values.type !== "memory"
+  ) {
+    return NextResponse.json(
+      {
+        message: "Invalid order payload",
+        errors: {
+          fieldErrors: {
+            dedications: [
+              `Venovanie je možné zadať len pri ${MEMORY_SET_LABEL}.`,
+            ],
+          },
+        },
+      },
+      { status: 400 },
+    );
+  }
+
+  const dedications =
+    values.type === "memory"
+      ? (values.dedications ?? []).map((entry) => entry.trim())
+      : [];
+
+  if (values.type === "memory" && dedications.length !== values.quantity) {
+    return NextResponse.json(
+      {
+        message: "Invalid order payload",
+        errors: {
+          fieldErrors: {
+            dedications: ["Počet venovaní musí zodpovedať počtu kalendárov."],
+          },
+        },
+      },
+      { status: 400 },
+    );
+  }
 
   const quantityOption = getQuantityOptionFromQuantity(values.quantity);
 
@@ -289,6 +325,8 @@ export async function POST(request: Request) {
     );
   }
 
+  const deliveryWave = getDeliveryWaveForDate(new Date());
+
   const { data, error } = await supabaseAdmin
     .from("orders")
     .insert({
@@ -301,6 +339,7 @@ export async function POST(request: Request) {
       email: values.email,
       phone: values.phone ?? null,
       note: values.note?.trim() || null,
+      delivery_wave_key: deliveryWave.key,
 
       calendar_type: values.type,
       quantity: values.quantity,
@@ -313,6 +352,10 @@ export async function POST(request: Request) {
       photos: values.photos,
       birthdays,
       namedays,
+
+      memory_set_enabled: values.type === "memory",
+      dedications,
+      dedication: dedications.find((entry) => entry.length > 0) ?? null,
 
       delivery_method: values.deliveryMethod,
       delivery_price: deliveryPrice,
@@ -397,8 +440,10 @@ export async function POST(request: Request) {
       photoCount: values.photos.length,
       birthdaysCount: birthdays.length,
       namedaysCount: namedays.length,
+      dedications,
       note: values.note?.trim() || null,
       paymentUrl,
+      deliveryWaveKey: deliveryWave.key,
       delivery: {
         method: values.deliveryMethod,
         price: deliveryPrice,

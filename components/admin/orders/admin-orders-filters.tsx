@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { AdminBulkDownloadButton } from "@/components/admin/admin-bulk-download-button";
 import { buildAdminHref } from "@/helpers/admin-table";
 import { writeAdminOrdersFilterPreference } from "@/helpers/admin-orders-filter-storage";
+import { MEMORY_SET_LABEL } from "@/lib/order/config";
+import { getAllDeliveryWaveFilterOptions } from "@/lib/order/delivery-waves";
 import {
   Select,
   SelectContent,
@@ -34,6 +36,7 @@ type AdminOrdersFiltersProps = {
   currentMonth?: string;
   currentCalendar?: string;
   currentDelivery?: string;
+  currentWave?: string;
   undownloadedCount: number;
 };
 
@@ -43,13 +46,15 @@ export function AdminOrdersFilters({
   currentMonth = "all",
   currentCalendar = "all",
   currentDelivery = "all",
+  currentWave = "all",
   undownloadedCount,
 }: AdminOrdersFiltersProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const waveOptions = getAllDeliveryWaveFilterOptions();
 
   function updateFilter(
-    key: "year" | "month" | "calendar" | "delivery",
+    key: "year" | "month" | "calendar" | "delivery" | "wave",
     value: string,
   ) {
     const next = {
@@ -57,6 +62,7 @@ export function AdminOrdersFilters({
       month: key === "month" ? value : currentMonth,
       calendar: key === "calendar" ? value : currentCalendar,
       delivery: key === "delivery" ? value : currentDelivery,
+      wave: key === "wave" ? value : currentWave,
     };
 
     writeAdminOrdersFilterPreference(next);
@@ -122,7 +128,7 @@ export function AdminOrdersFilters({
             <SelectItem value="all">Všetky kalendáre</SelectItem>
             <SelectItem value="basic">Basic</SelectItem>
             <SelectItem value="premium">Premium</SelectItem>
-            <SelectItem value="business">Business</SelectItem>
+            <SelectItem value="memory">{MEMORY_SET_LABEL}</SelectItem>
           </SelectContent>
         </Select>
 
@@ -142,6 +148,29 @@ export function AdminOrdersFilters({
             <SelectItem value="all">Všetky spôsoby</SelectItem>
             <SelectItem value="pickup">Odber</SelectItem>
             <SelectItem value="packeta">Doručenie</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={currentWave}
+          onValueChange={(value) => updateFilter("wave", value)}
+        >
+          <SelectTrigger
+            size="sm"
+            className="w-full sm:w-52"
+            aria-label="Filter podľa várky tlače"
+          >
+            <SelectValue placeholder="Várka" />
+          </SelectTrigger>
+
+          <SelectContent>
+            <SelectItem value="all">Všetky várky</SelectItem>
+            <SelectItem value="none">Bez várky</SelectItem>
+            {waveOptions.map((wave) => (
+              <SelectItem key={wave.key} value={wave.key}>
+                {wave.batchLabel}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>

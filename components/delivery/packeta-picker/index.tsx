@@ -51,6 +51,7 @@ type PacketaPickerProps = {
   };
   onChange: (value: { id: string; name: string; address: string }) => void;
   disabled?: boolean;
+  layout?: "default" | "embedded";
 };
 
 const PACKETA_SCRIPT_ID = "packeta-widget-script";
@@ -85,6 +86,7 @@ export function PacketaPicker({
   value,
   onChange,
   disabled,
+  layout = "default",
 }: PacketaPickerProps) {
   const [isReady, setIsReady] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -167,6 +169,52 @@ export function PacketaPicker({
         });
       },
       packetaWidgetOptions,
+    );
+  }
+
+  if (layout === "embedded") {
+    return (
+      <div className="space-y-2">
+        {!isConfigured ? (
+          <p className="text-sm text-[#FC5A61]">
+            Výber výdajného miesta nie je dostupný. Skúste to prosím neskôr.
+          </p>
+        ) : null}
+
+        {loadError ? (
+          <p className="text-sm text-[#FC5A61]">{loadError}</p>
+        ) : null}
+
+        {value ? (
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+            <div className="min-w-0 text-sm leading-snug">
+              <p className="font-bold text-[#3E0F28]">{value.name}</p>
+              <p className="mt-0.5 text-[#3E0F28]/65">{value.address}</p>
+            </div>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handlePick}
+              disabled={disabled || !isReady || !isConfigured}
+              className="h-auto shrink-0 self-start px-2 py-1 text-xs font-bold text-[#FC5A61] hover:bg-[#FFF7F4] hover:text-[#E94D54]"
+            >
+              Zmeniť
+            </Button>
+          </div>
+        ) : (
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handlePick}
+            disabled={disabled || !isReady || !isConfigured}
+            className="w-full"
+          >
+            Vybrať Z-BOX alebo výdajné miesto
+          </Button>
+        )}
+      </div>
     );
   }
 

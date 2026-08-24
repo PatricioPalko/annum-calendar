@@ -7,7 +7,7 @@ import {
 } from "@/app/types/types";
 import { getDeliveryPrice } from "@/helpers/delivery";
 import { getDiscountAmount } from "@/helpers/discount-codes";
-import { formatEuroPrice } from "@/helpers/format-euro-price";
+import { PriceWithVat } from "@/components/ui/price-with-vat";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
@@ -36,7 +36,6 @@ export function OrderFormMobileBar({
   const price = getCalendarPrice({ type, quantityOption, customQuantity });
   const discount = getDiscountAmount(price.totalPrice, discountCode);
   const deliveryPrice = getDeliveryPrice(deliveryMethod);
-
   const totalPrice =
     discount.finalPrice !== null ? discount.finalPrice + deliveryPrice : null;
 
@@ -47,8 +46,15 @@ export function OrderFormMobileBar({
           <p className="text-[11px] font-extrabold uppercase tracking-[0.14em] text-[#FC5A61]">
             Celkom
           </p>
-          <p className="truncate whitespace-nowrap text-lg font-extrabold text-[#3E0F28] sm:text-xl">
-            {totalPrice !== null ? formatEuroPrice(totalPrice) : "Cena na mieru"}
+          <p className="truncate font-heading text-lg font-extrabold text-[#3E0F28] sm:text-xl">
+            {totalPrice !== null ? (
+              <PriceWithVat
+                value={totalPrice}
+                vatClassName="text-[0.55em] font-medium text-[#3E0F28]/45"
+              />
+            ) : (
+              "Cena na mieru"
+            )}
           </p>
         </div>
 
@@ -56,16 +62,17 @@ export function OrderFormMobileBar({
           type="submit"
           form="order-form"
           size="lg"
+          variant="lime"
           className="shrink-0 px-5"
           disabled={isSubmitting || submitDisabled}
         >
           {isSubmitting ? (
             <>
               <Loader2 className="size-4 animate-spin" />
-              Odosielam...
+              Dokončujem...
             </>
           ) : (
-            "Odoslať"
+            "Dokončiť"
           )}
         </Button>
       </div>

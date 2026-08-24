@@ -1,54 +1,47 @@
-import {
-  calendarTypes,
-  getLowestUnitPrice,
-} from "@/app/types/types";
-import { formatEuroPrice } from "@/helpers/format-euro-price";
-import { Check } from "lucide-react";
+import { calendarTypes, getLowestUnitPrice } from "@/app/types/types";
+import { Check, Plus } from "lucide-react";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { PriceWithVat } from "@/components/ui/price-with-vat";
+import {
+  RecommendedBadge,
+  recommendedBadgeLabel,
+} from "@/components/ui/recommended-badge";
+import {
+  BASIC_PRICING_FEATURES,
+  MEMORY_SET_PRICING_FEATURES,
+  PREMIUM_PRICING_FEATURES,
+} from "@/lib/order/config";
 import { Heading, SectionLabel, Text } from "@/components/ui/typography";
-import { ORDER_SHARED_INCLUSIONS } from "@/lib/order/config";
 
 const basicPlan = calendarTypes.find((plan) => plan.value === "basic")!;
 const premiumPlan = calendarTypes.find((plan) => plan.value === "premium")!;
-const businessPlan = calendarTypes.find((plan) => plan.value === "business")!;
+const memoryPlan = calendarTypes.find((plan) => plan.value === "memory")!;
 
-const sharedInclusions = [...ORDER_SHARED_INCLUSIONS];
-
-const plans = [
+const productPlans = [
   {
     plan: basicPlan,
-    subtitle: "Jednoduchý kalendár s fotkami",
-    features: [
-      "12 mesiacov s Vašimi fotkami",
-      "Bez vyznačených menín a narodenín",
-      "Jednoduchý dizajn, v ktorom vyniknú Vaše fotky",
-    ],
-    buttonLabel: "Objednať",
+    subtitle: "Jednoduchý kalendár plný spomienok",
+    features: [...BASIC_PRICING_FEATURES],
+    buttonLabel: "Vytvoriť spomienky",
+    href: "/objednavka",
   },
   {
     plan: premiumPlan,
-    subtitle: "Kalendár s fotkami + dôležité dátumy",
-    features: [
-      "Všetko z Basic",
-      "Zvýraznené narodeniny",
-      "Zvýraznené meniny",
-      "Dátumy zadáte priamo v objednávke",
-    ],
-    buttonLabel: "Objednať",
+    subtitle: "Spomienky s dôležitými dátumami",
+    features: [...PREMIUM_PRICING_FEATURES],
+    buttonLabel: "Vytvoriť spomienky",
+    href: "/objednavka",
   },
   {
-    plan: businessPlan,
-    subtitle: "Pre firmy a väčšie objednávky",
-    features: [
-      "Rovnaké kalendáre pre tím, klientov alebo partnerov",
-      "Logo, firemné fotky a farby podľa dohody",
-      "Individuálna príprava a komunikácia pred tlačou",
-    ],
-    buttonLabel: "Objednať",
+    plan: memoryPlan,
+    subtitle: "Premium kalendár s kolážou a venovaním",
+    features: [...MEMORY_SET_PRICING_FEATURES],
+    buttonLabel: "Vytvoriť spomienky",
+    href: "/objednavka",
   },
-];
+] as const;
 
 export function PricingSection() {
   return (
@@ -60,57 +53,22 @@ export function PricingSection() {
         <SectionLabel>Cenník</SectionLabel>
 
         <Heading as="h2" className="mt-3">
-          Vyberte si typ kalendára
+          Koľko stojí kalendár spomienok
         </Heading>
 
         <Text className="mx-auto mt-4 max-w-2xl">
-          Presnú sumu uvidíte v konfigurátore podľa zvoleného typu a počtu
-          kusov.
+          V cene je príprava, tlač, zabalenie a set na zavesenie. Všetky ceny
+          sú uvedené s DPH.
         </Text>
       </div>
 
-      <div className="mx-2 mb-8 overflow-x-auto rounded-xl border border-[#EAD6DE] bg-[#FFF7F4] sm:mx-4">
-        <table className="min-w-[640px] w-full border-collapse text-left text-sm">
-          <thead className="border-b border-[#EAD6DE] bg-white text-[#3E0F28]">
-            <tr>
-              <th className="px-4 py-3 font-bold">Balík</th>
-              <th className="px-4 py-3 font-bold">1 ks</th>
-              <th className="px-4 py-3 font-bold">3 ks</th>
-              <th className="px-4 py-3 font-bold">5+ ks</th>
-              <th className="px-4 py-3 font-bold">10+ ks</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#EAD6DE]">
-            <tr>
-              <td className="px-4 py-3 font-bold">Basic</td>
-              <td className="px-4 py-3">25 €</td>
-              <td className="px-4 py-3">22 €/ks</td>
-              <td className="px-4 py-3">19 €/ks</td>
-              <td className="px-4 py-3 text-[#3E0F28]/35">—</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-3 font-bold">Premium</td>
-              <td className="px-4 py-3">32 €</td>
-              <td className="px-4 py-3">28 €/ks</td>
-              <td className="px-4 py-3">25 €/ks</td>
-              <td className="px-4 py-3 text-[#3E0F28]/35">—</td>
-            </tr>
-            <tr>
-              <td className="px-4 py-3 font-bold">Business Basic</td>
-              <td className="px-4 py-3 text-[#3E0F28]/35">—</td>
-              <td className="px-4 py-3 text-[#3E0F28]/35">—</td>
-              <td className="px-4 py-3 text-[#3E0F28]/35">—</td>
-              <td className="px-4 py-3">20 €/ks</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
       <div className="grid py-4 md:grid-cols-3">
-        {plans.map(({ plan, subtitle, features, buttonLabel }) => {
+        {productPlans.map(({ plan, subtitle, features, buttonLabel, href }) => {
           const isPremium = plan.value === "premium";
           const lowestUnitPrice = getLowestUnitPrice(plan);
-          const accentClassName = isPremium ? "bg-[#FC5A61]" : "bg-secondary";
+          const accentClassName = isPremium
+            ? "bg-[#FC5A61] text-white"
+            : "bg-secondary text-white";
 
           return (
             <article
@@ -123,40 +81,36 @@ export function PricingSection() {
               ].join(" ")}
             >
               {isPremium && (
-                <Text className="absolute -top-3.5 left-1/2 -translate-x-1/2 rounded-md bg-[#C8FF3D] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.06em] text-[#3E0F28] shadow-sm">
-                  Najobľúbenejší
-                </Text>
+                <RecommendedBadge
+                  variant="lime"
+                  className="absolute -top-3 left-1/2 -translate-x-1/2 px-2.5 py-1 text-[11px] normal-case tracking-normal sm:text-xs"
+                >
+                  {recommendedBadgeLabel}
+                </RecommendedBadge>
               )}
 
-              <div
+              <span
                 className={[
-                  "inline-flex w-fit items-center gap-2 rounded-md border px-2.5 py-1.5 text-sm font-semibold",
+                  "inline-flex w-fit items-center rounded-md px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.14em]",
                   isPremium
-                    ? "border-[#FC5A61]/30 bg-white text-[#3E0F28]"
-                    : "border-[#EAD6DE] bg-[#FFF7F4] text-[#7B5A6B]",
+                    ? "bg-[#FC5A61] text-white shadow-sm"
+                    : "bg-[#FC5A61]/10 text-[#FC5A61]",
                 ].join(" ")}
               >
-                <Text
-                  variant="small"
-                  className="font-extrabold uppercase tracking-wide"
-                >
-                  {plan.label}
-                </Text>
-              </div>
+                {plan.label}
+              </span>
 
               {lowestUnitPrice !== null && (
-                <div className="mt-6 flex flex-wrap items-end gap-1">
-                  <span className="pb-0.5 text-base font-bold text-primary sm:text-xl">
-                    od
-                  </span>
-
-                  <span className="whitespace-nowrap font-body text-3xl font-bold leading-none tracking-tight text-primary sm:text-5xl md:text-7xl">
-                    {formatEuroPrice(lowestUnitPrice)}
-                  </span>
-
-                  <span className="pb-1 pl-1 text-base font-bold text-primary sm:text-xl">
-                    / ks
-                  </span>
+                <div className="mt-6">
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.12em] text-primary/45">
+                    Cena od
+                  </p>
+                  <PriceWithVat
+                    value={lowestUnitPrice}
+                    perUnit
+                    className="mt-1 font-body text-3xl font-bold tracking-tight text-primary sm:text-4xl"
+                    vatClassName="text-[0.38em] font-semibold text-primary/40"
+                  />
                 </div>
               )}
 
@@ -168,21 +122,34 @@ export function PricingSection() {
               </Text>
 
               <ul className="mt-8 grow space-y-3">
-                {features.map((feature) => (
+                {features.map((feature) => {
+                  const useCheckMarker =
+                    plan.value === "basic" ||
+                    feature === "Všetko z balíka Basic" ||
+                    feature === "Všetko z balíka Premium";
+
+                  return (
                   <li key={feature} className="flex items-start gap-3">
-                    <span className="flex h-6 shrink-0 items-center mt-0.5">
-                      <span
-                        className={`flex size-5 items-center justify-center rounded-full text-white ${accentClassName}`}
-                      >
-                        <Check className="size-3 stroke-3" />
-                      </span>
+                    <span className="mt-0.5 flex h-6 shrink-0 items-center">
+                      {useCheckMarker ? (
+                        <span
+                          className={`flex size-5 items-center justify-center rounded-full ${accentClassName}`}
+                        >
+                          <Check className="size-3 stroke-3" />
+                        </span>
+                      ) : (
+                        <span className="flex size-5 items-center justify-center rounded-full bg-[#FC5A61]/10 text-[#FC5A61]">
+                          <Plus className="size-3 stroke-3" aria-hidden />
+                        </span>
+                      )}
                     </span>
 
                     <Text as="span" variant="body" className="block min-w-0 flex-1">
                       {feature}
                     </Text>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
 
               <Button
@@ -191,30 +158,23 @@ export function PricingSection() {
                 variant={isPremium ? "lime" : "default"}
                 className="mt-10 w-full"
               >
-                <Link href="/objednavka">{buttonLabel}</Link>
+                <Link href={href}>{buttonLabel}</Link>
               </Button>
             </article>
           );
         })}
       </div>
 
-      <div className="mx-2 mt-4 rounded-xl border border-[#EAD6DE] bg-[#FFF7F4] px-4 py-5 sm:mx-4 sm:px-6">
-        <SectionLabel>V každej objednávke</SectionLabel>
-
-        <ul className="mt-4 space-y-2">
-          {sharedInclusions.map((item) => (
-            <li
-              key={item}
-              className="flex items-start gap-2 text-sm font-medium leading-6 text-[#3E0F28]/80"
-            >
-              <span className="flex h-6 w-4 shrink-0 items-center justify-center text-[#FC5A61]">
-                <Check className="size-4" />
-              </span>
-              {item}
-            </li>
-          ))}
-        </ul>
-      </div>
+      <p className="mx-2 mt-6 max-w-2xl text-center text-sm font-medium leading-6 text-[#3E0F28]/60 sm:mx-auto">
+        Pre firmy a objednávky od 10 kusov s logom pripravíme ponuku na mieru —{" "}
+        <Link
+          href="/pre-firmy"
+          className="font-bold text-[#FC5A61] underline-offset-4 transition hover:underline"
+        >
+          nezáväzný dopyt
+        </Link>
+        .
+      </p>
     </section>
   );
 }

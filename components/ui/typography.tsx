@@ -14,8 +14,8 @@ export function Heading({
       className={cn(
         "font-heading font-bold tracking-tight text-primary",
         {
-          h1: "text-[1.75rem] leading-[1.05] sm:text-5xl sm:leading-[0.98] md:text-7xl md:leading-[0.95]",
-          h2: "text-[1.375rem] leading-tight sm:text-3xl md:text-5xl",
+          h1: "text-[1.875rem] leading-[1.08] tracking-[-0.02em] sm:text-5xl sm:leading-[1.02] md:text-7xl md:leading-[0.98]",
+          h2: "text-[1.4rem] leading-[1.15] tracking-[-0.015em] sm:text-3xl md:text-5xl",
           h3: "text-lg leading-tight sm:text-xl md:text-2xl",
           h4: "text-base leading-tight sm:text-lg md:text-xl",
           h5: "text-sm leading-tight sm:text-base md:text-lg",
@@ -51,10 +51,10 @@ type TextProps = React.ComponentProps<"p"> & {
 };
 
 const textVariants: Record<TextVariant, string> = {
-  body: "text-sm font-medium leading-6 tracking-normal text-[#3E0F28]/72 sm:text-base sm:leading-7",
-  lead: "text-sm font-semibold leading-6 tracking-normal text-primary/70 sm:text-base sm:leading-7 md:text-[17px] md:leading-8",
-  small: "text-xs font-medium leading-5 tracking-normal text-[#3E0F28]/68 sm:text-sm sm:leading-6",
-  muted: "text-xs font-medium leading-5 tracking-normal text-[#3E0F28]/55 sm:text-sm sm:leading-6",
+  body: "text-sm font-semibold leading-[1.65] tracking-[0.01em] text-[#3E0F28]/78 sm:text-base sm:leading-[1.7]",
+  lead: "text-[15px] font-semibold leading-[1.65] tracking-[0.015em] text-primary/78 sm:text-base sm:leading-[1.75] md:text-[17px] md:leading-8",
+  small: "text-xs font-semibold leading-6 tracking-[0.01em] text-[#3E0F28]/72 sm:text-sm sm:leading-[1.65]",
+  muted: "text-xs font-medium leading-6 tracking-[0.01em] text-[#3E0F28]/58 sm:text-sm sm:leading-[1.65]",
   caption: sectionLabelClassName,
 };
 

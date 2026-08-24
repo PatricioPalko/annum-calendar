@@ -39,6 +39,7 @@ export default async function AdminOrdersPage({
   const currentMonth = params.month ?? "all";
   const currentCalendar = params.calendar ?? "all";
   const currentDelivery = params.delivery ?? "all";
+  const currentWave = params.wave ?? "all";
 
   const { data, error } = await supabaseAdmin.from("orders").select("*");
 
@@ -54,6 +55,7 @@ export default async function AdminOrdersPage({
       month: currentMonth,
       calendar: currentCalendar,
       delivery: currentDelivery,
+      wave: currentWave,
     }),
     currentSort,
     currentDir,
@@ -138,6 +140,7 @@ export default async function AdminOrdersPage({
               currentMonth={currentMonth}
               currentCalendar={currentCalendar}
               currentDelivery={currentDelivery}
+              currentWave={currentWave}
               undownloadedCount={undownloadedCount}
             />
           </Suspense>
@@ -152,6 +155,7 @@ export default async function AdminOrdersPage({
             currentMonth={currentMonth}
             currentCalendar={currentCalendar}
             currentDelivery={currentDelivery}
+            currentWave={currentWave}
           />
           <AdminOrdersSummary
             ordersCount={orders.length}

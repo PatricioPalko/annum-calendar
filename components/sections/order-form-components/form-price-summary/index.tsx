@@ -6,12 +6,22 @@ import {
 } from "@/app/types/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PriceWithVat } from "@/components/ui/price-with-vat";
+import { DeliveryWaveNotice } from "@/components/ui/delivery-wave-notice";
 import { Heading, SectionLabel } from "@/components/ui/typography";
 import { getDeliveryLabel, getDeliveryPrice } from "@/helpers/delivery";
 import { getDiscountAmount } from "@/helpers/discount-codes";
-import { formatEuroPrice } from "@/helpers/format-euro-price";
-import { ORDER_NOTE_ACCESSORY_LABEL } from "@/lib/order/config";
+import {
+  ORDER_HANGING_SET_LABEL,
+  ORDER_HANGING_SET_SUMMARY_ITEMS,
+} from "@/lib/order/config";
+import { cn } from "@/lib/utils";
+import {
+  orderFormPriceTotalClassName,
+  orderFormPriceTotalVatClassName,
+} from "../order-form-styles";
 import { Check, Tag, X } from "lucide-react";
+import type { ReactNode } from "react";
 
 type DeliveryMethod = "pickup" | "packeta";
 
@@ -87,7 +97,6 @@ export function PriceSummary({
   const hasDiscountCode = discountCode.trim().length > 0;
 
   // ── derived display values ──────────────────────────────────────────────
-  //  Single source of truth for what to show as the final price
   const displayTotal = hasFixedPrice
     ? totalPrice
     : originalTotalPrice !== null
@@ -95,12 +104,6 @@ export function PriceSummary({
       : computedTotalPrice !== null
         ? computedTotalPrice + deliveryPrice
         : null;
-
-  //  Single source of truth for per-piece price (coupon price first, then bulk)
-  const effectivePricePerPiece = productPricePerPiece ?? originalPricePerPiece;
-
-  const showPricePerPiece =
-    effectivePricePerPiece !== null && quantity !== null && quantity > 1;
 
   //  Show breakdown list only when there are actual savings/discounts to itemise
   const hasDeliveryPrice = deliveryPrice > 0;
@@ -110,7 +113,7 @@ export function PriceSummary({
   const referencePrice = computedTotalPrice ?? originalTotalPrice;
 
   // ── summary rows ────────────────────────────────────────────────────────
-  const summaryItems = [
+  const summaryItems: Array<{ label: string; value: ReactNode }> = [
     { label: "Produkt", value: "A3 nástenný kalendár" },
     { label: "Variant", value: selectedType?.label ?? "—" },
     { label: "Počet kusov", value: hasQuantity ? `${quantity} ks` : "—" },
@@ -118,47 +121,84 @@ export function PriceSummary({
       label: "Počet nahraných fotiek",
       value: `${selectedPhotosQuantity ?? 0}`,
     },
-    { label: "V balení", value: ORDER_NOTE_ACCESSORY_LABEL },
-    {
-      label: "Doručenie",
-      value:
-        deliveryPrice > 0
-          ? `${deliveryLabel} · ${formatEuroPrice(deliveryPrice)}`
-          : deliveryLabel,
-    },
   ];
 
   return (
     <>
       {/* ── Header ── */}
-      <div className="border-b border-[#EAD6DE] bg-[#FFF7F4] px-3 py-3 text-center sm:px-5 sm:py-5">
-        <SectionLabel>Súhrn objednávky</SectionLabel>
-        <Heading as="h3" className="mt-2">
-          Váš kalendár
+      <div className="border-b border-[#EAD6DE] bg-[#FFF7F4] px-4 py-4 sm:px-5">
+        <SectionLabel>Súhrn</SectionLabel>
+        <Heading as="h3" className="mt-1 text-xl sm:text-2xl">
+          Vaša objednávka
         </Heading>
       </div>
 
       {/* ── Order details ── */}
-      <div className="px-3 py-3 sm:px-5 sm:py-4">
-        <div className="space-y-2.5">
+      <div className="px-4 py-4 sm:px-5">
+        <DeliveryWaveNotice variant="compact" className="mb-4" />
+
+        <div className="space-y-2">
           {summaryItems.map((item) => (
             <div
               key={item.label}
-              className="flex items-start justify-between gap-4"
+              className="flex items-start justify-between gap-3 text-sm"
             >
-              <span className="min-w-0 shrink text-sm font-medium text-primary/60">
+              <span className="min-w-0 shrink font-medium text-[#3E0F28]/55">
                 {item.label}
               </span>
-              <span className="max-w-[55%] shrink-0 text-right text-sm font-bold break-words text-primary">
+              <span className="max-w-[58%] shrink-0 text-right font-bold break-words text-[#3E0F28]">
                 {item.value}
               </span>
             </div>
           ))}
+
+          <div className="flex items-start justify-between gap-3 text-sm">
+            <span className="min-w-0 shrink font-medium text-[#3E0F28]/55">
+              Doručenie
+            </span>
+            <span className="max-w-[58%] shrink-0 text-right font-bold text-[#3E0F28]">
+              {deliveryPrice > 0 ? (
+                <span className="inline-flex flex-col items-end gap-0.5">
+                  <span>{deliveryLabel}</span>
+                  <PriceWithVat
+                    value={deliveryPrice}
+                    className="justify-end text-sm font-bold"
+                    vatClassName="text-[10px] font-medium text-primary/40"
+                  />
+                </span>
+              ) : (
+                deliveryLabel
+              )}
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-lg border border-[#EAD6DE] bg-[#FFF7F4]/80 px-3 py-2.5">
+          <p className="text-xs font-semibold uppercase tracking-wide text-[#3E0F28]/50">
+            V balení
+          </p>
+          <p className="mt-1 text-sm font-bold text-[#3E0F28]">
+            {ORDER_HANGING_SET_LABEL}
+          </p>
+          <ul className="mt-2 space-y-1">
+            {ORDER_HANGING_SET_SUMMARY_ITEMS.map((item) => (
+              <li
+                key={item}
+                className="flex items-start gap-2 text-xs font-medium leading-5 text-[#3E0F28]/75 sm:text-sm"
+              >
+                <span
+                  aria-hidden="true"
+                  className="mt-2 size-1.5 shrink-0 rounded-full bg-[#FC5A61]"
+                />
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
 
       {/* ── Price section ── */}
-      <div className="space-y-3 bg-surface-soft px-3 pb-4 pt-1 sm:px-5 sm:pb-5">
+      <div className="space-y-3 border-t border-[#EAD6DE] bg-[#FFF7F4]/50 px-4 pb-4 pt-3 sm:px-5 sm:pb-5">
         {/* Price breakdown OR simple total */}
         {showBreakdown ? (
           /* When there are savings / discounts → show a clean breakdown list */
@@ -170,7 +210,12 @@ export function PriceSummary({
                   Pôvodná cena
                 </span>
                 <span className="whitespace-nowrap text-primary/50 font-medium">
-                  {formatEuroPrice(referencePrice)}
+                <PriceWithVat
+                  value={referencePrice}
+                  className="justify-end text-sm font-medium text-primary/50"
+                  amountClassName="text-primary/50"
+                  vatClassName="text-[10px] font-medium text-primary/35"
+                />
                 </span>
               </div>
             )}
@@ -182,7 +227,13 @@ export function PriceSummary({
                   Množstevná zľava
                 </span>
                 <span className="whitespace-nowrap text-emerald-700 font-semibold">
-                  −{formatEuroPrice(savedAmount)}
+                  <PriceWithVat
+                    value={savedAmount}
+                    sign="−"
+                    className="justify-end text-sm font-semibold text-emerald-700"
+                    amountClassName="text-emerald-700"
+                    vatClassName="text-[10px] font-medium text-emerald-600/70"
+                  />
                 </span>
               </div>
             )}
@@ -195,7 +246,13 @@ export function PriceSummary({
                   Kód {discount.code}
                 </span>
                 <span className="whitespace-nowrap text-emerald-700 font-semibold">
-                  −{formatEuroPrice(discount.discountAmount)}
+                  <PriceWithVat
+                    value={discount.discountAmount}
+                    sign="−"
+                    className="justify-end text-sm font-semibold text-emerald-700"
+                    amountClassName="text-emerald-700"
+                    vatClassName="text-[10px] font-medium text-emerald-600/70"
+                  />
                 </span>
               </div>
             )}
@@ -207,7 +264,13 @@ export function PriceSummary({
                   {deliveryLabel}
                 </span>
                 <span className="whitespace-nowrap text-primary/70 font-semibold">
-                  +{formatEuroPrice(deliveryPrice)}
+                  <PriceWithVat
+                    value={deliveryPrice}
+                    sign="+"
+                    className="justify-end text-sm font-semibold text-primary/70"
+                    amountClassName="text-primary/70"
+                    vatClassName="text-[10px] font-medium text-primary/40"
+                  />
                 </span>
               </div>
             )}
@@ -215,36 +278,46 @@ export function PriceSummary({
             {/* Final total */}
             <div className="border-t border-border/50 pt-2.5">
               <div className="flex items-baseline justify-between gap-2">
-                <span className="font-heading text-xl font-semibold text-secondary">
+                <span className={cn(orderFormPriceTotalClassName, "text-lg font-semibold")}>
                   Spolu
                 </span>
-                <span className="whitespace-nowrap font-heading text-2xl font-bold leading-none text-secondary sm:text-3xl">
-                  {displayTotal !== null ? formatEuroPrice(displayTotal) : "—"}
+                <span className={cn("whitespace-nowrap leading-none", orderFormPriceTotalClassName)}>
+                {displayTotal !== null ? (
+                  <PriceWithVat
+                    value={displayTotal}
+                    className={cn("justify-end", orderFormPriceTotalClassName)}
+                    vatClassName={orderFormPriceTotalVatClassName}
+                  />
+                ) : (
+                  "—"
+                )}
                 </span>
               </div>
-
-              {showPricePerPiece && effectivePricePerPiece !== null && (
-                <p className="mt-0.5 text-right text-xs font-medium text-primary/40">
-                  <span className="whitespace-nowrap">
-                    {formatEuroPrice(effectivePricePerPiece)} za 1 ks
-                  </span>
-                </p>
-              )}
             </div>
           </div>
         ) : (
           /* When there are no discounts → simple, large total */
-          <div className="flex items-end justify-between gap-4 pt-3">
-            <p className="font-heading text-2xl font-semibold text-secondary sm:text-4xl">
+          <div className="flex items-end justify-between gap-4 pt-2">
+            <p className={cn(orderFormPriceTotalClassName, "font-semibold")}>
               Spolu
             </p>
             <div className="text-right">
-              <p className="whitespace-nowrap font-heading text-2xl font-bold leading-none text-secondary sm:text-4xl">
-                {displayTotal !== null
-                  ? formatEuroPrice(displayTotal)
-                  : computedTotalPrice !== null
-                    ? formatEuroPrice(computedTotalPrice)
-                    : "—"}
+              <p className={cn("leading-none", orderFormPriceTotalClassName)}>
+                {displayTotal !== null ? (
+                  <PriceWithVat
+                    value={displayTotal}
+                    className={cn("justify-end", orderFormPriceTotalClassName)}
+                    vatClassName={orderFormPriceTotalVatClassName}
+                  />
+                ) : computedTotalPrice !== null ? (
+                  <PriceWithVat
+                    value={computedTotalPrice}
+                    className={cn("justify-end", orderFormPriceTotalClassName)}
+                    vatClassName={orderFormPriceTotalVatClassName}
+                  />
+                ) : (
+                  "—"
+                )}
               </p>
 
               {displayTotal === null && computedTotalPrice === null && (
@@ -253,13 +326,6 @@ export function PriceSummary({
                 </p>
               )}
 
-              {showPricePerPiece && effectivePricePerPiece !== null && (
-                <p className="mt-0.5 text-xs font-medium text-primary/40">
-                  <span className="whitespace-nowrap">
-                    {formatEuroPrice(effectivePricePerPiece)} za 1 ks
-                  </span>
-                </p>
-              )}
             </div>
           </div>
         )}
@@ -279,7 +345,14 @@ export function PriceSummary({
                       Kód {discount.code}
                     </p>
                     <p className="text-xs font-medium text-emerald-600">
-                      Zľava −{formatEuroPrice(discount.discountAmount)}
+                      Zľava{" "}
+                      <PriceWithVat
+                        value={discount.discountAmount}
+                        sign="−"
+                        className="inline-flex text-xs font-medium text-emerald-600"
+                        amountClassName="text-emerald-600"
+                        vatClassName="text-[10px] font-medium text-emerald-600/70"
+                      />
                     </p>
                   </div>
                 </div>

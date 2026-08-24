@@ -23,12 +23,12 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://www.annum.sk"),
 
   title: {
-    default: "Annum | Personalizované A3 nástenné kalendáre z fotiek",
+    default: "Annum | Spomienky z vašich fotiek celý rok",
     template: "%s | Annum",
   },
 
   description:
-    "Personalizovaný A3 nástenný kalendár s kovovou väzbou z vašich fotiek. Jednoduchá konfigurácia, až 52 fotiek a doručenie cez Packetu.",
+    "Personalizovaný A3 fotokalendár pripravený zavesiť. Nahrajte fotky, my pripravíme kalendár spomienok — s meninami a narodeninami, pekne zabalený, bez zložitého editora.",
 
   keywords: [
     "Annum",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     "kalendár s meninami",
     "kalendár s narodeninami",
     "kalendár s kovovou väzbou",
-    "darčekový kalendár",
+    "kalendár spomienok",
     "vlastný kalendár",
     "fotokalendár Košice",
     "A3 kalendár Košice",

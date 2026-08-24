@@ -1,4 +1,5 @@
 import { Heading, Text } from "@/components/ui/typography";
+import { ORDER_HANGING_SET_DETAILS, ORDER_HANGING_SET_LABEL } from "@/lib/order/config";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -72,7 +73,8 @@ export default function TermsPage() {
               Prostredníctvom objednávkového formulára si môžete objednať
               personalizovaný A3 nástenný kalendár pripravený z vašich fotiek,
               zadaných údajov a podľa zvoleného variantu. Ku každej objednávke
-              patrí aj klinček a pero na zapisovanie poznámok.
+              patrí aj {ORDER_HANGING_SET_LABEL.toLowerCase()} (
+              {ORDER_HANGING_SET_DETAILS}).
             </Text>
 
             <Text>

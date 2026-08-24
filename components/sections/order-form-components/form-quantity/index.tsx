@@ -1,39 +1,115 @@
-import { Control, Controller } from "react-hook-form";
+import { Control, Controller, useWatch } from "react-hook-form";
 
 import {
   calendarTypes,
   CUSTOM_QUANTITY_VALUE,
+  getCalendarPrice,
   type FixedPriceQuantity,
   quantityItems,
 } from "@/app/types/types";
 import { Field, FieldError } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { PriceWithVat } from "@/components/ui/price-with-vat";
+import {
+  orderFormRecommendedBadgeClassName,
+  recommendedBadgeLabel,
+  RecommendedBadge,
+} from "@/components/ui/recommended-badge";
 import { formatEuroPrice } from "@/helpers/format-euro-price";
 import type { OrderFormValues } from "@/lib/schema";
 import { cn } from "@/lib/utils";
-import { BadgeCheck } from "lucide-react";
 import { FormNumberInput } from "../form-number-input";
+import {
+  orderFormPriceClassName,
+  orderFormPriceVatClassName,
+  orderFormQuantityCardBodyClassName,
+  orderFormQuantityCardClassName,
+  orderFormQuantityCardFooterClassName,
+  orderFormQuantityCardHeaderClassName,
+  orderFormRadioClassName,
+} from "../order-form-styles";
 
 type QuantityFieldProps = {
   control: Control<OrderFormValues>;
   name: "quantityOption";
-  label: string;
   selectedCalendarType: OrderFormValues["types"];
 };
 
+type QuantityPriceLineProps = {
+  singlePiecePrice: number | null;
+  pricePerPiece: number;
+  totalPrice: number;
+  hasDiscount: boolean;
+};
+
+function QuantityPriceLine({
+  singlePiecePrice,
+  pricePerPiece,
+  totalPrice,
+  hasDiscount,
+}: QuantityPriceLineProps) {
+  return (
+    <div className="space-y-1.5">
+      <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+        {hasDiscount && singlePiecePrice !== null ? (
+          <span className="text-sm font-semibold text-[#3E0F28]/45 line-through">
+            {formatEuroPrice(singlePiecePrice)}/ks
+          </span>
+        ) : null}
+
+        <PriceWithVat
+          value={pricePerPiece}
+          perUnit
+          className={orderFormPriceClassName}
+          vatClassName={orderFormPriceVatClassName}
+        />
+      </div>
+
+      <div className="flex items-baseline justify-between gap-2">
+        <span className="text-xs font-semibold text-[#3E0F28]/55">Spolu</span>
+        <PriceWithVat
+          value={totalPrice}
+          className={orderFormPriceClassName}
+          vatClassName={orderFormPriceVatClassName}
+        />
+      </div>
+    </div>
+  );
+}
 
 export function FormQuantity({
   control,
   name,
-  label,
   selectedCalendarType,
 }: QuantityFieldProps) {
   const selectedPlan = calendarTypes.find(
     (plan) => plan.value === selectedCalendarType,
   );
 
+  const customQuantity = useWatch({ control, name: "customQuantity" });
   const singlePiecePrice = selectedPlan?.prices[1] ?? null;
-  const isBusiness = selectedCalendarType === "business";
+
+  const customPrice =
+    customQuantity !== undefined && customQuantity >= 1
+      ? getCalendarPrice({
+          type: selectedCalendarType,
+          quantityOption: CUSTOM_QUANTITY_VALUE,
+          customQuantity,
+        })
+      : null;
+
+  const customHasDiscount =
+    singlePiecePrice !== null &&
+    customPrice !== null &&
+    customPrice.pricePerPiece !== null &&
+    customPrice.quantity !== null &&
+    customPrice.quantity > 1 &&
+    customPrice.pricePerPiece < singlePiecePrice;
+
+  const showCustomPrice =
+    customPrice !== null &&
+    customPrice.totalPrice !== null &&
+    customPrice.pricePerPiece !== null;
 
   return (
     <Controller
@@ -41,26 +117,18 @@ export function FormQuantity({
       control={control}
       render={({ field, fieldState }) => (
         <Field data-invalid={fieldState.invalid}>
-          {/* <div className="space-y-1"> */}
-          {/* <FieldLabel>{label}</FieldLabel>
-            <p className="text-sm leading-6 text-muted-foreground">
-              Vyberte počet rovnakých kusov. Pri väčšom množstve sa cena za kus
-              automaticky zníži.
-            </p> */}
-          {/* </div> */}
-
           <RadioGroup
             value={String(field.value)}
             onValueChange={(value) => {
               field.onChange(Number(value));
             }}
-            className="grid gap-x-3 gap-y-6 pt-4 sm:grid-cols-2 xl:grid-cols-4"
+            className="grid items-stretch gap-3 sm:grid-cols-2 xl:grid-cols-4"
           >
             {quantityItems.map((item) => {
               const isCustom = item.value === CUSTOM_QUANTITY_VALUE;
               const isPresetQuantity = !isCustom;
-              const isDisabled = isBusiness && isPresetQuantity;
               const isSelected = field.value === item.value;
+              const radioId = `quantity-option-${item.value}`;
 
               const totalPrice =
                 isPresetQuantity && selectedPlan
@@ -78,102 +146,81 @@ export function FormQuantity({
                 item.value > 1 &&
                 pricePerPiece < singlePiecePrice;
 
-              const isRecommended = item.value === 3 && !isBusiness;
+              const isRecommended = item.value === 3;
 
               return (
                 <label
                   key={item.value}
+                  htmlFor={radioId}
                   data-selected={isSelected ? "true" : "false"}
-                  data-disabled={isDisabled ? "true" : "false"}
                   className={cn(
-                    "relative flex min-h-36 cursor-pointer flex-col  rounded-md border border-[#EAD6DE] bg-white p-4 shadow-sm transition-all duration-200",
-                    "hover:border-[#FC5A61]/50 hover:bg-[#FFF7F4] hover:shadow-md",
-                    "data-[selected=true]:border-[#FC5A61] data-[selected=true]:bg-[#FFF7F4]",
-                    "data-[disabled=true]:cursor-not-allowed data-[disabled=true]:opacity-40 data-[disabled=true]:hover:border-[#EAD6DE] data-[disabled=true]:hover:bg-white data-[disabled=true]:hover:shadow-sm",
+                    orderFormQuantityCardClassName,
+                    "pt-5",
                   )}
                 >
-                  {isRecommended && (
-                    <div className="absolute -top-4 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-[#C8FF3D] px-3 py-1.5 text-xs font-extrabold uppercase tracking-[0.16em] text-[#3E0F28] shadow-sm">
-                      <BadgeCheck className="size-3.5" />
-                      Obľúbený
-                    </div>
-                  )}
-                  <div className="flex items-start gap-3">
+                  {isCustom ? (
+                    <RecommendedBadge
+                      className={cn(
+                        orderFormRecommendedBadgeClassName,
+                        "bg-[#FFF7F4] text-[#3E0F28] ring-1 ring-[#EAD6DE]",
+                      )}
+                    >
+                      Vlastný počet
+                    </RecommendedBadge>
+                  ) : isRecommended ? (
+                    <RecommendedBadge
+                      variant="lime"
+                      className={orderFormRecommendedBadgeClassName}
+                    >
+                      {recommendedBadgeLabel}
+                    </RecommendedBadge>
+                  ) : null}
+
+                  <div
+                    className={cn(
+                      orderFormQuantityCardHeaderClassName,
+                      isCustom && "pb-2",
+                    )}
+                  >
                     <RadioGroupItem
+                      id={radioId}
                       value={String(item.value)}
-                      disabled={isDisabled}
-                      className="mt-0.5"
+                      className={orderFormRadioClassName}
                     />
 
-                    <div className="min-w-0 flex-1 mt-1">
-                      <p className="font-bold leading-none text-foreground">
-                        {item.label}
-                      </p>
-
-                      {isCustom ? (
-                        <p className="mt-2 text-sm leading-5 text-muted-foreground">
-                          Zadajte vlastný počet kusov.
+                    <div className={orderFormQuantityCardBodyClassName}>
+                      {!isCustom ? (
+                        <p className="text-base font-bold leading-tight text-foreground">
+                          {item.label}
                         </p>
                       ) : (
-                        <p className="mt-2 text-sm leading-5 text-muted-foreground">
-                          {hasDiscount
-                            ? "Zvýhodnená cena za kus"
-                            : "Štandardná cena"}
-                        </p>
+                        <FormNumberInput control={control} layout="card" />
                       )}
                     </div>
                   </div>
 
-                  <div className="mt-4 flex flex-1 flex-col justify-end">
+                  <div className={orderFormQuantityCardFooterClassName}>
                     {isCustom ? (
-                      <div className="space-y-2">
-                        {isBusiness && (
-                          <p className="text-xs font-semibold text-secondary">
-                            Business objednávka je od 10 kusov.
-                          </p>
-                        )}
-
-                        <FormNumberInput
-                          control={control}
-                          isBusinessType={isBusiness}
+                      showCustomPrice &&
+                      customPrice.pricePerPiece !== null &&
+                      customPrice.totalPrice !== null ? (
+                        <QuantityPriceLine
+                          singlePiecePrice={singlePiecePrice}
+                          pricePerPiece={customPrice.pricePerPiece}
+                          totalPrice={customPrice.totalPrice}
+                          hasDiscount={customHasDiscount}
                         />
-                      </div>
+                      ) : null
                     ) : (
-                      <div className="space-y-3">
-                        {pricePerPiece !== undefined && (
-                          <div>
-                            <p className="text-xs font-medium text-muted-foreground">
-                              Cena za 1 kalendár
-                            </p>
-
-                            <div className="mt-1 flex items-baseline gap-2">
-                              {hasDiscount && singlePiecePrice !== null && (
-                                <span className="whitespace-nowrap text-sm font-semibold text-primary/60 line-through">
-                                  {formatEuroPrice(singlePiecePrice)}
-                                </span>
-                              )}
-
-                              <span className="whitespace-nowrap font-heading text-lg font-bold text-primary">
-                                {formatEuroPrice(pricePerPiece)}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-
-                        {totalPrice !== undefined && (
-                          <div className="border-t border-[#EAD6DE] pt-3">
-                            <div className="flex items-center justify-between gap-3">
-                              <span className="text-sm font-semibold text-muted-foreground">
-                                Spolu
-                              </span>
-
-                              <span className="whitespace-nowrap font-heading text-xl font-bold text-secondary sm:text-2xl">
-                                {formatEuroPrice(totalPrice)}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
+                      pricePerPiece !== undefined &&
+                      totalPrice !== undefined && (
+                        <QuantityPriceLine
+                          singlePiecePrice={singlePiecePrice}
+                          pricePerPiece={pricePerPiece}
+                          totalPrice={totalPrice}
+                          hasDiscount={hasDiscount}
+                        />
+                      )
                     )}
                   </div>
                 </label>

@@ -1,12 +1,11 @@
-import { calendarTypesValues, CUSTOM_QUANTITY_VALUE } from "@/app/types/types";
+import {
+  CUSTOM_QUANTITY_VALUE,
+  orderableCalendarTypesValues,
+} from "@/app/types/types";
 import { isValidCalendarDayMonth } from "@/helpers/calendar-date";
 import { discountAllowsPickup } from "@/helpers/discount-codes";
 import { normalizePhone } from "@/helpers/phone";
-import {
-  MAX_BIRTHDAY_NAME_LENGTH,
-  MAX_PHOTOS,
-  MIN_PHOTOS,
-} from "@/lib/order/config";
+import { MEMORY_SET_LABEL, MAX_BIRTHDAY_NAME_LENGTH, MAX_DEDICATION_LENGTH, MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
 import { z } from "zod";
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
@@ -37,6 +36,29 @@ const namedaySchema = z.object({
   name: z.string().min(1, "Zadajte meno"),
 });
 
+const optionalNullableStringSchema = z
+  .union([z.string(), z.null(), z.undefined()])
+  .transform((value) => value ?? "");
+
+export const optionalDedicationSchema = optionalNullableStringSchema.pipe(
+  z.string().max(
+    MAX_DEDICATION_LENGTH,
+    `Venovanie môže mať maximálne ${MAX_DEDICATION_LENGTH} znakov.`,
+  ),
+);
+
+export const optionalNoteSchema = optionalNullableStringSchema.pipe(
+  z.string().max(500, "Poznámka môže mať maximálne 500 znakov"),
+);
+
+export const optionalDiscountCodeSchema = optionalNullableStringSchema
+  .pipe(z.string().max(40))
+  .transform((value) => {
+    const normalized = value.trim().toUpperCase();
+
+    return normalized.length > 0 ? normalized : undefined;
+  });
+
 export const orderSchema = z
   .object({
     firstName: z.string().min(1, "Zadajte meno"),
@@ -56,12 +78,9 @@ export const orderSchema = z
             message: "Zadajte platné slovenské telefónne číslo.",
           }),
       ),
-    note: z
-      .string()
-      .max(500, "Poznámka môže mať maximálne 500 znakov")
-      .optional(),
+    note: optionalNoteSchema,
 
-    types: z.enum(calendarTypesValues),
+    types: z.enum(orderableCalendarTypesValues),
     quantityOption: z.union([
       z.literal(1),
       z.literal(3),
@@ -99,11 +118,9 @@ export const orderSchema = z
         address: z.string().min(1),
       })
       .optional(),
-    discountCode: z
-      .string()
-      .max(40)
-      .transform((value) => value.trim().toUpperCase())
-      .optional(),
+    discountCode: optionalDiscountCodeSchema,
+
+    dedications: z.array(optionalDedicationSchema),
   })
   .superRefine((data, ctx) => {
     if (
@@ -114,19 +131,6 @@ export const orderSchema = z
         code: "custom",
         path: ["customQuantity"],
         message: "Zadajte vlastný počet kusov",
-      });
-    }
-
-    if (
-      data.types === "business" &&
-      data.quantityOption === CUSTOM_QUANTITY_VALUE &&
-      data.customQuantity !== undefined &&
-      data.customQuantity < 10
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        path: ["customQuantity"],
-        message: "Business objednávka je dostupná od 10 kusov",
       });
     }
 
@@ -146,6 +150,17 @@ export const orderSchema = z
         code: z.ZodIssueCode.custom,
         path: ["deliveryMethod"],
         message: "Osobný odber je dostupný len so zľavovým kódom RODINA15.",
+      });
+    }
+
+    if (
+      data.types !== "memory" &&
+      data.dedications.some((entry) => entry.trim().length > 0)
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["dedications"],
+        message: `Venovanie je možné zadať len pri ${MEMORY_SET_LABEL}.`,
       });
     }
   });

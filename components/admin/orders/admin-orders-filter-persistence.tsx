@@ -15,7 +15,8 @@ export function AdminOrdersFilterPersistence() {
       searchParams.get("year") ||
       searchParams.get("month") ||
       searchParams.get("calendar") ||
-      searchParams.get("delivery");
+      searchParams.get("delivery") ||
+      searchParams.get("wave");
 
     if (hasUrlFilters) {
       return;
@@ -31,7 +32,8 @@ export function AdminOrdersFilterPersistence() {
       stored.year === "all" &&
       stored.month === "all" &&
       stored.calendar === "all" &&
-      stored.delivery === "all"
+      stored.delivery === "all" &&
+      stored.wave === "all"
     ) {
       return;
     }
@@ -44,6 +46,7 @@ export function AdminOrdersFilterPersistence() {
         month: stored.month,
         calendar: stored.calendar,
         delivery: stored.delivery,
+        wave: stored.wave,
       }),
     );
   }, [router, searchParams]);

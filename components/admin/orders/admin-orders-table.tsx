@@ -16,6 +16,7 @@ function SortLink({
   currentMonth,
   currentCalendar,
   currentDelivery,
+  currentWave,
   children,
 }: {
   sort: SortKey;
@@ -25,6 +26,7 @@ function SortLink({
   currentMonth?: string;
   currentCalendar?: string;
   currentDelivery?: string;
+  currentWave?: string;
   children: React.ReactNode;
 }) {
   const isActive = sort === currentSort;
@@ -36,6 +38,7 @@ function SortLink({
         month: currentMonth,
         calendar: currentCalendar,
         delivery: currentDelivery,
+        wave: currentWave,
       })}
       className="inline-flex items-center gap-1 font-bold transition hover:text-[#FC5A61]"
     >
@@ -55,6 +58,7 @@ type AdminOrdersTableProps = {
   currentMonth?: string;
   currentCalendar?: string;
   currentDelivery?: string;
+  currentWave?: string;
 };
 
 export function AdminOrdersTable({
@@ -65,13 +69,15 @@ export function AdminOrdersTable({
   currentMonth,
   currentCalendar,
   currentDelivery,
+  currentWave,
 }: AdminOrdersTableProps) {
   if (orders.length === 0) {
     const hasActiveFilters =
       currentYear !== "all" ||
       currentMonth !== "all" ||
       currentCalendar !== "all" ||
-      currentDelivery !== "all";
+      currentDelivery !== "all" ||
+      currentWave !== "all";
 
     const emptyMessage = hasActiveFilters
       ? "Pre zvolené filtre nemáte žiadne objednávky."
@@ -118,6 +124,7 @@ export function AdminOrdersTable({
                   currentMonth={currentMonth}
                   currentCalendar={currentCalendar}
                   currentDelivery={currentDelivery}
+                  currentWave={currentWave}
                 >
                   Objednávka
                 </SortLink>
@@ -132,6 +139,7 @@ export function AdminOrdersTable({
                   currentMonth={currentMonth}
                   currentCalendar={currentCalendar}
                   currentDelivery={currentDelivery}
+                  currentWave={currentWave}
                 >
                   Zákazník
                 </SortLink>
@@ -146,6 +154,7 @@ export function AdminOrdersTable({
                   currentMonth={currentMonth}
                   currentCalendar={currentCalendar}
                   currentDelivery={currentDelivery}
+                  currentWave={currentWave}
                 >
                   Kalendár
                 </SortLink>

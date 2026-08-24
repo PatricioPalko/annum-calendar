@@ -5,6 +5,7 @@ export type AdminOrdersFilterPreference = {
   month: string;
   calendar: string;
   delivery: string;
+  wave: string;
 };
 
 export function readAdminOrdersFilterPreference():
@@ -32,6 +33,7 @@ export function readAdminOrdersFilterPreference():
         month: parsed.month,
         calendar: parsed.calendar ?? "all",
         delivery: parsed.delivery ?? "all",
+        wave: parsed.wave ?? "all",
       };
     }
   } catch {

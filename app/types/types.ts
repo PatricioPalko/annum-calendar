@@ -1,6 +1,21 @@
-export const calendarTypesValues = ["basic", "premium", "business"] as const;
+import {
+  MEMORY_SET_LABEL,
+  MEMORY_SET_PACK_PRICES,
+} from "@/lib/order/config";
+
+export const calendarTypesValues = ["basic", "premium", "memory", "business"] as const;
 
 export type CalendarTypes = (typeof calendarTypesValues)[number];
+
+/** Typy dostupné v objednávkovom formulári (bez Business — ten ide cez /pre-firmy). */
+export const orderableCalendarTypesValues = [
+  "basic",
+  "premium",
+  "memory",
+] as const;
+
+export type OrderableCalendarTypes =
+  (typeof orderableCalendarTypesValues)[number];
 
 export type FixedPriceQuantity = 1 | 3 | 5;
 
@@ -34,12 +49,24 @@ export const calendarTypes = [
   {
     value: "premium",
     label: "Premium",
-    badge: "Obľubený",
+    badge: "Najobľúbenejší",
     description: "Kalendár s fotkami, meninami a narodeninami.",
     prices: {
       1: 32,
       3: 84,
       5: 125,
+    },
+  },
+  {
+    value: "memory",
+    label: MEMORY_SET_LABEL,
+    badge: "Prémiový darček",
+    description:
+      "Premium kalendár s kolážou a venovaním na samostatnom papieri.",
+    prices: {
+      1: MEMORY_SET_PACK_PRICES[1],
+      3: MEMORY_SET_PACK_PRICES[3],
+      5: MEMORY_SET_PACK_PRICES[5],
     },
   },
   {
@@ -51,6 +78,21 @@ export const calendarTypes = [
     priceNote: "Cena podľa množstva",
   },
 ] satisfies CalendarTypesOption[];
+
+export const orderableCalendarTypes = calendarTypes.filter(
+  (
+    plan,
+  ): plan is Extract<CalendarTypesOption, { value: OrderableCalendarTypes }> =>
+    plan.value !== "business",
+);
+
+export function hasPremiumCalendarFeatures(type: CalendarTypes): boolean {
+  return type === "premium" || type === "memory";
+}
+
+export function isMemoryCalendarType(type: CalendarTypes): boolean {
+  return type === "memory";
+}
 
 export const BUSINESS_MIN_QUANTITY = 10;
 
@@ -117,6 +159,32 @@ export function getLowestUnitPrice(plan: CalendarTypesOption): number | null {
   }
 
   return fivePiecesPrice / 5;
+}
+
+export function getBasicLowestUnitPrice(): number {
+  const basic = calendarTypes.find((plan) => plan.value === "basic");
+
+  if (!basic) {
+    throw new Error("Basic calendar type is missing.");
+  }
+
+  const price = getLowestUnitPrice(basic);
+
+  if (price === null) {
+    throw new Error("Basic calendar type has no price.");
+  }
+
+  return price;
+}
+
+export function getConsumerHighestPackPrice(): number {
+  return Math.max(
+    ...orderableCalendarTypesValues.flatMap((type) =>
+      Object.values(getCalendarType(type).prices).filter(
+        (price): price is number => typeof price === "number",
+      ),
+    ),
+  );
 }
 
 export function resolveQuantity(values: {
@@ -257,6 +325,7 @@ export type SearchParams = Promise<{
   month?: string;
   calendar?: string;
   delivery?: string;
+  wave?: string;
 }>;
 
 export type OrderRow = {
@@ -270,6 +339,7 @@ export type OrderRow = {
   email: string;
   phone: string | null;
   note: string | null;
+  delivery_wave_key: string | null;
 
   calendar_type: CalendarTypes;
   quantity: number;
@@ -283,6 +353,10 @@ export type OrderRow = {
 
   birthdays: unknown[];
   namedays: unknown[];
+
+  memory_set_enabled?: boolean | null;
+  dedications?: string[] | null;
+  dedication?: string | null;
 
   total_price: number | null;
 

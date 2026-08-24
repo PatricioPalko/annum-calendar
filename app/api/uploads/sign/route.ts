@@ -30,7 +30,7 @@ const bodySchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
 
-  type: z.enum(["basic", "premium", "business"]),
+  type: z.enum(["basic", "premium", "memory"]),
   quantity: z.number().int().min(1).max(200),
 
   turnstileToken: z.string().min(1),
@@ -126,6 +126,41 @@ function createUploadPathToken(values: {
   return `${values.expiresAt}.${signature}`;
 }
 
+function isStorageDeadlockError(error: unknown) {
+  if (!error || typeof error !== "object") {
+    return false;
+  }
+
+  const message =
+    "message" in error && typeof error.message === "string"
+      ? error.message
+      : "";
+
+  return message.includes("40P01");
+}
+
+async function createSignedUploadUrlWithRetry(path: string) {
+  const maxAttempts = 3;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const { data, error } = await supabaseAdmin.storage
+      .from(BUCKET)
+      .createSignedUploadUrl(path);
+
+    if (!error && data) {
+      return data;
+    }
+
+    if (!isStorageDeadlockError(error) || attempt === maxAttempts) {
+      throw error ?? new Error("Nepodarilo sa vytvoriť signed upload URL.");
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 50 * attempt));
+  }
+
+  throw new Error("Nepodarilo sa vytvoriť signed upload URL.");
+}
+
 export async function POST(request: Request) {
   const ip = getClientIp(request);
   const rate = await consumeRateLimit("upload-sign", ip, {
@@ -210,20 +245,13 @@ export async function POST(request: Request) {
 
   const expiresAt = Math.floor(Date.now() / 1000) + TOKEN_TTL_SECONDS;
 
-  const files = await Promise.all(
-    inputFiles.map(async (file, index) => {
+  try {
+    const files = [];
+
+    for (const [index, file] of inputFiles.entries()) {
       const safeName = normalizeFileName(file.name);
-
       const path = `${storageFolder}/${index + 1}-${crypto.randomUUID()}-${safeName}`;
-
-      const { data, error } = await supabaseAdmin.storage
-        .from(BUCKET)
-        .createSignedUploadUrl(path);
-
-      if (error) {
-        throw error;
-      }
-
+      const data = await createSignedUploadUrlWithRetry(path);
       const uploadPathToken = createUploadPathToken({
         path,
         size: file.size,
@@ -231,22 +259,31 @@ export async function POST(request: Request) {
         expiresAt,
       });
 
-      return {
+      files.push({
         name: file.name,
         type: file.type,
         size: file.size,
         path,
         token: data.token,
         uploadPathToken,
-      };
-    }),
-  );
+      });
+    }
 
-  return NextResponse.json({
-    orderNumber,
-    orderCode,
-    storageFolder,
-    expiresAt,
-    files,
-  });
+    return NextResponse.json({
+      orderNumber,
+      orderCode,
+      storageFolder,
+      expiresAt,
+      files,
+    });
+  } catch (error) {
+    console.error("SIGNED_UPLOAD_URL_ERROR:", error);
+
+    return NextResponse.json(
+      {
+        message: "Nepodarilo sa pripraviť upload fotiek.",
+      },
+      { status: 500 },
+    );
+  }
 }

@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 type SectionLinkProps = {
   sectionId: string;
   children: ReactNode;
   className?: string;
+  isActive?: boolean;
   onClick?: () => void;
 };
 
@@ -45,9 +46,9 @@ export function SectionLink({
   sectionId,
   children,
   className,
+  isActive = false,
   onClick,
 }: SectionLinkProps) {
-  const router = useRouter();
   const pathname = usePathname();
 
   const href = `/#${sectionId}`;
@@ -66,7 +67,6 @@ export function SectionLink({
       return;
     }
 
-    event.preventDefault();
     onClick?.();
 
     const openDetails = document.querySelector(
@@ -76,25 +76,23 @@ export function SectionLink({
       openDetails.open = false;
     }
 
-    if (pathname === "/") {
-      window.history.pushState(null, "", `#${sectionId}`);
-      scrollToSection(sectionId);
+    if (pathname !== "/") {
       return;
     }
 
-    router.push(href, {
-      scroll: false,
-    });
-
+    event.preventDefault();
+    const nextUrl = `${window.location.pathname}${window.location.search}#${sectionId}`;
+    window.history.pushState(null, "", nextUrl);
     scrollToSection(sectionId);
   }
 
   return (
     <Link
       href={href}
-      scroll={false}
+      scroll={pathname !== "/"}
       onClick={handleClick}
       className={className}
+      aria-current={isActive ? "location" : undefined}
     >
       {children}
     </Link>

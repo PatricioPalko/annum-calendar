@@ -4,19 +4,22 @@ import {
   getLowestUnitPrice,
   type CalendarTypesOption,
 } from "@/app/types/types";
-import {
-  Field,
-  FieldContent,
-  FieldDescription,
-  FieldError,
-  FieldSet,
-  FieldTitle,
-} from "@/components/ui/field";
+import { FieldError, FieldSet } from "@/components/ui/field";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { formatEuroPrice } from "@/helpers/format-euro-price";
+import { PriceWithVat } from "@/components/ui/price-with-vat";
+import {
+  orderFormRecommendedBadgeClassName,
+  recommendedBadgeLabel,
+  RecommendedBadge,
+} from "@/components/ui/recommended-badge";
 import type { OrderFormValues } from "@/lib/schema";
 import { cn } from "@/lib/utils";
-import { BadgeCheck } from "lucide-react";
+import {
+  orderFormOptionCardClassName,
+  orderFormPriceClassName,
+  orderFormPriceVatClassName,
+  orderFormRadioClassName,
+} from "../order-form-styles";
 
 type RadioGroupFieldProps = {
   control: Control<OrderFormValues>;
@@ -24,7 +27,6 @@ type RadioGroupFieldProps = {
   label: string;
   options: CalendarTypesOption[];
 };
-
 
 export function FormRadioGroup({
   control,
@@ -37,73 +39,65 @@ export function FormRadioGroup({
       name={name}
       control={control}
       render={({ field, fieldState }) => (
-        <FieldSet data-invalid={fieldState.invalid} className="space-y-4">
+        <FieldSet data-invalid={fieldState.invalid}>
           <RadioGroup
             name={field.name}
             value={field.value}
             onValueChange={field.onChange}
+            aria-label={label}
             aria-invalid={fieldState.invalid}
-            className="grid gap-3 md:grid-cols-3"
+            className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
           >
             {options.map((plan) => {
               const id = `calendar-type-${plan.value}`;
               const isSelected = field.value === plan.value;
               const lowestUnitPrice = getLowestUnitPrice(plan);
+              const isRecommended = plan.value === "premium";
 
               return (
                 <label
                   key={plan.value}
                   htmlFor={id}
                   data-selected={isSelected ? "true" : "false"}
-                  className={cn(
-                    "relative flex cursor-pointer flex-col rounded-md border border-[#EAD6DE] bg-white p-3 shadow-sm transition-all duration-200",
-                    "hover:border-[#FC5A61]/50 hover:bg-[#FFF7F4] hover:shadow-md",
-                    "data-[selected=true]:border-secondary data-[selected=true]:bg-[#FFF7F4] data-[selected=true]:shadow-md",
-                  )}
+                  className={orderFormOptionCardClassName}
                 >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-start gap-2.5">
-                      <RadioGroupItem
-                        id={id}
-                        value={plan.value}
-                        aria-invalid={fieldState.invalid}
-                        className="mt-0.5"
-                      />
+                  {isRecommended ? (
+                    <RecommendedBadge
+                      variant="lime"
+                      className={orderFormRecommendedBadgeClassName}
+                    >
+                      {recommendedBadgeLabel}
+                    </RecommendedBadge>
+                  ) : null}
 
-                      <Field orientation="vertical" className="gap-0.5">
-                        <FieldContent>
-                          <FieldTitle className="font-bold normal-case text-foreground">
-                            {plan.label}
-                          </FieldTitle>
+                  <RadioGroupItem
+                    id={id}
+                    value={plan.value}
+                    aria-invalid={fieldState.invalid}
+                    className={cn(orderFormRadioClassName, "col-start-1 row-start-1")}
+                  />
 
-                          <FieldDescription className="mt-0.5 text-sm leading-5 text-muted-foreground">
-                            {plan.description}
-                          </FieldDescription>
-                        </FieldContent>
-                      </Field>
-                    </div>
-                    {plan.value === "premium" && (
-                      <span
-                        className={cn(
-                          "absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-[#C8FF3D] px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#3E0F28] shadow-sm",
-                        )}
-                      >
-                        <BadgeCheck className="size-3" />
-                        {plan.badge}
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-3 border-t border-[#EAD6DE] pt-2">
+                  <p className="col-start-2 row-start-1 self-center text-base font-bold leading-tight text-foreground">
+                    {plan.label}
+                  </p>
+
+                  <div className="col-span-2 row-start-2 space-y-1.5 border-t border-[#EAD6DE]/70 pt-2.5">
+                    <p className="text-sm leading-snug text-[#3E0F28]/60">
+                      {plan.description}
+                    </p>
+
                     {lowestUnitPrice !== null ? (
-                      <p className="text-sm font-semibold text-primary">
+                      <p className="text-sm font-semibold text-[#3E0F28]/55">
                         od{" "}
-                        <span className="whitespace-nowrap font-heading text-xl font-bold text-secondary sm:text-2xl">
-                          {formatEuroPrice(lowestUnitPrice)}
-                        </span>{" "}
-                        / ks
+                        <PriceWithVat
+                          value={lowestUnitPrice}
+                          perUnit
+                          className={orderFormPriceClassName}
+                          vatClassName={orderFormPriceVatClassName}
+                        />
                       </p>
                     ) : (
-                      <p className="font-heading text-xl font-bold text-secondary">
+                      <p className={orderFormPriceClassName}>
                         {plan.priceNote ?? "Cena na mieru"}
                       </p>
                     )}

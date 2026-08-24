@@ -1,3 +1,4 @@
+import type { OrderableCalendarTypes } from "@/app/types/types";
 import { supabaseBrowser } from "@/lib/supabase/browser";
 
 const BUCKET = "calendar-uploads";
@@ -37,7 +38,7 @@ export type FinalizedUploadedPhoto = {
 type UploadOrderPhotosParams = {
   firstName: string;
   lastName: string;
-  type: "basic" | "premium" | "business";
+  type: OrderableCalendarTypes;
   quantity: number;
   files: File[];
   turnstileToken: string;

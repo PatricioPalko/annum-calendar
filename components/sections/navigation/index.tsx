@@ -2,20 +2,27 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useMemo } from "react";
 
 import { AdminLogoutButton } from "@/components/admin/admin-logout-button";
 import { MobileNavMenu } from "@/components/sections/navigation/mobile-nav-menu";
 import { SectionLink } from "@/components/sections/navigation/section-link";
+import { getNavigationLinkClassName } from "@/components/sections/navigation/navigation-styles";
 import { Button } from "@/components/ui/button";
+import { useActiveSection } from "@/helpers/use-active-section";
 
 const navigationItems = [
   {
-    label: "Ako to funguje",
+    label: "Pre koho",
+    sectionId: "pre-koho",
+  },
+  {
+    label: "Ako to prebieha",
     sectionId: "ako-to-funguje",
   },
   {
-    label: "Ukážka kalendára",
-    sectionId: "ukazka-kalendara",
+    label: "Čo je v balení",
+    sectionId: "co-je-v-baleni",
   },
   {
     label: "Cenník",
@@ -25,10 +32,16 @@ const navigationItems = [
     label: "FAQ",
     sectionId: "faq",
   },
-];
+] as const;
 
 export default function Navigation() {
   const pathname = usePathname();
+  const isHomePage = pathname === "/";
+  const sectionIds = useMemo(
+    () => navigationItems.map((item) => item.sectionId),
+    [],
+  );
+  const activeSection = useActiveSection(sectionIds, isHomePage);
   const isAdminRoute =
     pathname.startsWith("/admin") && pathname !== "/admin/login";
 
@@ -44,14 +57,17 @@ export default function Navigation() {
         </Link>
 
         <nav
-          className="hidden items-center gap-6 md:flex"
+          className="hidden items-center gap-4 lg:gap-5 xl:gap-7 md:flex"
           aria-label="Hlavná navigácia"
         >
           {navigationItems.map((item) => (
             <SectionLink
               key={item.sectionId}
               sectionId={item.sectionId}
-              className="text-sm font-semibold uppercase text-[#3E0F28]/70 transition hover:text-[#FC5A61]"
+              isActive={activeSection === item.sectionId}
+              className={getNavigationLinkClassName(
+                activeSection === item.sectionId,
+              )}
             >
               {item.label}
             </SectionLink>
@@ -69,7 +85,7 @@ export default function Navigation() {
                 size="sm"
                 className="hidden min-[420px]:inline-flex sm:size-default"
               >
-                <Link href="/objednavka">Vytvoriť kalendár</Link>
+                <Link href="/objednavka">Vytvoriť spomienky</Link>
               </Button>
 
               <Button
@@ -78,13 +94,14 @@ export default function Navigation() {
                 size="sm"
                 className="min-[420px]:hidden"
               >
-                <Link href="/objednavka">Objednať</Link>
+                <Link href="/objednavka">Spomienky</Link>
               </Button>
             </>
           )}
 
           <MobileNavMenu
             items={navigationItems}
+            activeSection={activeSection}
             showLogout={isAdminRoute}
           />
         </div>

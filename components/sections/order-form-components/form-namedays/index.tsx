@@ -29,15 +29,7 @@ export function NamedaysFieldArray({ control }: NamedaysFieldArrayProps) {
   );
 
   return (
-    <div className="space-y-5">
-      {/* <div>
-        <h3 className="text-lg font-medium">Meniny</h3>
-
-        <p className="mt-1 text-left text-sm leading-normal tracking-wide text-muted-foreground">
-          Vyberte mená, ktorých meniny chcete v kalendári zvýrazniť.
-        </p>
-      </div> */}
-
+    <div className="space-y-3">
       <NamedayPicker
         data={data}
         append={append}
@@ -45,20 +37,20 @@ export function NamedaysFieldArray({ control }: NamedaysFieldArrayProps) {
         selectedNames={selectedNames}
       />
       {sortedSelectedNames.length > 0 && (
-        <div className="rounded-md border border-secondary bg-[#FFF7F4] p-4 shadow-md">
-          <div className="mb-3 flex items-center justify-between gap-4">
-            <p className="text-sm font-bold text-foreground">Vybrané meniny</p>
+        <div className="rounded-md border border-[#EAD6DE] bg-[#FFF7F4]/80 p-2.5">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-xs font-bold text-foreground">Vybrané meniny</p>
 
-            <span className="text-xs font-semibold text-foreground">
-              {sortedSelectedNames.length} mien
+            <span className="text-[11px] font-semibold text-[#3E0F28]/55">
+              {sortedSelectedNames.length}
             </span>
           </div>
 
-          <ul className="grid grid-cols-3 gap-x-3 gap-y-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
+          <ul className="flex flex-wrap gap-1.5">
             {sortedSelectedNames.map((name) => (
               <li
                 key={name}
-                className="break-words text-sm font-medium text-foreground"
+                className="rounded-full border border-[#EAD6DE] bg-white px-2 py-0.5 text-[11px] font-semibold text-foreground sm:text-xs"
               >
                 {name}
               </li>

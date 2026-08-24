@@ -1,7 +1,9 @@
 import { OrderRow } from "@/app/types/types";
 import { formatDateOnly, formatTimeOnly } from "@/helpers/format-date-time";
+import { getOrderCheckoutPaymentUrl } from "@/helpers/admin-order-payment-url";
 import { cn } from "@/lib/utils";
 
+import { AdminOrderCheckoutPaymentLink } from "./admin-order-checkout-payment-link";
 import { AdminPaymentStatusBadge } from "./admin-payment-status-badge";
 import { AdminStripePaymentLink } from "./admin-stripe-payment-link";
 
@@ -16,6 +18,8 @@ export function AdminOrderPayment({
   className,
   align = "start",
 }: AdminOrderPaymentProps) {
+  const checkoutPaymentUrl = getOrderCheckoutPaymentUrl(order);
+
   return (
     <div
       className={cn(
@@ -34,6 +38,10 @@ export function AdminOrderPayment({
 
       {order.payment_status === "paid" && (
         <AdminStripePaymentLink order={order} />
+      )}
+
+      {checkoutPaymentUrl && (
+        <AdminOrderCheckoutPaymentLink paymentUrl={checkoutPaymentUrl} />
       )}
     </div>
   );

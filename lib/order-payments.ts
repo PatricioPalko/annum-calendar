@@ -19,6 +19,7 @@ type PaidOrderRow = {
   total_price: number | null;
   delivery_price: number | string | null;
   delivery_method: string | null;
+  delivery_wave_key: string | null;
   packeta_point_id: string | null;
   packeta_point_name: string | null;
   packeta_point_address: string | null;
@@ -30,6 +31,7 @@ type PaidOrderRow = {
   photos: unknown[] | null;
   birthdays: unknown[] | null;
   namedays: unknown[] | null;
+  dedications: unknown[] | null;
 };
 
 const paidOrderSelect = `
@@ -46,6 +48,7 @@ const paidOrderSelect = `
   total_price,
   delivery_price,
   delivery_method,
+  delivery_wave_key,
   packeta_point_id,
   packeta_point_name,
   packeta_point_address,
@@ -56,7 +59,8 @@ const paidOrderSelect = `
   discount_amount,
   photos,
   birthdays,
-  namedays
+  namedays,
+  dedications
 `;
 
 function sleep(ms: number) {
@@ -216,6 +220,7 @@ async function runPostPaymentSideEffects(
         calendarType:
           order.calendar_type === "basic" ||
           order.calendar_type === "premium" ||
+          order.calendar_type === "memory" ||
           order.calendar_type === "business"
             ? order.calendar_type
             : "basic",
@@ -236,12 +241,19 @@ async function runPostPaymentSideEffects(
                 }
               : null,
         },
+        deliveryWaveKey: order.delivery_wave_key,
         photoCount: Array.isArray(order.photos) ? order.photos.length : undefined,
         birthdaysCount: Array.isArray(order.birthdays)
           ? order.birthdays.length
           : undefined,
         namedaysCount: Array.isArray(order.namedays)
           ? order.namedays.length
+          : undefined,
+        dedications: Array.isArray(order.dedications)
+          ? order.dedications.filter(
+              (entry): entry is string =>
+                typeof entry === "string" && entry.trim().length > 0,
+            )
           : undefined,
         note: order.note,
       });

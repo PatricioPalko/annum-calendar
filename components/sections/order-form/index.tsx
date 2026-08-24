@@ -1,6 +1,10 @@
 "use client";
-import { calendarTypes, CUSTOM_QUANTITY_VALUE } from "@/app/types/types";
-import { PacketaPicker } from "@/components/delivery/packeta-picker";
+import {
+  hasPremiumCalendarFeatures,
+  isMemoryCalendarType,
+  orderableCalendarTypes,
+  resolveQuantity,
+} from "@/app/types/types";
 import {
   TurnstileWidget,
   type TurnstileWidgetHandle,
@@ -12,9 +16,9 @@ import {
   FieldError,
   FieldGroup,
 } from "@/components/ui/field";
-import { Heading, SectionLabel, Text } from "@/components/ui/typography";
 import { getDiscountCode } from "@/helpers/discount-codes";
 import { getFinalQuantity } from "@/helpers/form";
+import { getOrderFormStepCompletion, getOrderFormStepCount } from "@/helpers/order-form-step-completion";
 import {
   clearOrderFormDraft,
   loadOrderFormDraft,
@@ -24,11 +28,12 @@ import { OrderFormValues, orderSchema } from "@/lib/schema";
 import { uploadOrderPhotos } from "@/lib/upload-order-photos";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Loader2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { BirthdaysFieldArray } from "../order-form-components/form-birthdays";
 import { FormConsentCheckbox } from "../order-form-components/form-consent-checkbox";
 import { FormDeliveryMethod } from "../order-form-components/form-delivery-method";
+import { FormDedication } from "../order-form-components/form-dedication";
 import { FormInput } from "../order-form-components/form-input";
 import { NamedaysFieldArray } from "../order-form-components/form-namedays";
 import { PhotoDropzone } from "../order-form-components/form-photo-dropzone";
@@ -36,6 +41,7 @@ import { PriceSummary } from "../order-form-components/form-price-summary";
 import { FormQuantity } from "../order-form-components/form-quantity";
 import { FormRadioGroup } from "../order-form-components/form-radiogroup";
 import { FormTextarea } from "../order-form-components/form-textarea";
+import { orderFormFieldHintClassName } from "../order-form-components/order-form-styles";
 import { OrderFormMobileBar } from "../order-form-components/order-form-mobile-bar";
 import OrderSection from "../order-section";
 
@@ -54,6 +60,7 @@ const orderFormDefaultValues: OrderFormValues = {
   termsAccepted: false,
   marketingConsent: false,
   discountCode: "",
+  dedications: [],
   deliveryMethod: "packeta",
   packetaPoint: undefined,
 };
@@ -100,6 +107,7 @@ export default function OrderForm() {
   const errors = form.formState.errors;
 
   const hasPhotoError = Boolean(errors.photos);
+  const hasDedicationError = Boolean(errors.dedications);
   const hasQuantityError = Boolean(
     errors.quantityOption || errors.customQuantity,
   );
@@ -122,6 +130,25 @@ export default function OrderForm() {
   const turnstileConfigured = Boolean(turnstileSiteKey);
   const canSubmitWithTurnstile = !turnstileConfigured || Boolean(turnstileToken);
   const selectedDeliveryMethod = form.watch("deliveryMethod");
+  const watchedFormValues = form.watch();
+  const formErrors = form.formState.errors;
+  const hasPremiumFeatures = hasPremiumCalendarFeatures(selectedCalendarType);
+  const isMemoryType = isMemoryCalendarType(selectedCalendarType);
+
+  const { steps: stepCompletion, activeStep } = useMemo(
+    () => getOrderFormStepCompletion(watchedFormValues, formErrors),
+    [watchedFormValues, formErrors],
+  );
+
+  const totalSteps = getOrderFormStepCount(selectedCalendarType);
+  const dedicationQuantity =
+    resolveQuantity({
+      quantityOption: selectedQuantityOption,
+      customQuantity,
+    }) ?? 1;
+  const deliveryStepNumber = isMemoryType ? 7 : hasPremiumFeatures ? 6 : 4;
+  const contactStepNumber = deliveryStepNumber + 1;
+  const noteStepNumber = contactStepNumber + 1;
 
   useEffect(() => {
     const draft = loadOrderFormDraft();
@@ -133,6 +160,10 @@ export default function OrderForm() {
     form.reset({
       ...orderFormDefaultValues,
       ...draft,
+      types:
+        (draft as { types?: string }).types === "business"
+          ? "premium"
+          : (draft.types ?? orderFormDefaultValues.types),
       photos: [],
     });
   }, [form]);
@@ -150,24 +181,51 @@ export default function OrderForm() {
   }, [form]);
 
   useEffect(() => {
-    if (selectedCalendarType === "business") {
-      form.setValue("quantityOption", CUSTOM_QUANTITY_VALUE, {
-        shouldValidate: true,
-        shouldDirty: true,
-      });
+    if (hasPremiumFeatures) {
+      return;
     }
 
-    if (selectedCalendarType !== "premium") {
-      form.setValue("birthdays", [], {
+    form.setValue("birthdays", [], {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    form.setValue("namedays", [], {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+    form.setValue("dedications", [], {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  }, [hasPremiumFeatures, form]);
+
+  useEffect(() => {
+    if (!isMemoryType) {
+      form.setValue("dedications", [], {
         shouldDirty: true,
         shouldValidate: true,
       });
-      form.setValue("namedays", [], {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
+      return;
     }
-  }, [selectedCalendarType, form]);
+
+    const current = form.getValues("dedications") ?? [];
+
+    if (current.length === dedicationQuantity) {
+      return;
+    }
+
+    form.setValue(
+      "dedications",
+      Array.from(
+        { length: dedicationQuantity },
+        (_, index) => current[index] ?? "",
+      ),
+      {
+        shouldDirty: true,
+        shouldValidate: true,
+      },
+    );
+  }, [isMemoryType, dedicationQuantity, form]);
 
   useEffect(() => {
     if (showPickupOption) {
@@ -245,14 +303,23 @@ export default function OrderForm() {
         lastName: values.lastName,
         email: values.email,
         phone: values.phone,
-        note: values.note,
+        note: values.note?.trim() || undefined,
+
+        dedications:
+          values.types === "memory"
+            ? values.dedications.map((entry) => (entry ?? "").trim())
+            : undefined,
 
         type: values.types,
         quantity,
 
         photos: uploaded.photos,
-        birthdays: values.types === "premium" ? values.birthdays : [],
-        namedays: values.types === "premium" ? values.namedays : [],
+        birthdays: hasPremiumCalendarFeatures(values.types)
+          ? values.birthdays
+          : [],
+        namedays: hasPremiumCalendarFeatures(values.types)
+          ? values.namedays
+          : [],
 
         deliveryMethod: values.deliveryMethod,
         packetaPoint:
@@ -302,52 +369,44 @@ export default function OrderForm() {
   }
 
   return (
-    <div className="mx-auto mt-6 max-w-7xl rounded-xl border border-[#EAD6DE] bg-white px-3 py-8 text-primary shadow-2xl shadow-[#3E0F28]/10 sm:px-4 md:px-6 lg:pb-10">
-      <div className="my-8 text-center">
-        <SectionLabel>Konfigurátor</SectionLabel>
-
-        <Heading as="h2" className="mt-2">
-          Nástenný A3 kalendár
-        </Heading>
-
-        <Text>
-          Vyberte variant, počet kusov, nahrajte fotky a doplňte dôležité
-          dátumy.
-        </Text>
-      </div>
-
+    <div className="text-primary">
       <form
         onSubmit={form.handleSubmit(onSubmit, scrollToErrorSection)}
         id="order-form"
-        className="grid gap-4 pb-[calc(4.25rem+env(safe-area-inset-bottom))] lg:grid-cols-[minmax(0,1fr)_360px] lg:pb-0 lg:pt-8"
+        className="grid items-start gap-6 pb-[calc(4.5rem+env(safe-area-inset-bottom))] lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:gap-8 lg:pb-0 xl:grid-cols-[minmax(0,1fr)_360px]"
       >
         <fieldset
           disabled={isSubmitting}
-          className="min-w-0 space-y-8 disabled:pointer-events-none disabled:opacity-60"
+          className="min-w-0 space-y-4 sm:space-y-5 disabled:pointer-events-none disabled:opacity-60"
         >
           <OrderSection
-            step="1"
+            stepNumber={1}
+            totalSteps={totalSteps}
             title="Typ kalendára"
-            description="Vyberte, či chcete jednoduchý fotokalendár alebo kalendár aj s meninami a narodeninami."
+            description="Basic alebo Premium s meninami a narodeninami."
+            isComplete={stepCompletion.type}
+            isActive={activeStep === "type"}
           >
             <FormRadioGroup
               control={form.control}
               name="types"
               label="Typ kalendára"
-              options={calendarTypes}
+              options={orderableCalendarTypes}
             />
           </OrderSection>
 
           <div data-error-section={hasQuantityError ? "true" : undefined}>
             <OrderSection
-              step="2"
+              stepNumber={2}
+              totalSteps={totalSteps}
               title="Počet kusov"
-              description="Pri viacerých rovnakých kusoch sa automaticky použije výhodnejšia cena za kus."
+              description="Viac kusov = nižšia cena za kalendár."
+              isComplete={stepCompletion.quantity}
+              isActive={activeStep === "quantity"}
             >
               <FormQuantity
                 control={form.control}
                 name="quantityOption"
-                label="Počet kusov"
                 selectedCalendarType={selectedCalendarType}
               />
             </OrderSection>
@@ -355,18 +414,20 @@ export default function OrderForm() {
 
           <div data-error-section={hasPhotoError ? "true" : undefined}>
             <OrderSection
-              step="3"
-              title="Fotky"
-              description={`Nahrajte minimálne ${MIN_PHOTOS}, ideálne aspoň 30. Vďaka väčšiemu počtu fotiek budú jednotlivé mesiace pestrejšie.`}
+              stepNumber={3}
+              totalSteps={totalSteps}
+              title="Vaše fotky"
+              description={`Min. ${MIN_PHOTOS} fotiek, odporúčame 30+. Formát na výšku aj na šírku.`}
+              isComplete={stepCompletion.photos}
+              isActive={activeStep === "photos"}
             >
               <Controller
                 name="photos"
                 control={form.control}
                 render={({ field, fieldState }) => (
                   <Field data-invalid={fieldState.invalid}>
-                    <FieldDescription>
-                      {`JPG, PNG alebo WEBP · minimálne ${MIN_PHOTOS} fotiek ·
-                      maximálne ${MAX_PHOTOS} fotiek · max. 10 MB / fotka`}
+                    <FieldDescription className={orderFormFieldHintClassName}>
+                      {`JPG, PNG alebo WEBP · min. ${MIN_PHOTOS} fotiek · max. ${MAX_PHOTOS} · max. 10 MB / fotka`}
                     </FieldDescription>
 
                     <PhotoDropzone
@@ -388,76 +449,91 @@ export default function OrderForm() {
             </OrderSection>
           </div>
 
-          {selectedCalendarType === "premium" && (
+          {isMemoryType && (
+            <div data-error-section={hasDedicationError ? "true" : undefined}>
+              <OrderSection
+                stepNumber={4}
+                totalSteps={totalSteps}
+                title="Venovanie"
+                description={
+                  dedicationQuantity > 1
+                    ? `Voliteľné — pre každý z ${dedicationQuantity} kalendárov môžete zadať vlastné venovanie.`
+                    : "Voliteľné — ak chcete kalendár niekomu venovať, napíšte text priamo do kalendára."
+                }
+                isComplete={stepCompletion.dedication}
+                isActive={activeStep === "dedication"}
+                isOptional
+              >
+                <FormDedication
+                  control={form.control}
+                  quantity={dedicationQuantity}
+                />
+              </OrderSection>
+            </div>
+          )}
+
+          {hasPremiumFeatures && (
             <>
               <div data-error-section={hasBirthdayError ? "true" : undefined}>
                 <OrderSection
-                  step="4"
-                  title="Dôležité narodeniny"
-                  description="Doplňte narodeniny, ktoré chcete mať v kalendári zvýraznené."
+                  stepNumber={isMemoryType ? 5 : 4}
+                  totalSteps={totalSteps}
+                  title="Narodeniny"
+                  description="Voliteľné — doplňte narodeniny, ktoré chcete v kalendári zvýrazniť."
+                  isComplete={stepCompletion.birthdays}
+                  isActive={activeStep === "birthdays"}
+                  isOptional
                 >
-                  <div className="space-y-8">
-                    <BirthdaysFieldArray
-                      control={form.control}
-                      trigger={form.trigger}
-                    />
-                  </div>
+                  <BirthdaysFieldArray
+                    control={form.control}
+                    trigger={form.trigger}
+                  />
                 </OrderSection>
               </div>
+
               <OrderSection
-                step="5"
-                title="Dôležité meniny"
-                description="Doplňte meniny, ktoré chcete mať v kalendári zvýraznené."
+                stepNumber={isMemoryType ? 6 : 5}
+                totalSteps={totalSteps}
+                title="Meniny"
+                description="Voliteľné — vyberte mená, ktorých meniny chcete v kalendári."
+                isComplete={stepCompletion.namedays}
+                isActive={activeStep === "namedays"}
+                isOptional
               >
-                <div className="space-y-8">
-                  <NamedaysFieldArray control={form.control} />
-                </div>
+                <NamedaysFieldArray control={form.control} />
               </OrderSection>
             </>
           )}
           <div data-error-section={hasDeliveryError ? "true" : undefined}>
             <OrderSection
-              step={selectedCalendarType === "premium" ? "6" : "4"}
+              stepNumber={deliveryStepNumber}
+              totalSteps={totalSteps}
               title="Doručenie"
               description={
                 showPickupOption
-                  ? "Vyberte, či si kalendár prevezmete osobne v Košiciach alebo cez Packetu."
-                  : "Kalendár vám doručíme cez Packetu na vybrané výdajné miesto alebo Z-BOX."
+                  ? "Osobný odber v Košiciach alebo Packeta."
+                  : "Packeta na výdajné miesto alebo Z-BOX."
               }
+              isComplete={stepCompletion.delivery}
+              isActive={activeStep === "delivery"}
             >
               <FormDeliveryMethod
                 control={form.control}
                 showPickup={showPickupOption}
+                isSubmitting={isSubmitting}
               />
-
-              {form.watch("deliveryMethod") === "packeta" && (
-                <Controller
-                  control={form.control}
-                  name="packetaPoint"
-                  render={({ field, fieldState }) => (
-                    <Field data-invalid={fieldState.invalid}>
-                      <PacketaPicker
-                        value={field.value}
-                        onChange={field.onChange}
-                        disabled={isSubmitting}
-                      />
-
-                      {fieldState.error && (
-                        <FieldError errors={[fieldState.error]} />
-                      )}
-                    </Field>
-                  )}
-                />
-              )}
             </OrderSection>
           </div>
           <div data-error-section={hasContactError ? "true" : undefined}>
             <OrderSection
-              step={selectedCalendarType === "premium" ? "7" : "5"}
+              stepNumber={contactStepNumber}
+              totalSteps={totalSteps}
               title="Kontaktné údaje"
-              description="Tieto údaje použijeme len na spracovanie objednávky."
+              description="Len na spracovanie objednávky."
+              isComplete={stepCompletion.contact}
+              isActive={activeStep === "contact"}
             >
-              <FieldGroup className="grid gap-4 md:grid-cols-2">
+              <FieldGroup className="grid gap-3 sm:grid-cols-2 sm:gap-4">
                 <FormInput
                   control={form.control}
                   name="firstName"
@@ -495,19 +571,40 @@ export default function OrderForm() {
           </div>
 
           <OrderSection
-            step={selectedCalendarType === "premium" ? "8" : "6"}
-            title="Poznámka"
-            description="Poznámka k objednávke"
+            stepNumber={noteStepNumber}
+            totalSteps={totalSteps}
+            title="Poznámka k objednávke"
+            isComplete={stepCompletion.note}
+            isActive={activeStep === "note"}
+            isOptional
           >
-            <FormTextarea control={form.control} name="note" label="Poznámka" />
+            <FormTextarea
+              control={form.control}
+              name="note"
+              label="Poznámka k objednávke"
+              placeholder="Napríklad špeciálne prianie pri príprave kalendára…"
+            />
+
+            <Button
+              type="button"
+              variant="secondary"
+              className="mt-3 w-full lg:hidden"
+              onClick={() => {
+                document
+                  .getElementById("order-summary")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            >
+              Prejsť k súhrnu objednávky
+            </Button>
           </OrderSection>
         </fieldset>
 
         <aside
           id="order-summary"
-          className="min-w-0 scroll-mt-24 overflow-hidden rounded-md bg-white text-primary shadow-xl shadow-primary/10 ring-1 ring-soft lg:sticky lg:top-20 lg:self-start"
+          className="min-w-0 scroll-mt-24 overflow-hidden rounded-xl border border-[#EAD6DE] bg-white shadow-md lg:sticky lg:top-20 lg:self-start"
         >
-          <div className="space-y-2">
+          <div>
             <PriceSummary
               type={selectedCalendarType}
               quantityOption={selectedQuantityOption}
@@ -555,13 +652,13 @@ export default function OrderForm() {
               deliveryMethod={selectedDeliveryMethod}
             />
             <div data-error-section={hasTermsError ? "true" : undefined}>
-              <FormConsentCheckbox control={form.control} className="px-3 sm:px-5" />
+              <FormConsentCheckbox control={form.control} className="px-4 sm:px-5" />
             </div>
 
             {turnstileConfigured ? (
               <div
                 data-error-section={hasTurnstileError ? "true" : undefined}
-                className="px-3 sm:px-5"
+                className="px-4 sm:px-5"
               >
                 <TurnstileWidget
                   ref={turnstileRef}
@@ -582,27 +679,28 @@ export default function OrderForm() {
                 )}
               </div>
             ) : (
-              <p className="px-6 text-sm font-semibold text-[#FC5A61]">
+              <p className="px-5 text-sm font-semibold text-[#FC5A61]">
                 Overenie formulára nie je nakonfigurované. Objednávku momentálne
                 nie je možné odoslať.
               </p>
             )}
 
-            <div className="hidden px-5 pb-6 lg:block">
+            <div className="hidden border-t border-[#EAD6DE]/60 px-4 py-4 sm:px-5 lg:block">
               <Button
                 type="submit"
                 form="order-form"
                 size="lg"
+                variant="lime"
                 className="w-full"
                 disabled={form.formState.isSubmitting || !canSubmitWithTurnstile}
               >
                 {form.formState.isSubmitting ? (
                   <>
                     <Loader2 className="size-4 animate-spin" />
-                    Odosielam objednávku...
+                    Dokončujem...
                   </>
                 ) : (
-                  "Odoslať objednávku"
+                  "Dokončiť objednávku"
                 )}
               </Button>
             </div>
@@ -611,7 +709,7 @@ export default function OrderForm() {
                 role="alert"
                 data-submit-error="true"
                 data-error-section="true"
-                className="mx-3 mb-6 rounded-md border border-[#FC5A61]/30 bg-[#FFF7F4] p-3 text-sm font-semibold text-[#FC5A61] sm:mx-5"
+                className="mx-4 mb-4 rounded-lg border border-[#FC5A61]/30 bg-[#FFF7F4] p-3 text-sm font-semibold text-[#FC5A61] sm:mx-5"
               >
                 {submitError}
               </p>

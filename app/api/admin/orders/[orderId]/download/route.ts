@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import sharp from "sharp";
 
 import { isAdminEmail, isAdminMutationOriginAllowed } from "@/lib/auth/admin";
+import { buildOrderExportData } from "@/lib/order-export";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -181,55 +182,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     },
   );
 
-  const exportData = {
-    id: order.id,
-    orderCode: order.order_code,
-    storageFolder: order.storage_folder,
-    createdAt: order.created_at,
-
-    payment: {
-      status: order.payment_status,
-      paidAt: order.paid_at,
-      stripeCheckoutSessionId: order.stripe_checkout_session_id,
-      stripePaymentIntentId: order.stripe_payment_intent_id,
-    },
-
-    delivery: {
-      method: order.delivery_method ?? "pickup",
-      label: order.delivery_method === "packeta" ? "Packeta" : "Osobný odber",
-      price: Number(order.delivery_price ?? 0),
-      packetaPoint: order.packeta_point_id
-        ? {
-            id: order.packeta_point_id,
-            name: order.packeta_point_name,
-            address: order.packeta_point_address,
-          }
-        : null,
-      trackingNumber: order.tracking_number ?? null,
-      shippedAt: order.shipped_at ?? null,
-    },
-
-    customer: {
-      firstName: order.first_name,
-      lastName: order.last_name,
-      email: order.email,
-      phone: order.phone,
-    },
-
-    calendar: {
-      type: order.calendar_type,
-      quantity: order.quantity,
-      totalPrice: order.total_price,
-      discountCode: order.discount_code,
-      discountAmount: order.discount_amount,
-      note: order.note,
-    },
-
-    birthdays: order.birthdays ?? [],
-    namedays: order.namedays ?? [],
-    photoCount: exportPhotos.length,
-    photos: exportPhotos,
-  };
+  const exportData = buildOrderExportData(order, exportPhotos);
 
   zip.file("order.json", JSON.stringify(exportData, null, 2));
 
