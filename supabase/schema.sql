@@ -161,6 +161,9 @@ alter table public.orders
   add column if not exists delivery_price numeric(10, 2);
 
 alter table public.orders
+  add column if not exists delivery_wave_key text;
+
+alter table public.orders
   add column if not exists stripe_checkout_session_id text;
 
 alter table public.orders
