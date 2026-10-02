@@ -29,7 +29,7 @@ const audiences = [
 
 export function ForWhomSection() {
   return (
-    <section id="pre-koho" className="scroll-mt-24 py-10 sm:py-14">
+    <section id="pre-koho" className="scroll-mt-32 py-10 sm:py-14">
       <div className="mx-auto max-w-6xl rounded-2xl bg-white px-4 py-10 shadow-sm ring-1 ring-[#EAD6DE]/80 sm:px-6 sm:py-12 md:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <SectionLabel>Pre koho</SectionLabel>

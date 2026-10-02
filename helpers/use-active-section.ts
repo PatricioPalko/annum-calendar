@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-const HEADER_OFFSET_PX = 80;
+const HEADER_OFFSET_PX = 112;
 
 export function useActiveSection(sectionIds: string[], enabled: boolean) {
   const [activeSection, setActiveSection] = useState<string | null>(null);

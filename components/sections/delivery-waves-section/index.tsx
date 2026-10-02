@@ -18,7 +18,7 @@ export function DeliveryWavesSection() {
   return (
     <section
       id="terminy-dorucenia"
-      className="scroll-mt-24 -mx-4 mt-12 bg-primary px-4 py-10 text-[#FFF7F4] sm:-mx-6 sm:mt-16 sm:px-6 sm:py-14"
+      className="scroll-mt-32 -mx-4 mt-12 bg-primary px-4 py-10 text-[#FFF7F4] sm:-mx-6 sm:mt-16 sm:px-6 sm:py-14"
     >
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">

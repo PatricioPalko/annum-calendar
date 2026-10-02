@@ -12,7 +12,7 @@ type SectionLinkProps = {
   onClick?: () => void;
 };
 
-const HEADER_OFFSET_PX = 64;
+const HEADER_OFFSET_PX = 112;
 
 export function scrollToSection(sectionId: string) {
   const startedAt = Date.now();

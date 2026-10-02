@@ -148,7 +148,7 @@ const faqJsonLd = {
 
 export function FaqSection() {
   return (
-    <section className="mx-auto my-10 max-w-6xl scroll-mt-24 px-4" id="faq">
+    <section className="mx-auto my-10 max-w-6xl scroll-mt-32 px-4" id="faq">
       <JsonLd data={faqJsonLd} />
       <div className="mb-5 text-center">
         <SectionLabel>FAQ</SectionLabel>

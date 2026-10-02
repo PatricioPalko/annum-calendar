@@ -14,27 +14,27 @@ const heroHighlights = [
 export function HeroSection() {
   return (
     <section className="relative mx-auto max-w-6xl py-4 sm:py-10">
-      <div
-        className="pointer-events-none absolute left-1/2 top-1 w-screen -translate-x-1/2 overflow-hidden sm:top-4"
-        aria-hidden
-      >
-        <Image
-          src="/line.svg"
-          alt=""
-          width={560}
-          height={32}
-          className="-ml-16 h-auto w-[34rem] max-w-none sm:-ml-24 sm:w-[46rem] lg:-ml-32 lg:w-[54rem]"
-        />
-      </div>
-
       <div className="relative z-10 grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-12">
         <div className="relative">
           <SectionLabel>Kalendár spomienok</SectionLabel>
 
           <Heading as="h1" className="mt-3 max-w-xl">
             Vaše momenty
-            <span className="relative mt-1 block text-secondary">
+            <span className="relative mt-1 block pb-3 text-secondary sm:pb-4">
               po celý rok.
+              <span
+                className="pointer-events-none absolute left-0 top-[88%] block w-[11.5rem] sm:w-[15rem] md:w-[18rem]"
+                aria-hidden
+              >
+                <Image
+                  src="/line.svg"
+                  alt=""
+                  width={280}
+                  height={16}
+                  priority
+                  className="h-auto w-full"
+                />
+              </span>
             </span>
           </Heading>
 

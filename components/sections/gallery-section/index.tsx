@@ -97,13 +97,13 @@ export function GallerySection() {
   return (
     <section
       id="ukazka-kalendara"
-      className="scroll-mt-24 bg-[#FFF7F4] py-10 sm:py-14"
+      className="scroll-mt-32 bg-[#FFF7F4] py-10 sm:py-14"
     >
       <div className="mx-auto max-w-6xl px-4 md:px-6">
         <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,0.52fr)_minmax(0,0.48fr)] lg:gap-8 xl:gap-10">
           <div
             id="co-je-v-baleni"
-            className="scroll-mt-24 max-w-3xl lg:max-w-none lg:pr-2 xl:pr-4"
+            className="scroll-mt-32 max-w-3xl lg:max-w-none lg:pr-2 xl:pr-4"
           >
             <SectionLabel>Čo je v balení</SectionLabel>
 

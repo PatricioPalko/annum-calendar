@@ -47,7 +47,7 @@ export function PricingSection() {
   return (
     <section
       id="cennik"
-      className="scroll-mt-24 mx-auto mt-8 max-w-6xl overflow-hidden rounded-xl border-2 border-[#EAD6DE] bg-white px-3 py-8 text-primary shadow-2xl shadow-[#3E0F28]/20 sm:px-4 sm:py-12"
+      className="scroll-mt-32 mx-auto mt-8 max-w-6xl overflow-hidden rounded-xl border-2 border-[#EAD6DE] bg-white px-3 py-8 text-primary shadow-2xl shadow-[#3E0F28]/20 sm:px-4 sm:py-12"
     >
       <div className="mb-10 text-center">
         <SectionLabel>Cenník</SectionLabel>
