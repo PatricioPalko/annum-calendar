@@ -94,24 +94,33 @@ export async function POST(request: Request, { params }: RouteParams) {
     );
   }
 
-  await sendOrderFulfillmentEmail({
-    orderCode: order.order_code,
-    firstName: order.first_name,
-    email: order.email,
-    trackingNumber: resolvedTrackingNumber,
-    delivery: {
-      method: isPacketa ? "packeta" : "pickup",
-      price: Number(order.delivery_price ?? 0),
-      packetaPoint:
-        isPacketa && order.packeta_point_id
-          ? {
-              id: order.packeta_point_id,
-              name: order.packeta_point_name ?? "",
-              address: order.packeta_point_address ?? "",
-            }
-          : null,
-    },
-  });
+  try {
+    await sendOrderFulfillmentEmail({
+      orderCode: order.order_code,
+      firstName: order.first_name,
+      email: order.email,
+      trackingNumber: resolvedTrackingNumber,
+      delivery: {
+        method: isPacketa ? "packeta" : "pickup",
+        price: Number(order.delivery_price ?? 0),
+        packetaPoint:
+          isPacketa && order.packeta_point_id
+            ? {
+                id: order.packeta_point_id,
+                name: order.packeta_point_name ?? "",
+                address: order.packeta_point_address ?? "",
+              }
+            : null,
+      },
+    });
+  } catch (emailError) {
+    console.error("ORDER_FULFILLMENT_EMAIL_ERROR:", emailError);
+
+    return NextResponse.json(
+      { message: "Stav sa uložil, ale e-mail sa nepodarilo odoslať." },
+      { status: 502 },
+    );
+  }
 
   return NextResponse.json({ ok: true });
 }

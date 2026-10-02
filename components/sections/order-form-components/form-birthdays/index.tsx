@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { OrderFormInput } from "@/lib/schema";
+import type { OrderFormValues } from "@/lib/schema";
 import { cn } from "@/lib/utils";
 
 import {
@@ -46,8 +46,8 @@ const months = [
 ];
 
 type BirthdaysFieldArrayProps = {
-  control: Control<OrderFormInput>;
-  trigger: UseFormTrigger<OrderFormInput>;
+  control: Control<OrderFormValues>;
+  trigger: UseFormTrigger<OrderFormValues>;
 };
 
 const birthdayDayColumnClass = "w-[52px] shrink-0";

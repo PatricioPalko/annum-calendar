@@ -29,7 +29,7 @@ import { uploadOrderPhotos } from "@/lib/upload-order-photos";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, type Resolver, useForm } from "react-hook-form";
 import { BirthdaysFieldArray } from "../order-form-components/form-birthdays";
 import { FormConsentCheckbox } from "../order-form-components/form-consent-checkbox";
 import { FormDeliveryMethod } from "../order-form-components/form-delivery-method";
@@ -79,7 +79,7 @@ export default function OrderForm() {
   }
 
   const form = useForm<OrderFormValues>({
-    resolver: zodResolver(orderSchema),
+    resolver: zodResolver(orderSchema) as Resolver<OrderFormValues>,
     mode: "onTouched",
     reValidateMode: "onChange",
     defaultValues: orderFormDefaultValues,

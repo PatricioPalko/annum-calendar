@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 
+import type { SortKey } from "@/app/types/types";
 import { AdminBulkDownloadButton } from "@/components/admin/admin-bulk-download-button";
 import { buildAdminHref } from "@/helpers/admin-table";
 import { writeAdminOrdersFilterPreference } from "@/helpers/admin-orders-filter-storage";
@@ -69,7 +70,7 @@ export function AdminOrdersFilters({
 
     router.push(
       buildAdminHref({
-        sort: searchParams.get("sort") ?? undefined,
+        sort: (searchParams.get("sort") as SortKey | null) ?? undefined,
         dir: (searchParams.get("dir") as "asc" | "desc" | null) ?? undefined,
         ...next,
       }),

@@ -31,7 +31,7 @@ export function Heading({
 const sectionLabelClassName =
   "block font-body text-sm font-extrabold uppercase tracking-[0.18em] text-[#FC5A61]";
 
-type SectionLabelProps = React.ComponentProps<"span"> & {
+type SectionLabelProps = React.HTMLAttributes<HTMLElement> & {
   as?: "span" | "p";
 };
 

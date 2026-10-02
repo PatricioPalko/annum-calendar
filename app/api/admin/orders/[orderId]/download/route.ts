@@ -8,7 +8,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const BUCKET = "calendar-uploads";
 const CONVERT_CONCURRENCY = 3;
@@ -186,8 +186,8 @@ export async function GET(request: Request, { params }: RouteParams) {
 
   zip.file("order.json", JSON.stringify(exportData, null, 2));
 
-  const zipBuffer = await zip.generateAsync({
-    type: "arraybuffer",
+  const zipStream = zip.generateInternalStream({
+    type: "uint8array",
     compression: "DEFLATE",
     compressionOptions: {
       level: 6,
@@ -205,7 +205,18 @@ export async function GET(request: Request, { params }: RouteParams) {
     console.error("MARK_AS_DOWNLOADED_ERROR:", updateError);
   }
 
-  return new Response(zipBuffer, {
+  // Streamed so the ZIP is not subject to Vercel's 4.5 MB buffered response limit.
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      zipStream
+        .on("data", (chunk) => controller.enqueue(chunk))
+        .on("error", (error) => controller.error(error))
+        .on("end", () => controller.close())
+        .resume();
+    },
+  });
+
+  return new Response(body, {
     headers: {
       "Content-Type": "application/zip",
       "Content-Disposition": `attachment; filename="${orderCode}.zip"`,

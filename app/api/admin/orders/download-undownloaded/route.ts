@@ -8,7 +8,7 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const BUCKET = "calendar-uploads";
 
@@ -173,8 +173,8 @@ export async function GET(request: Request) {
     );
   }
 
-  const zipBuffer = await zip.generateAsync({
-    type: "arraybuffer",
+  const zipStream = zip.generateInternalStream({
+    type: "uint8array",
     compression: "DEFLATE",
     compressionOptions: {
       level: 6,
@@ -192,7 +192,18 @@ export async function GET(request: Request) {
     console.error("BULK_MARK_AS_DOWNLOADED_ERROR:", updateError);
   }
 
-  return new Response(zipBuffer, {
+  // Streamed so the ZIP is not subject to Vercel's 4.5 MB buffered response limit.
+  const body = new ReadableStream<Uint8Array>({
+    start(controller) {
+      zipStream
+        .on("data", (chunk) => controller.enqueue(chunk))
+        .on("error", (error) => controller.error(error))
+        .on("end", () => controller.close())
+        .resume();
+    },
+  });
+
+  return new Response(body, {
     headers: {
       "Content-Type": "application/zip",
       "Content-Disposition": `attachment; filename="zaplatene-nestiahnute-objednavky.zip"`,

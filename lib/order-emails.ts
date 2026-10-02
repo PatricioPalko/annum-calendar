@@ -60,6 +60,14 @@ type SendOrderFulfillmentEmailParams = {
   trackingNumber?: string | null;
 };
 
+async function sendEmail(options: Parameters<typeof resend.emails.send>[0]) {
+  const { error } = await resend.emails.send(options);
+
+  if (error) {
+    throw new Error(`Resend: ${error.name} — ${error.message}`);
+  }
+}
+
 function escapeHtml(value: string) {
   return value
     .replaceAll("&", "&amp;")
@@ -336,7 +344,7 @@ export async function sendOrderCreatedEmail({
     note,
   };
 
-  await resend.emails.send({
+  await sendEmail({
     from: emailFrom,
     to: email,
     subject: `Objednávka ${orderCode} čaká na platbu`,
@@ -424,7 +432,7 @@ export async function sendOrderPaidEmail({
   };
 
   await Promise.all([
-    resend.emails.send({
+    sendEmail({
       from: emailFrom,
       to: email,
       subject: `Platba prijatá — objednávka ${orderCode}`,
@@ -453,7 +461,7 @@ export async function sendOrderPaidEmail({
       ),
     }),
 
-    resend.emails.send({
+    sendEmail({
       from: emailFrom,
       to: adminEmail,
       subject: `Nová objednávka ${orderCode}`,
@@ -502,7 +510,7 @@ export async function sendOrderFulfillmentEmail({
 
   const isPacketa = delivery.method === "packeta";
 
-  await resend.emails.send({
+  await sendEmail({
     from: emailFrom,
     to: email,
     subject: isPacketa
@@ -584,7 +592,7 @@ export async function sendBusinessInquiryEmail(
     "<br />",
   );
 
-  await resend.emails.send({
+  await sendEmail({
     from: emailFrom,
     to: adminEmail,
     replyTo: params.email,

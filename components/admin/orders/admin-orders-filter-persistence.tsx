@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
+import type { SortKey } from "@/app/types/types";
 import { buildAdminHref } from "@/helpers/admin-table";
 import { readAdminOrdersFilterPreference } from "@/helpers/admin-orders-filter-storage";
 
@@ -40,7 +41,7 @@ export function AdminOrdersFilterPersistence() {
 
     router.replace(
       buildAdminHref({
-        sort: searchParams.get("sort") ?? undefined,
+        sort: (searchParams.get("sort") as SortKey | null) ?? undefined,
         dir: (searchParams.get("dir") as "asc" | "desc" | null) ?? undefined,
         year: stored.year,
         month: stored.month,

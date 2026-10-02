@@ -1,5 +1,3 @@
-import { supabaseAdmin } from "@/lib/supabase/admin";
-
 const PACKETA_API_URL = "https://www.zasilkovna.cz/api/rest";
 
 type CreatePacketaPacketInput = {
@@ -109,7 +107,6 @@ function getPacketaConfig() {
   return {
     apiPassword,
     eshop,
-    defaultWeight: Number(process.env.PACKETA_PACKET_WEIGHT ?? "1.5"),
   };
 }
 
@@ -176,13 +173,6 @@ function parsePacketaResponse(xml: string) {
     barcode,
     barcodeText: barcodeText ?? barcode,
   } satisfies PacketaPacketResult;
-}
-
-export function estimatePacketaWeight(quantity: number) {
-  const config = getPacketaConfig();
-  const baseWeight = config?.defaultWeight ?? 1.5;
-
-  return Math.max(0.3, Number((0.35 * quantity + 0.25).toFixed(2))) || baseWeight;
 }
 
 export async function createPacketaPacket(
@@ -285,67 +275,4 @@ export function isPacketaConfigured() {
   const config = getPacketaConfig();
 
   return Boolean(config?.apiPassword && config.eshop);
-}
-
-type SyncPacketaPacketForOrderInput = {
-  orderId: string;
-  orderCode: string;
-  orderNumber?: number | null;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone?: string | null;
-  packetaPointId: string;
-  goodsValue: number;
-  quantity: number;
-  existingTrackingNumber?: string | null;
-};
-
-export async function syncPacketaPacketForOrder(
-  input: SyncPacketaPacketForOrderInput,
-): Promise<PacketaPacketResult | null> {
-  if (input.existingTrackingNumber?.trim()) {
-    return null;
-  }
-
-  if (!isPacketaConfigured()) {
-    console.warn("PACKETA_NOT_CONFIGURED: skipping packet creation.");
-    return null;
-  }
-
-  try {
-    const packet = await createPacketaPacket({
-      orderCode: input.orderCode,
-      orderNumber: input.orderNumber,
-      firstName: input.firstName,
-      lastName: input.lastName,
-      email: input.email,
-      phone: input.phone,
-      addressId: input.packetaPointId,
-      value: input.goodsValue,
-      weight: estimatePacketaWeight(input.quantity),
-    });
-
-    const { error } = await supabaseAdmin
-      .from("orders")
-      .update({
-        tracking_number: packet.barcode,
-      })
-      .eq("id", input.orderId)
-      .is("tracking_number", null);
-
-    if (error) {
-      console.error("PACKETA_TRACKING_UPDATE_ERROR:", error);
-    }
-
-    return packet;
-  } catch (error) {
-    console.error("PACKETA_CREATE_PACKET_ERROR:", {
-      orderId: input.orderId,
-      orderCode: input.orderCode,
-      error,
-    });
-
-    return null;
-  }
 }

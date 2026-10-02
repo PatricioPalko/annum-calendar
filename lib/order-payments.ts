@@ -1,7 +1,6 @@
 import type Stripe from "stripe";
 
 import { sendOrderPaidEmail } from "@/lib/order-emails";
-import { syncPacketaPacketForOrder } from "@/lib/packeta";
 import { stripe } from "@/lib/stripe";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
@@ -172,32 +171,8 @@ export type MarkOrderPaidResult =
 
 async function runPostPaymentSideEffects(
   order: PaidOrderRow,
-  options: { sendEmail: boolean; syncPacketa: boolean },
+  options: { sendEmail: boolean },
 ) {
-  if (
-    options.syncPacketa &&
-    order.delivery_method === "packeta" &&
-    order.packeta_point_id &&
-    order.order_code
-  ) {
-    await syncPacketaPacketForOrder({
-      orderId: order.id,
-      orderCode: order.order_code,
-      orderNumber: order.order_number,
-      firstName: order.first_name,
-      lastName: order.last_name,
-      email: order.email,
-      phone: order.phone,
-      packetaPointId: order.packeta_point_id,
-      goodsValue: Math.max(
-        1,
-        Number(order.total_price ?? 0) - Number(order.delivery_price ?? 0),
-      ),
-      quantity: order.quantity,
-      existingTrackingNumber: order.tracking_number,
-    });
-  }
-
   if (options.sendEmail && order.order_code) {
     try {
       const totalPrice =
@@ -265,7 +240,7 @@ async function runPostPaymentSideEffects(
 
 export async function markOrderPaidFromCheckoutSession(
   session: Stripe.Checkout.Session,
-  options: { sendEmail?: boolean; syncPacketa?: boolean } = {},
+  options: { sendEmail?: boolean } = {},
 ): Promise<MarkOrderPaidResult> {
   const orderId = session.metadata?.orderId;
 
@@ -404,7 +379,6 @@ export async function markOrderPaidFromCheckoutSession(
 
   await runPostPaymentSideEffects(paidOrder, {
     sendEmail: options.sendEmail ?? true,
-    syncPacketa: options.syncPacketa ?? true,
   });
 
   return {
