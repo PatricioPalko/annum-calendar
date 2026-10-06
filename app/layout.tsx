@@ -1,3 +1,4 @@
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 import { CookiebotScript } from "@/components/cookiebot/cookiebot-script";
 import { Footer } from "@/components/sections/footer";
 import Navigation from "@/components/sections/navigation";
@@ -132,6 +133,7 @@ export default function RootLayout({
         <SiteShell navigation={<Navigation />} footer={<Footer />}>
           {children}
         </SiteShell>
+        <GoogleAnalytics />
       </body>
     </html>
   );
