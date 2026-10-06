@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { isAdminEmail } from "@/lib/auth/admin";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/admin/login")) {
     return NextResponse.next();
   }

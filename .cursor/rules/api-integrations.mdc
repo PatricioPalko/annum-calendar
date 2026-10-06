@@ -1,6 +1,6 @@
 ---
 description: Server boundaries for API routes and external providers
-globs: app/api/**/*.{ts,tsx},lib/**/*.{ts,tsx},middleware.ts
+globs: app/api/**/*.{ts,tsx},lib/**/*.{ts,tsx},proxy.ts
 alwaysApply: false
 ---
 
