@@ -41,9 +41,9 @@ export const calendarTypes = [
     badge: "Jednoduchý",
     description: "Kalendár s fotkami bez označených dátumov.",
     prices: {
-      1: 25,
-      3: 66,
-      5: 95,
+      1: 23.9,
+      3: 65.7,
+      5: 99.5,
     },
   },
   {
@@ -52,9 +52,9 @@ export const calendarTypes = [
     badge: "Najobľúbenejší",
     description: "Kalendár s fotkami, meninami a narodeninami.",
     prices: {
-      1: 32,
-      3: 84,
-      5: 125,
+      1: 29.9,
+      3: 83.7,
+      5: 129.5,
     },
   },
   {
@@ -147,6 +147,10 @@ export function formatUnitPrice(price: number) {
     : price.toFixed(2).replace(".", ",");
 }
 
+function roundEuro(value: number) {
+  return Math.round(value * 100) / 100;
+}
+
 export function getLowestUnitPrice(plan: CalendarTypesOption): number | null {
   if (plan.value === "business") {
     return businessVolumeTiers[0]?.unitPrice ?? null;
@@ -158,7 +162,7 @@ export function getLowestUnitPrice(plan: CalendarTypesOption): number | null {
     return null;
   }
 
-  return fivePiecesPrice / 5;
+  return roundEuro(fivePiecesPrice / 5);
 }
 
 export function getBasicLowestUnitPrice(): number {
@@ -281,23 +285,25 @@ export function getCalendarPrice(values: {
     };
   }
 
-  const unitPrice = (() => {
-    if (quantity <= 2) {
-      return singlePiecePrice;
-    }
+  const unitPrice = roundEuro(
+    (() => {
+      if (quantity <= 2) {
+        return singlePiecePrice;
+      }
 
-    if (quantity <= 4) {
-      const threePackPrice = calendarType.prices[3];
-      return threePackPrice ? threePackPrice / 3 : singlePiecePrice;
-    }
+      if (quantity <= 4) {
+        const threePackPrice = calendarType.prices[3];
+        return threePackPrice ? threePackPrice / 3 : singlePiecePrice;
+      }
 
-    const fivePackPrice = calendarType.prices[5];
-    return fivePackPrice ? fivePackPrice / 5 : singlePiecePrice;
-  })();
+      const fivePackPrice = calendarType.prices[5];
+      return fivePackPrice ? fivePackPrice / 5 : singlePiecePrice;
+    })(),
+  );
 
-  const totalPrice = unitPrice * quantity;
-  const originalPrice = singlePiecePrice * quantity;
-  const savedAmount = originalPrice - totalPrice;
+  const totalPrice = roundEuro(unitPrice * quantity);
+  const originalPrice = roundEuro(singlePiecePrice * quantity);
+  const savedAmount = roundEuro(originalPrice - totalPrice);
 
   return {
     quantity,

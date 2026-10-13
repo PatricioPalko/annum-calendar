@@ -8,7 +8,6 @@ import { Heading, SectionLabel, Text } from "@/components/ui/typography";
 const heroHighlights = [
   "Bez zložitého editora",
   "Darčekovo zabalené",
-  "Obsahuje set na zavesenie",
 ] as const;
 
 export function HeroSection() {
@@ -31,7 +30,6 @@ export function HeroSection() {
                   alt=""
                   width={280}
                   height={16}
-                  priority
                   className="h-auto w-full"
                 />
               </span>
@@ -39,8 +37,9 @@ export function HeroSection() {
           </Heading>
 
           <Text variant="lead" className="mt-6 max-w-lg text-primary/80">
-            Premeňte chvíle, ku ktorým sa radi vraciate, na kalendár plný
-            spoločných príbehov. Darujte spomienky, ktoré zostanú navždy.
+            Personalizovaný A3 fotokalendár z vašich fotiek. Premeňte chvíle,
+            ku ktorým sa radi vraciate, na kalendár spomienok — bez zložitého
+            editora, pekne zabalený.
           </Text>
 
           <ul className="mt-6 space-y-2.5">
@@ -74,11 +73,11 @@ export function HeroSection() {
         <div className="relative lg:pt-4">
           <Image
             src="/hero1.webp"
-            alt="Personalizovaný A3 kalendár spomienok pripravený na zavesenie"
+            alt="Personalizovaný A3 fotokalendár z vlastných fotiek"
             width={800}
             height={1000}
             priority
-            sizes="(min-width: 1024px) 45vw, 100vw"
+            sizes="(min-width: 1024px) 540px, 100vw"
             className="aspect-4/5 w-full object-contain object-center"
           />
         </div>

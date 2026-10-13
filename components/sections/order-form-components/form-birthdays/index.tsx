@@ -53,7 +53,7 @@ type BirthdaysFieldArrayProps = {
 const birthdayDayColumnClass = "w-[52px] shrink-0";
 const birthdayMonthColumnClass = "w-[110px] shrink-0";
 const birthdayNameColumnClass = "w-full max-w-[7.5rem] shrink-0";
-const birthdayDeleteOffsetClass = "mt-[1.5rem] sm:mt-[1.625rem]";
+const birthdayControlHeightClass = "h-10!";
 
 export function BirthdaysFieldArray({
   control,
@@ -112,7 +112,7 @@ export function BirthdaysFieldArray({
           return (
             <div
               key={item.id}
-              className="grid grid-cols-[52px_110px_7.5rem_2.25rem] items-start gap-x-1.5 md:gap-x-2"
+              className="grid grid-cols-[52px_110px_7.5rem_2.5rem] items-start gap-x-1.5 md:gap-x-2"
             >
               <Controller
                 name={`birthdays.${index}.day`}
@@ -141,7 +141,7 @@ export function BirthdaysFieldArray({
                       >
                         <SelectTrigger
                           id={fieldId}
-                          className={`${orderFormBirthdaySelectClassName} ${birthdayDayColumnClass} gap-0 px-2! [&_svg]:size-3.5`}
+                          className={`${orderFormBirthdaySelectClassName} ${birthdayControlHeightClass} ${birthdayDayColumnClass} gap-0 px-2! [&_svg]:size-3.5`}
                           aria-invalid={fieldState.invalid}
                           aria-describedby={
                             fieldState.invalid ? errorId : undefined
@@ -193,7 +193,7 @@ export function BirthdaysFieldArray({
                       >
                         <SelectTrigger
                           id={fieldId}
-                          className={`${orderFormBirthdaySelectClassName} ${birthdayMonthColumnClass} gap-0 px-2! [&_svg]:size-3.5`}
+                          className={`${orderFormBirthdaySelectClassName} ${birthdayControlHeightClass} ${birthdayMonthColumnClass} gap-0 px-2! [&_svg]:size-3.5`}
                           aria-invalid={fieldState.invalid}
                           aria-describedby={
                             fieldState.invalid ? errorId : undefined
@@ -245,7 +245,7 @@ export function BirthdaysFieldArray({
                         id={fieldId}
                         value={field.value ?? ""}
                         placeholder="Napr. Martin"
-                        className={`${orderFormBirthdayControlClassName} w-full min-w-0`}
+                        className={`${orderFormBirthdayControlClassName} ${birthdayControlHeightClass} w-full min-w-0`}
                         aria-invalid={fieldState.invalid}
                         aria-describedby={
                           fieldState.invalid ? errorId : undefined
@@ -275,10 +275,23 @@ export function BirthdaysFieldArray({
               <Button
                 type="button"
                 variant="secondary"
-                size="icon"
-                onClick={() => remove(index)}
+                onClick={() => {
+                  const confirmed = window.confirm(
+                    "Naozaj chcete odstrániť tieto narodeniny?",
+                  );
+
+                  if (!confirmed) {
+                    return;
+                  }
+
+                  remove(index);
+                }}
                 aria-label="Odstrániť narodeniny"
-                className={`${orderFormBirthdayControlClassName} aspect-square shrink-0 px-0 ${showRowLabel ? birthdayDeleteOffsetClass : ""}`}
+                className={cn(
+                  orderFormBirthdayControlClassName,
+                  birthdayControlHeightClass,
+                  "w-10! shrink-0 self-end px-0!",
+                )}
               >
                 <Trash2 className="size-4" />
               </Button>

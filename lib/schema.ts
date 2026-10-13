@@ -107,7 +107,8 @@ export const orderSchema = z
     birthdays: z.array(birthdaySchema),
     namedays: z.array(namedaySchema),
     termsAccepted: z.boolean().refine((value) => value === true, {
-      message: "Pre odoslanie objednávky je potrebné potvrdiť súhlas.",
+      message:
+        "Pred odoslaním objednávky je potrebné súhlasiť s obchodnými podmienkami.",
     }),
     marketingConsent: z.boolean().optional(),
     deliveryMethod: z.enum(["pickup", "packeta"]),

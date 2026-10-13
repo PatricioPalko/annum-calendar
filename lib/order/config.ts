@@ -2,18 +2,6 @@ export const MIN_PHOTOS = 14;
 export const MAX_PHOTOS = 52;
 export const MAX_BIRTHDAY_NAME_LENGTH = 15;
 
-export const ORDER_HANGING_SET_LABEL = "Set na zavesenie";
-
-export const ORDER_HANGING_SET_DETAILS =
-  "2× strieborný klinček na zavesenie, 1× samolepiaci háčik v čiernej farbe";
-
-export const ORDER_HANGING_SET_INCLUSION = `${ORDER_HANGING_SET_LABEL} (${ORDER_HANGING_SET_DETAILS})`;
-
-export const ORDER_HANGING_SET_SUMMARY_ITEMS = [
-  "2× strieborný klinček na zavesenie",
-  "1× samolepiaci háčik v bielej farbe",
-] as const;
-
 export const MEMORY_SET_PRICE = 49;
 
 export const MEMORY_SET_UNIT_PRICE_FROM_3 = 45;
@@ -41,9 +29,7 @@ export const ORDER_SHARED_INCLUSIONS = [
   "13 strán (titulná strana + 12 mesiacov)",
   "Vaše fotky rozložené do 12 mesiacov (min. 14, odporúčame 30+)",
   "Príprava, tlač a pekné zabalenie v cene",
-  ORDER_HANGING_SET_INCLUSION,
   "Doručenie cez Packetu sa účtuje samostatne",
-  "Súčasťou balenia je aj fixka na zapisovanie poznámok",
   "Darčekovo zabalené, vhodné na darovanie",
 ] as const;
 

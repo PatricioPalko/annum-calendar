@@ -1,24 +1,18 @@
 import Link from "next/link";
 
 import { BusinessInquiryForm } from "@/components/sections/business-inquiry-form";
+import { Breadcrumbs } from "@/components/seo/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Heading, SectionLabel, Text } from "@/components/ui/typography";
+import { createPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  title: "Pre firmy",
+export const metadata: Metadata = createPageMetadata({
+  title: "Firemný fotokalendár",
   description:
-    "Nezáväzná ponuka na personalizované A3 kalendáre pre firmy od 10 kusov. Logo, firemné fotky a individuálna príprava.",
-  alternates: {
-    canonical: "/pre-firmy",
-  },
-  openGraph: {
-    title: "Pre firmy | Annum",
-    description:
-      "Kalendáre pre tím, klientov alebo partnerov od 10 kusov. Pošlite dopyt a pripravíme ponuku na mieru.",
-    url: "https://www.annum.sk/pre-firmy",
-  },
-};
+    "Nezáväzná ponuka na firemné fotokalendáre od 10 kusov. Logo, firemné fotky a príprava na mieru pre tím, klientov alebo partnerov.",
+  path: "/pre-firmy",
+});
 
 const highlights = [
   "Rovnaké kalendáre pre tím, klientov alebo partnerov",
@@ -34,12 +28,19 @@ export default function PreFirmyPage() {
       className="font-body min-h-screen bg-[#FFF7F4] px-4 py-6 text-[#3E0F28] sm:px-6"
     >
       <section className="mx-auto max-w-5xl py-8 sm:py-12">
+        <Breadcrumbs
+          items={[
+            { name: "Domov", path: "/" },
+            { name: "Pre firmy", path: "/pre-firmy" },
+          ]}
+        />
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:items-start">
           <div>
             <SectionLabel>Pre firmy</SectionLabel>
 
-            <Heading as="h1" className="mt-2">
-              Kalendáre pre tím od 10 kusov
+            <Heading as="h1" className="mt-2 md:text-6xl">
+              <span className="block">Fotokalendáre</span>
+              <span className="block">pre tím od 10 kusov</span>
             </Heading>
 
             <Text variant="lead" className="mt-4 max-w-xl">
@@ -61,10 +62,10 @@ export default function PreFirmyPage() {
 
             <div className="mt-8 flex flex-wrap gap-3">
               <Button variant="secondary" asChild>
-                <Link href="/objednavka">Objednávka pre jednotlivcov</Link>
+                <Link href="/objednavka">Objednať fotokalendár pre jednotlivcov</Link>
               </Button>
               <Button variant="lime" asChild>
-                <Link href="/#cennik">Pozrieť cenník Basic & Premium</Link>
+                <Link href="/#cennik">Cenník fotokalendára</Link>
               </Button>
             </div>
           </div>

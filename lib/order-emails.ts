@@ -3,10 +3,18 @@ import {
   getDeliveryWaveByKey,
 } from "@/lib/order/delivery-waves";
 import { MEMORY_SET_LABEL } from "@/lib/order/config";
+import { OPERATOR } from "@/lib/legal";
 import { resend } from "@/lib/resend";
+import { SITE_URL } from "@/lib/seo";
 
 const emailFrom = process.env.EMAIL_FROM!;
-const adminEmail = process.env.ADMIN_EMAIL!;
+
+function getAdminEmailRecipients() {
+  return (process.env.ADMIN_EMAIL ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0);
+}
 
 type DeliveryMethod = "pickup" | "packeta";
 type CalendarType = "basic" | "premium" | "memory" | "business";
@@ -199,7 +207,7 @@ function renderOrderSummaryHtml(summary: OrderSummary) {
         hasDiscount
           ? renderDetailRow(
               "Zľavový kód",
-              `${escapeHtml(summary.discountCode!)} · -${formatPrice(summary.discountAmount!)}`,
+              `${escapeHtml(summary.discountCode!)} -${formatPrice(summary.discountAmount!)}`,
             )
           : ""
       }
@@ -296,20 +304,52 @@ function renderCustomerHtml(customer: CustomerInfo) {
 }
 
 function renderSignature() {
+  const logoUrl = `${SITE_URL}/icon-512.png`;
+  const termsUrl = `${SITE_URL}/obchodne-podmienky`;
+  const safeWeb = escapeHtml(SITE_URL.replace(/^https:\/\//, ""));
+  const safeEmail = escapeHtml(OPERATOR.email);
+  const safeOperator = escapeHtml(
+    `${OPERATOR.name} · IČO ${OPERATOR.ico} · Košice`,
+  );
+
   return `
-    <p style="margin-top: 24px;">
-      Ďakujeme,<br />
-      Annum
-    </p>
+    <div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid #EAD6DE;">
+      <p style="margin: 0 0 16px;">Ďakujeme,</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="vertical-align: middle; padding-right: 12px;">
+            <a href="${SITE_URL}" style="text-decoration: none;">
+              <img src="${logoUrl}" width="48" height="48" alt="Annum" style="display: block; width: 48px; height: 48px; border: 0;" />
+            </a>
+          </td>
+          <td style="vertical-align: middle;">
+            <p style="margin: 0; font-size: 18px; font-weight: 800; letter-spacing: -0.02em; color: #3E0F28;">
+              Annum<span style="color: #FC5A61;">.</span>
+            </p>
+            <p style="margin: 2px 0 0; font-size: 13px; color: rgba(62, 15, 40, 0.65);">
+              Fotokalendáre z vašich fotiek
+            </p>
+          </td>
+        </tr>
+      </table>
+      <p style="margin: 14px 0 0; font-size: 14px;">
+        <a href="${SITE_URL}" style="color: #3E0F28; font-weight: 700; text-decoration: none;">${safeWeb}</a><br />
+        <a href="mailto:${safeEmail}" style="color: #3E0F28; font-weight: 700; text-decoration: none;">${safeEmail}</a>
+      </p>
+      <p style="margin: 14px 0 0; font-size: 12px; color: rgba(62, 15, 40, 0.45);">
+        ${safeOperator}
+      </p>
+      <p style="margin: 6px 0 0; font-size: 12px;">
+        <a href="${termsUrl}" style="color: rgba(62, 15, 40, 0.55); text-decoration: underline;">Obchodné podmienky</a>
+      </p>
+    </div>
   `;
 }
 
 export async function sendOrderCreatedEmail({
   orderCode,
   firstName,
-  lastName,
   email,
-  phone,
   totalPrice,
   paymentUrl,
   calendarType,
@@ -442,18 +482,21 @@ export async function sendOrderPaidEmail({
           <p>Dobrý deň, ${safeFirstName},</p>
 
           <p>
-            ďakujeme — platbu k objednávke <strong>${escapeHtml(orderCode)}</strong> sme prijali.
-            Vaše spomienky teraz pripravujeme: rozloženie fotiek, tlač a darčekové
-            zabalenie so setom na zavesenie.
+            ďakujeme — platbu k objednávke <strong>${escapeHtml(orderCode)}</strong> sme prijali
+            a objednávku tým potvrdzujeme. Zaradíme ju do výrobnej várky: rozloženie
+            fotiek, tlač a darčekové zabalenie.
           </p>
 
           ${renderOrderCodeBlock(orderCode)}
           ${renderOrderSummaryHtml(summary)}
 
           <p>
-            Objednávky spracúvame v spoločných várkach tlače. Keď bude kalendár
-            hotový, dáme Vám vedieť e-mailom — pri Packete aj so sledovacím číslom,
-            pri osobnom odbere s informáciou o prevzatí.
+            Keď bude kalendár hotový, dáme Vám vedieť e-mailom — pri Packete
+            aj so sledovacím číslom, pri osobnom odbere s informáciou o prevzatí.
+          </p>
+
+          <p>
+            Ak v súhrne niečo nesedí, odpovedzte prosím na tento e-mail.
           </p>
 
           ${renderSignature()}
@@ -463,10 +506,11 @@ export async function sendOrderPaidEmail({
 
     sendEmail({
       from: emailFrom,
-      to: adminEmail,
-      subject: `Nová objednávka ${orderCode}`,
+      to: getAdminEmailRecipients(),
+      replyTo: email,
+      subject: `Zaplatená objednávka ${orderCode}`,
       html: renderEmailShell(
-        `Nová objednávka ${escapeHtml(orderCode)}`,
+        `Zaplatená objednávka ${escapeHtml(orderCode)}`,
         `
           <p>
             Objednávka <strong>${escapeHtml(orderCode)}</strong> bola úspešne zaplatená
@@ -477,8 +521,10 @@ export async function sendOrderPaidEmail({
           ${renderOrderSummaryHtml(summary)}
           ${renderCustomerHtml(customer)}
 
-          <p>
-            Objednávku nájdeš v admin paneli.
+          <p style="margin: 24px 0;">
+            <a href="${escapeHtml(`${SITE_URL}/admin`)}" style="display: inline-block; background: #3E0F28; color: #ffffff; text-decoration: none; padding: 12px 18px; border-radius: 8px; font-weight: 700;">
+              Otvoriť v admin paneli
+            </a>
           </p>
         `,
       ),
@@ -528,13 +574,13 @@ export async function sendOrderFulfillmentEmail({
             ? `
               <p>
                 Váš kalendár spomienok sme odoslali cez Packetu. Je darčekovo
-                zabalený, obsahuje set na zavesenie a je pripravený robiť radosť.
+                zabalený a pripravený robiť radosť.
               </p>
             `
             : `
               <p>
                 Váš kalendár spomienok je pripravený na osobný odber v Košiciach.
-                Je darčekovo zabalený a obsahuje set na zavesenie.
+                Je darčekovo zabalený.
               </p>
               <p>
                 Pre presný čas odberu Vás budeme kontaktovať, alebo sa môžete
@@ -594,7 +640,7 @@ export async function sendBusinessInquiryEmail(
 
   await sendEmail({
     from: emailFrom,
-    to: adminEmail,
+    to: getAdminEmailRecipients(),
     replyTo: params.email,
     subject: `Nezáväzná ponuka — ${params.company} (${params.quantity} ks)`,
     html: renderEmailShell(

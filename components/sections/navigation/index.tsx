@@ -50,7 +50,7 @@ export default function Navigation() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
         <Link
           href="/"
-          className="shrink-0 font-heading text-lg font-bold tracking-tight text-primary sm:text-2xl"
+          className="shrink-0 rounded-sm font-heading text-lg font-bold tracking-tight text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#FC5A61]/30 sm:text-2xl"
         >
           Annum
           <span className="pl-0.5 text-secondary">.</span>

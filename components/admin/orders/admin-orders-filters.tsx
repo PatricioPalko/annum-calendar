@@ -8,6 +8,7 @@ import { buildAdminHref } from "@/helpers/admin-table";
 import { writeAdminOrdersFilterPreference } from "@/helpers/admin-orders-filter-storage";
 import { MEMORY_SET_LABEL } from "@/lib/order/config";
 import { getAllDeliveryWaveFilterOptions } from "@/lib/order/delivery-waves";
+import { cn } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -15,6 +16,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+const activeFilterClassName =
+  "border-[#FC5A61] bg-[#FFF7F4] font-extrabold ring-2 ring-[#FC5A61]/25";
 
 const MONTH_LABELS = [
   "Január",
@@ -81,7 +85,11 @@ export function AdminOrdersFilters({
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-3">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
         <Select value={currentYear} onValueChange={(value) => updateFilter("year", value)}>
-          <SelectTrigger size="sm" className="w-full sm:w-44" aria-label="Filter podľa roka">
+          <SelectTrigger
+            size="sm"
+            className={cn("w-full sm:w-44", currentYear !== "all" && activeFilterClassName)}
+            aria-label="Filter podľa roka"
+          >
             <SelectValue placeholder="Rok" />
           </SelectTrigger>
 
@@ -99,7 +107,14 @@ export function AdminOrdersFilters({
           value={currentMonth}
           onValueChange={(value) => updateFilter("month", value)}
         >
-          <SelectTrigger size="sm" className="w-full sm:w-48" aria-label="Filter podľa mesiaca">
+          <SelectTrigger
+            size="sm"
+            className={cn(
+              "w-full sm:w-48",
+              currentMonth !== "all" && activeFilterClassName,
+            )}
+            aria-label="Filter podľa mesiaca"
+          >
             <SelectValue placeholder="Mesiac" />
           </SelectTrigger>
 
@@ -119,7 +134,10 @@ export function AdminOrdersFilters({
         >
           <SelectTrigger
             size="sm"
-            className="w-full sm:w-52"
+            className={cn(
+              "w-full sm:w-52",
+              currentCalendar !== "all" && activeFilterClassName,
+            )}
             aria-label="Filter podľa typu kalendára"
           >
             <SelectValue placeholder="Kalendár" />
@@ -139,7 +157,10 @@ export function AdminOrdersFilters({
         >
           <SelectTrigger
             size="sm"
-            className="w-full sm:w-48"
+            className={cn(
+              "w-full sm:w-48",
+              currentDelivery !== "all" && activeFilterClassName,
+            )}
             aria-label="Filter podľa doručenia"
           >
             <SelectValue placeholder="Doručenie" />
@@ -158,7 +179,10 @@ export function AdminOrdersFilters({
         >
           <SelectTrigger
             size="sm"
-            className="w-full sm:w-52"
+            className={cn(
+              "w-full sm:w-52",
+              currentWave !== "all" && activeFilterClassName,
+            )}
             aria-label="Filter podľa várky tlače"
           >
             <SelectValue placeholder="Várka" />

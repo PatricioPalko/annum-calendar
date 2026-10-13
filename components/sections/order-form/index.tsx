@@ -32,8 +32,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, type Resolver, useForm } from "react-hook-form";
 import { BirthdaysFieldArray } from "../order-form-components/form-birthdays";
 import { FormConsentCheckbox } from "../order-form-components/form-consent-checkbox";
-import { FormDeliveryMethod } from "../order-form-components/form-delivery-method";
 import { FormDedication } from "../order-form-components/form-dedication";
+import { FormDeliveryMethod } from "../order-form-components/form-delivery-method";
 import { FormInput } from "../order-form-components/form-input";
 import { NamedaysFieldArray } from "../order-form-components/form-namedays";
 import { PhotoDropzone } from "../order-form-components/form-photo-dropzone";
@@ -41,8 +41,8 @@ import { PriceSummary } from "../order-form-components/form-price-summary";
 import { FormQuantity } from "../order-form-components/form-quantity";
 import { FormRadioGroup } from "../order-form-components/form-radiogroup";
 import { FormTextarea } from "../order-form-components/form-textarea";
-import { orderFormFieldHintClassName } from "../order-form-components/order-form-styles";
 import { OrderFormMobileBar } from "../order-form-components/order-form-mobile-bar";
+import { orderFormFieldHintClassName } from "../order-form-components/order-form-styles";
 import OrderSection from "../order-section";
 
 const orderFormDefaultValues: OrderFormValues = {
@@ -85,6 +85,9 @@ export default function OrderForm() {
     defaultValues: orderFormDefaultValues,
   });
 
+  // watch() is the live subscription this form already uses. The React
+  // Compiler cannot memoize it, so that check stays disabled here.
+  /* eslint-disable react-hooks/incompatible-library */
   const selectedQuantityOption = form.watch("quantityOption");
   const selectedCalendarType = form.watch("types");
   const customQuantity = form.watch("customQuantity");
@@ -117,9 +120,9 @@ export default function OrderForm() {
   );
   const hasContactError = Boolean(
     errors.firstName ||
-      errors.lastName ||
-      errors.email ||
-      errors.phone,
+    errors.lastName ||
+    errors.email ||
+    errors.phone,
   );
   const hasTermsError = Boolean(errors.termsAccepted);
   const hasTurnstileError =
@@ -131,6 +134,7 @@ export default function OrderForm() {
   const canSubmitWithTurnstile = !turnstileConfigured || Boolean(turnstileToken);
   const selectedDeliveryMethod = form.watch("deliveryMethod");
   const watchedFormValues = form.watch();
+  /* eslint-enable react-hooks/incompatible-library */
   const formErrors = form.formState.errors;
   const hasPremiumFeatures = hasPremiumCalendarFeatures(selectedCalendarType);
   const isMemoryType = isMemoryCalendarType(selectedCalendarType);
@@ -169,15 +173,16 @@ export default function OrderForm() {
   }, [form]);
 
   useEffect(() => {
-    const subscription = form.watch((values) => {
-      saveOrderFormDraft({
-        ...orderFormDefaultValues,
-        ...values,
-        photos: values.photos ?? [],
-      } as OrderFormValues);
+    return form.subscribe({
+      formState: { values: true },
+      callback: ({ values }) => {
+        saveOrderFormDraft({
+          ...orderFormDefaultValues,
+          ...values,
+          photos: values.photos ?? [],
+        });
+      },
     });
-
-    return () => subscription.unsubscribe();
   }, [form]);
 
   useEffect(() => {
@@ -400,7 +405,7 @@ export default function OrderForm() {
               stepNumber={2}
               totalSteps={totalSteps}
               title="Počet kusov"
-              description="Viac kusov = nižšia cena za kalendár."
+              description="Viac kusov = nižšia cena za kalendár. Všetky kusy posielame v jednom balíku."
               isComplete={stepCompletion.quantity}
               isActive={activeStep === "quantity"}
             >
@@ -417,7 +422,7 @@ export default function OrderForm() {
               stepNumber={3}
               totalSteps={totalSteps}
               title="Vaše fotky"
-              description={`Min. ${MIN_PHOTOS} fotiek, odporúčame 30+. Formát na výšku aj na šírku.`}
+              description={`Min. ${MIN_PHOTOS} fotiek. Odporúčame nahrať aspoň 24 fotiek. Formát na výšku aj na šírku.`}
               isComplete={stepCompletion.photos}
               isActive={activeStep === "photos"}
             >
@@ -614,18 +619,18 @@ export default function OrderForm() {
                 isSubmitting
                   ? undefined
                   : (quantity) => {
-                      form.setValue("quantityOption", quantity, {
-                        shouldValidate: true,
-                        shouldDirty: true,
-                        shouldTouch: true,
-                      });
+                    form.setValue("quantityOption", quantity, {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    });
 
-                      form.setValue("customQuantity", undefined, {
-                        shouldValidate: true,
-                        shouldDirty: true,
-                        shouldTouch: true,
-                      });
-                    }
+                    form.setValue("customQuantity", undefined, {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                      shouldTouch: true,
+                    });
+                  }
               }
               discountCode={discountCode}
               discountCodeError={discountCodeError}

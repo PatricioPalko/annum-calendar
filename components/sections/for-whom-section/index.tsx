@@ -8,11 +8,13 @@ const audiences = [
     icon: Heart,
     title: "Pre rodičov a starých rodičov",
     description: "Každý mesiac iná spomienka — fotky, ktoré radi uvidia celý rok.",
+    href: "/objednavka" as const,
+    linkLabel: "Fotokalendár pre rodinu",
   },
   {
     icon: Home,
     title: "Pre partnera a rodinu",
-    description: "Rok Vášho spoločného príbehu na jednom mieste, pripravený zavesiť.",
+    description: "Rok Vášho spoločného príbehu na jednom mieste.",
   },
   {
     icon: Users,
@@ -24,6 +26,7 @@ const audiences = [
     title: "Pre firmy od 10 ks",
     description: "Kalendáre pre tím alebo klientov — nezáväzná ponuka na mieru.",
     href: "/pre-firmy" as const,
+    linkLabel: "Nezáväzná ponuka pre firmy",
   },
 ] as const;
 
@@ -69,9 +72,9 @@ export function ForWhomSection() {
                 {"href" in item ? (
                   <Link
                     href={item.href}
-                    className="mt-4 inline-flex items-center text-sm font-bold text-[#FC5A61] underline-offset-4 transition hover:underline"
+                    className="mt-4 inline-flex items-center rounded-sm text-sm font-bold text-[#FC5A61] underline-offset-4 transition hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#FC5A61]/30"
                   >
-                    Nezáväzná ponuka →
+                    {item.linkLabel}
                   </Link>
                 ) : null}
               </article>

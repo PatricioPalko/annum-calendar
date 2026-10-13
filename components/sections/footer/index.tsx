@@ -8,10 +8,14 @@ const footerNavigationLinks = [
   { label: "Ako to prebieha", sectionId: "ako-to-funguje" },
   { label: "Čo je v balení", sectionId: "co-je-v-baleni" },
   { label: "Cenník", sectionId: "cennik" },
+  { label: "Termíny doručenia", sectionId: "terminy-dorucenia" },
   { label: "FAQ", sectionId: "faq" },
 ];
 
-const footerPageLinks = [{ label: "Pre firmy", href: "/pre-firmy" }];
+const footerPageLinks = [
+  { label: "Objednať fotokalendár", href: "/objednavka" },
+  { label: "Firemný fotokalendár", href: "/pre-firmy" },
+];
 
 const footerLegalLinks = [
   { label: "Ochrana osobných údajov", href: "/ochrana-osobnych-udajov" },
@@ -27,15 +31,15 @@ export function Footer() {
         <div>
           <Link
             href="/"
-            className="font-heading text-2xl font-bold tracking-tight text-primary"
+            className="rounded-sm font-heading text-2xl font-bold tracking-tight text-primary focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#FC5A61]/30"
           >
             Annum
             <span className="pl-0.5 text-secondary">.</span>
           </Link>
 
           <p className="mt-2 max-w-sm text-sm font-medium leading-6 text-[#3E0F28]/60">
-            Personalizované A3 nástenné fotokalendáre s kovovou väzbou a
-            doručením cez Packetu.
+            Personalizované A3 fotokalendáre z vlastných fotiek, s kovovou
+            väzbou a doručením cez Packetu.
           </p>
 
           <div className="mt-4 space-y-1 text-sm font-semibold text-[#3E0F28]/65">
@@ -43,7 +47,7 @@ export function Footer() {
               E-mail:{" "}
               <a
                 href={`mailto:${contactEmail}`}
-                className="text-primary underline-offset-4 transition hover:text-[#FC5A61] hover:underline"
+                className="rounded-sm text-primary underline-offset-4 transition hover:text-[#FC5A61] hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#FC5A61]/30"
               >
                 {contactEmail}
               </a>
@@ -61,7 +65,7 @@ export function Footer() {
               <SectionLink
                 key={link.sectionId}
                 sectionId={link.sectionId}
-                className="w-fit text-sm font-bold text-[#3E0F28]/65 transition hover:text-[#FC5A61]"
+                className="w-fit rounded-sm text-sm font-bold text-[#3E0F28]/65 transition hover:text-[#FC5A61] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#FC5A61]/30"
               >
                 {link.label}
               </SectionLink>
@@ -71,7 +75,7 @@ export function Footer() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="col-span-2 w-fit text-sm font-bold text-[#3E0F28]/65 transition hover:text-[#FC5A61]"
+                className="col-span-2 w-fit rounded-sm text-sm font-bold text-[#3E0F28]/65 transition hover:text-[#FC5A61] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#FC5A61]/30"
               >
                 {link.label}
               </Link>
@@ -89,7 +93,7 @@ export function Footer() {
               <Link
                 key={link.href}
                 href={link.href}
-                className="w-fit text-sm font-bold text-[#3E0F28]/65 transition hover:text-[#FC5A61]"
+                className="w-fit rounded-sm text-sm font-bold text-[#3E0F28]/65 transition hover:text-[#FC5A61] focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#FC5A61]/30"
               >
                 {link.label}
               </Link>

@@ -1,8 +1,7 @@
+import { SITE_URL } from "@/lib/seo";
 import type { MetadataRoute } from "next";
 
 export default function robots(): MetadataRoute.Robots {
-  const siteUrl = "https://www.annum.sk";
-
   return {
     rules: [
       {
@@ -11,12 +10,15 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           "/admin",
           "/api",
-          "/admin/login",
           "/objednavka/dakujeme",
           "/objednavka/platba-zrusena",
+          "/*?*utm_",
+          "/*?*gclid=",
+          "/*?*fbclid=",
+          "/*?*session_id=",
         ],
       },
     ],
-    sitemap: `${siteUrl}/sitemap.xml`,
+    sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }

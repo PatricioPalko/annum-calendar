@@ -1,245 +1,408 @@
+import Link from "next/link";
+
 import { CookiebotDeclaration } from "@/components/cookiebot/cookiebot-declaration";
-import { Heading, Text } from "@/components/ui/typography";
+import {
+  LegalDocument,
+  LegalList,
+  LegalMailLink,
+  LegalSubheading,
+  LegalText,
+} from "@/components/legal/legal-document";
+import { LEGAL_UPDATED_ON, OPERATOR } from "@/lib/legal";
+import { createPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = createPageMetadata({
   title: "Ochrana osobných údajov",
   description:
-    "Zásady ochrany osobných údajov e-shopu Annum — personalizované A3 kalendáre.",
-  alternates: {
-    canonical: "/ochrana-osobnych-udajov",
-  },
-};
-
-const CONTACT_EMAIL = "info@annum.sk";
-const BUSINESS_NAME = "LAETAS s. r. o.";
-const BUSINESS_ICO = "57 810 133";
-const BUSINESS_OR =
-  "zapísaná v Obchodnom registri Okresného súdu Košice I, oddiel: Sro, vložka č. 67076/V";
-
-function LegalSection({
-  title,
-  children,
-}: {
-  title: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="space-y-3">
-      <Text variant="lead" className="uppercase text-primary font-semibold">
-        {title}
-      </Text>
-
-      <div className="space-y-3">{children}</div>
-    </section>
-  );
-}
+    "Ako Annum spracúva osobné údaje pri objednávke fotokalendára, nahratých fotografiách, platbe, doručení a cookies.",
+  path: "/ochrana-osobnych-udajov",
+});
 
 export default function PrivacyPolicyPage() {
   return (
-    <main className="bg-[#FFF7F4] px-4 py-16 text-primary md:px-6">
-      <div className="mx-auto max-w-3xl rounded-xl border border-[#EAD6DE] bg-white p-6 shadow-xl shadow-[#3E0F28]/10 md:p-10">
-        <Heading as="h1" className="mt-3 text-2xl!">
-          Ochrana osobných údajov
-        </Heading>
-
-        <Text variant="lead" className="mt-5">
-          Nižšie nájdete informácie o tom, aké osobné údaje spracúvame pri
-          vytvorení objednávky, platbe, doručení a komunikácii k objednávke.
-        </Text>
-
-        <div className="mt-10 space-y-10">
-          <LegalSection title="Prevádzkovateľ">
-            <Text>
-              Predávajúcim a prevádzkovateľom internetového obchodu Annum je{" "}
-              {BUSINESS_NAME}, IČO: {BUSINESS_ICO}, so sídlom: Trnavská
-              664/16, 040 01 Košice, {BUSINESS_OR}. Annum je obchodná značka,
-              pod ktorou predávajúci ponúka personalizované produkty.
-            </Text>
-            <Text>
-              V prípade otázok k objednávke, platbe, doručeniu alebo reklamácii
-              nás kontaktujte na e-mailovej adrese{" "}
-              <a
-                className="font-semibold text-primary"
-                href={`mailto:${CONTACT_EMAIL}`}
+    <LegalDocument
+      title="Ochrana osobných údajov"
+      path="/ochrana-osobnych-udajov"
+      updated={LEGAL_UPDATED_ON}
+      lead="Tento dokument vysvetľuje, aké osobné údaje spracúvame pri objednávke personalizovaného fotokalendára, prečo ich spracúvame a aké máte práva. Nejde o súhlas so všetkým spracúvaním. Údaje potrebné na vybavenie objednávky spracúvame preto, aby sme mohli zmluvu splniť."
+      sections={[
+        {
+          id: "prevadzkovatel",
+          title: "Prevádzkovateľ",
+          body: (
+            <>
+              <LegalText>
+                Prevádzkovateľom osobných údajov je {OPERATOR.name}, IČO:{" "}
+                {OPERATOR.ico}, so sídlom {OPERATOR.street}, {OPERATOR.postalCity},{" "}
+                {OPERATOR.register}. Obchod pod značkou {OPERATOR.brand}{" "}
+                prevádzkujeme na {OPERATOR.web}.
+              </LegalText>
+              <LegalText>
+                V otázkach osobných údajov nám píšte na <LegalMailLink />.
+              </LegalText>
+            </>
+          ),
+        },
+        {
+          id: "ake-udaje",
+          title: "Aké údaje spracúvame",
+          body: (
+            <>
+              <LegalText>
+                Zákaznícky účet nezakladáme. Objednávku vytvoríte vo formulári
+                bez registrácie.
+              </LegalText>
+              <LegalSubheading>Objednávka</LegalSubheading>
+              <LegalList
+                items={[
+                  "meno, priezvisko, e-mail a telefón,",
+                  "poznámka k objednávke, ak ju vyplníte,",
+                  "variant kalendára, počet kusov, zľavový kód a cena,",
+                  "spôsob doručenia a pri Packete identifikátor, názov a adresa výdajného miesta alebo Z-BOXu,",
+                  "pri variante Premium a Memory set mená a dátumy narodenín a vybrané mená k meninám,",
+                  "pri Memory sete text venovania,",
+                  "číslo a kód objednávky, čas odoslania a stav vybavenia,",
+                  "čas súhlasu s obchodnými podmienkami a, ak ho dáte, čas súhlasu s e-mailovými novinkami.",
+                ]}
+              />
+              <LegalSubheading>Fotografie</LegalSubheading>
+              <LegalText>
+                Nahrávate fotografie, z ktorých kalendár vyrobíme. Môžu
+                zobrazovať vás, deti alebo iné osoby a môžu z nich vyplývať
+                ďalšie osobné údaje. Fotografie sa ukladajú do neverejného
+                úložiska. Aplikácia nevytvára verejný odkaz na návrh ani na
+                hotové fotografie.
+              </LegalText>
+              <LegalSubheading>Platba</LegalSubheading>
+              <LegalText>
+                Platbu spracúva Stripe. Celé číslo platobnej karty v našej
+                aplikácii neukladáme. Ukladáme stav platby, identifikátor
+                platobnej relácie a identifikátor platby, aby sme vedeli, či
+                je objednávka zaplatená.
+              </LegalText>
+              <LegalSubheading>Technické údaje</LegalSubheading>
+              <LegalText>
+                Pri odoslaní formulára a nahrávaní fotografií spracúvame IP
+                adresu na obmedzenie počtu požiadaviek a na overenie, že
+                formulár nevyplnil automatizovaný program (Cloudflare
+                Turnstile). Rozpracovaný formulár bez fotografií sa ukladá v
+                prehliadači v localStorage, kým objednávku nedokončíte alebo
+                údaje nevymažete. Fotografie sa do tohto lokálneho konceptu
+                neukladajú.
+              </LegalText>
+              <LegalSubheading>Firemný dopyt</LegalSubheading>
+              <LegalText>
+                Vo formulári na stránke Pre firmy spracúvame názov firmy, meno,
+                priezvisko, e-mail, telefón, požadovaný počet kusov a
+                dobrovoľnú správu. Tieto údaje sa neukladajú do databázy
+                objednávok. Odošleme ich e-mailom, aby sme vedeli pripraviť
+                ponuku.
+              </LegalText>
+            </>
+          ),
+        },
+        {
+          id: "ucely",
+          title: "Účely a právne základy",
+          body: (
+            <>
+              <LegalText>
+                Jednotlivé operácie opierame o rôzne právne základy podľa
+                článku 6 nariadenia (EÚ) 2016/679 (GDPR) a zákona č. 18/2018 Z.
+                z.
+              </LegalText>
+              <LegalList
+                items={[
+                  "Vybavenie objednávky, výroba kalendára, platba, doručenie a súvisiaca komunikácia: plnenie zmluvy a kroky pred jej uzavretím, článok 6 ods. 1 písm. b) GDPR.",
+                  "Účtovné a daňové povinnosti k prijatým platbám: plnenie zákonnej povinnosti, článok 6 ods. 1 písm. c) GDPR.",
+                  "Ochrana formulára pred zneužitím, obmedzenie počtu požiadaviek a zabezpečenie neverejného úložiska: oprávnený záujem, článok 6 ods. 1 písm. f) GDPR.",
+                  "E-mailové novinky o produktoch Annum: iba váš súhlas, článok 6 ods. 1 písm. a) GDPR. Súhlas nie je podmienkou objednávky.",
+                  "Meranie návštevnosti cez Google Analytics: iba súhlas so štatistickými cookies, ak je na webe zapnutý Cookiebot.",
+                ]}
+              />
+              <LegalText>
+                Zaškrtnutie obchodných podmienok v objednávke nie je súhlasom
+                so spracúvaním všetkých osobných údajov. Informáciu o
+                spracúvaní dostávate týmto dokumentom. Údaje, bez ktorých
+                objednávku nevybavíme, spracúvame na základe zmluvy.
+              </LegalText>
+            </>
+          ),
+        },
+        {
+          id: "objednavka",
+          title: "Objednávka, platba, doručenie a reklamácia",
+          body: (
+            <>
+              <LegalText>
+                Údaje z formulára použijeme na uloženie objednávky, výpočet
+                ceny, spustenie platby a e-maily o prijatí objednávky, odkaze
+                na platbu, potvrdení platby a odoslaní alebo osobnom odbere.
+              </LegalText>
+              <LegalText>
+                Pri doručení cez Packetu odovzdáme Packete meno, priezvisko,
+                e-mail alebo telefón, identifikátor vybraného výdajného miesta
+                a údaje o zásielke potrebné na jej podanie. Fotografie Packete
+                neposielame.
+              </LegalText>
+              <LegalText>
+                Osobný odber v Košiciach sa vo formulári zobrazí len pri
+                zľavovom kóde, ktorý ho umožňuje. Inak je spôsobom doručenia
+                Packeta.
+              </LegalText>
+              <LegalText>
+                Pri reklamácii spracúvame e-mail, číslo objednávky, popis vady
+                a fotografie vady, ak ich pošlete, aby sme vedeli vadu
+                posúdiť.
+              </LegalText>
+            </>
+          ),
+        },
+        {
+          id: "fotografie",
+          title: "Fotografie",
+          body: (
+            <>
+              <LegalText>
+                Fotografie spracúvame len preto, aby sme z nich pripravili,
+                vytlačili a dodali objednaný kalendár a aby sme vedeli
+                vybaviť reklamáciu, ktorá sa týka použitého podkladu. Právnym
+                základom je plnenie zmluvy.
+              </LegalText>
+              <LegalText>
+                Fotografie nezverejňujeme a nepoužívame ich na reklamu,
+                sociálne siete ani portfólio. Také použitie by vyžadovalo
+                samostatný, dobrovoľný a konkrétny súhlas. Ten v objednávke
+                nepožadujeme a z objednávky nevyplýva.
+              </LegalText>
+              <LegalText>
+                Za to, že máte právo fotografie na výrobu kalendára poskytnúť,
+                zodpovedáte vy. Týka sa to aj fotografií iných osôb a detí.
+                Môžeme odmietnuť podklad, ktorý je nezákonný.
+              </LegalText>
+              <LegalText>
+                Súbory sa nahrávajú cez časovo obmedzený odkaz do neverejného
+                úložiska. Nie sú určené na verejné zobrazenie. Stiahnuť ich
+                môže administrátor pri vybavovaní objednávky. Aplikácia
+                neponúka zdieľanie návrhu verejným odkazom a pred tlačou
+                neposiela zákazníkovi náhľad na schválenie, ak ho pri
+                nevhodnom podklade sami nepožiadame o doplnenie.
+              </LegalText>
+              <LegalText>
+                Fotografie po vybavení objednávky systém sám po pevnom počte
+                dní nemaže. Vymažeme ich, keď zmažeme objednávku, alebo na vašu
+                žiadosť, ak už nie sú potrebné na výrobu, reklamáciu ani na
+                zákonnú povinnosť.
+              </LegalText>
+            </>
+          ),
+        },
+        {
+          id: "prijemcovia",
+          title: "Príjemcovia a sprostredkovatelia",
+          body: (
+            <>
+              <LegalText>
+                Údaje spracúvajú osoby, ktoré pre nás vybavujú objednávky.
+                Ďalej ich dostávajú títo poskytovatelia, v rozsahu potrebnom na
+                ich službu:
+              </LegalText>
+              <LegalList
+                items={[
+                  "Supabase: databáza objednávok a neverejné úložisko fotografií.",
+                  "Stripe: online platba. Číslo karty spracúva Stripe, nie naša aplikácia.",
+                  "Packeta: podanie zásielky na vybrané výdajné miesto alebo Z-BOX.",
+                  "Resend: odoslanie transakčných e-mailov k objednávke a firemnému dopytu.",
+                  "Cloudflare Turnstile: overenie, že formulár neodoslal automatizovaný program.",
+                  "Cookiebot: lišta súhlasu s cookies, ak je v produkcii nastavené Cookiebot ID.",
+                  "Google Analytics: návštevnosť stránok, len ak je zapnuté meranie a udelíte súhlas so štatistikou.",
+                ]}
+              />
+              <LegalText>
+                Údaje nepredávame a neodovzdávame ich tretím stranám na ich
+                vlastný marketing. Na prípravu a tlač kalendára ich použijú
+                osoby, ktoré pre nás objednávku vybavujú.
+              </LegalText>
+            </>
+          ),
+        },
+        {
+          id: "prenosy",
+          title: "Prenosy mimo Európskeho hospodárskeho priestoru",
+          body: (
+            <>
+              <LegalText>
+                Packeta pôsobí v Európskom hospodárskom priestore. Cookiebot
+                prevádzkuje poskytovateľ so sídlom v Európskom hospodárskom
+                priestore.
+              </LegalText>
+              <LegalText>
+                Stripe, Resend, Cloudflare a Google môžu údaje spracúvať aj
+                mimo Európskeho hospodárskeho priestoru. Taký prenos sa opiera
+                o záruky podľa kapitoly V GDPR, ktoré títo poskytovatelia
+                používajú. Databázu a úložisko fotografií prevádzkuje Supabase.
+                Krajina uloženia závisí od nastavenia projektu.
+              </LegalText>
+            </>
+          ),
+        },
+        {
+          id: "lehoty",
+          title: "Ako dlho údaje uchovávame",
+          body: (
+            <>
+              <LegalText>
+                Objednávku, kontakt, zvolený variant, doručenie a stav platby
+                uchovávame po dobu vybavenia objednávky, reklamácie a po dobu,
+                ktorú vyžadujú účtovné a daňové predpisy. Presný počet rokov
+                pre každý druh dokladu závisí od toho, či ide o účtovný záznam.
+                Aplikácia tieto záznamy po pevnej lehote sama nemaže.
+              </LegalText>
+              <LegalText>
+                Fotografie uchovávame na výrobu a na vybavenie prípadnej
+                reklamácie. Automatickú lehotu ich vymazania systém nemá.
+                Môžete nás požiadať o vymazanie, ak už nie sú potrebné na tieto
+                účely ani na zákonnú povinnosť.
+              </LegalText>
+              <LegalText>
+                Čas súhlasu s novinkami uchovávame, kým súhlas neodvoláte.
+                Rozpracovaný formulár v prehliadači zostáva v localStorage,
+                kým ho aplikácia po dokončení objednávky nezmaže alebo kým ho
+                nezmažete vo svojom prehliadači. Koncept neobsahuje
+                fotografie.
+              </LegalText>
+              <LegalText>
+                Firemný dopyt zostáva v e-mailovej schránke, z ktorej
+                pripravujeme ponuku, po dobu vybavenia dopytu.
+              </LegalText>
+            </>
+          ),
+        },
+        {
+          id: "cookies",
+          title: "Cookies a analytika",
+          body: (
+            <>
+              <LegalText>
+                V produkcii zobrazujeme lištu Cookiebot. Nevyhnutné cookies
+                slúžia na prevádzku stránky a zapamätanie voľby súhlasu.
+                Štatistické cookies, vrátane Google Analytics, sa načítajú až
+                po súhlase so štatistikou. Google Analytics zaznamenáva
+                zobrazenie stránky, nie obsah objednávky ani fotografie.
+              </LegalText>
+              <LegalText>
+                Súhlas s cookies môžete kedykoľvek zmeniť tlačidlom Nastavenia
+                cookies v pätičke. Podrobný zoznam cookies zobrazuje vyhlásenie
+                Cookiebotu nižšie, ak je Cookiebot na webe nastavený.
+              </LegalText>
+              <div
+                id="cookies-deklaracia"
+                className="scroll-mt-28 rounded-xl border border-[#EAD6DE] bg-[#FFF7F4] p-4 md:p-6"
               >
-                {CONTACT_EMAIL}
-              </a>
-              .
-            </Text>
-          </LegalSection>
-
-          <LegalSection title="Aké údaje spracúvame">
-            <Text>
-              Pri vytvorení objednávky spracúvame údaje, ktoré zadáte vo
-              formulári: meno, priezvisko, e-mail, telefónne číslo, poznámku k
-              objednávke, zvolený typ kalendára, počet kusov, zvolený spôsob
-              doručenia, údaje o výdajnom mieste Packety, dôležité dátumy,
-              nahraté fotky a technické údaje potrebné na spracovanie
-              objednávky.
-            </Text>
-
-            <Text>
-              Pri online platbe spracúvame aj informácie o stave platby, čísle
-              objednávky, identifikátore platobnej relácie a informáciu o tom,
-              či bola platba úspešná, zrušená alebo čaká na dokončenie.
-            </Text>
-          </LegalSection>
-
-          <LegalSection title="Na čo údaje používame">
-            <Text>
-              Údaje používame na vytvorenie a spracovanie objednávky, prípravu
-              personalizovaného kalendára, online platbu, doručenie cez Packetu,
-              komunikáciu so zákazníkom a administráciu objednávky.
-            </Text>
-
-            <Text>
-              E-mail používame na odoslanie informácie o vytvorení objednávky,
-              odkazu na dokončenie platby, potvrdenia prijatej platby a
-              informácie o odoslaní zásielky cez Packetu.
-            </Text>
-
-            <Text>
-              Vaše údaje nepoužívame na marketingové účely bez samostatného
-              súhlasu.
-            </Text>
-          </LegalSection>
-
-          <LegalSection title="Právny základ spracúvania">
-            <Text>
-              Osobné údaje spracúvame najmä preto, aby sme mohli vybaviť vašu
-              objednávku a splniť zmluvu. Niektoré údaje môžeme spracúvať aj z
-              dôvodu plnenia zákonných povinností, napríklad účtovných alebo
-              daňových povinností.
-            </Text>
-
-            <Text>
-              Technické a bezpečnostné údaje môžeme spracúvať na základe
-              oprávneného záujmu, napríklad pri ochrane formulára pred spamom,
-              zneužitím alebo neoprávneným prístupom.
-            </Text>
-          </LegalSection>
-
-          <LegalSection title="Nahraté fotky">
-            <Text>
-              Nahraté fotky slúžia iba na prípravu objednaného kalendára.
-              Nepoužívame ich na verejnú prezentáciu, reklamu ani sociálne siete
-              bez vášho výslovného súhlasu.
-            </Text>
-
-            <Text>
-              Zákazník zodpovedá za to, že má právo nahraté fotky použiť na
-              vytvorenie kalendára a že ich použitím neporušuje práva tretích
-              osôb.
-            </Text>
-          </LegalSection>
-
-          <LegalSection title="Platby">
-            <Text>
-              Online platby spracúva platobná služba Stripe. Platobné údaje,
-              napríklad celé číslo platobnej karty, nespracúvame ani neukladáme
-              priamo v našej aplikácii. Dostávame iba informácie potrebné na
-              potvrdenie stavu platby k objednávke.
-            </Text>
-          </LegalSection>
-
-          <LegalSection title="Doručenie a Packeta">
-            <Text>
-              Ak si zvolíte doručenie cez Packetu, spracúvame údaje o vybranom
-              výdajnom mieste alebo Z-BOXe, napríklad názov, adresu a
-              identifikátor výdajného miesta.
-            </Text>
-
-            <Text>
-              Tieto údaje používame na prípravu a odoslanie zásielky.
-            </Text>
-          </LegalSection>
-
-          <LegalSection title="Cookies">
-            <Text>
-              Na webe používame cookies na zabezpečenie prevádzky stránky,
-              spracovanie objednávky, ochranu formulára a, ak udelíte súhlas,
-              aj na analytické alebo marketingové účely.
-            </Text>
-
-            <Text>
-              Pri prvej návšteve vám zobrazíme cookie lištu, kde môžete
-              prijať všetky cookies, odmietnuť nepovinné cookies alebo si
-              nastavenia upraviť.
-            </Text>
-
-            <div
-              id="cookies"
-              className="scroll-mt-24 rounded-xl border border-[#EAD6DE] bg-[#FFF7F4] p-4 md:p-6"
-            >
-              <CookiebotDeclaration />
-            </div>
-          </LegalSection>
-
-          <LegalSection title="Služby tretích strán">
-            <Text>
-              Pri spracovaní objednávky môžeme používať technické služby tretích
-              strán, napríklad databázu, úložisko nahratých fotiek, e-mailovú
-              službu, platobnú bránu, ochranu formulára pred spamom a
-              doručovaciu službu.
-            </Text>
-
-            <Text>
-              Ide najmä o služby potrebné na prevádzku webu, uloženie
-              objednávky, odoslanie e-mailov, spracovanie platby a doručenie
-              zásielky.
-            </Text>
-          </LegalSection>
-
-          <LegalSection title="Uchovávanie údajov">
-            <Text>
-              Údaje uchovávame po dobu potrebnú na vybavenie objednávky,
-              doručenie zásielky, riešenie prípadnej komunikácie a následnú
-              administráciu.
-            </Text>
-
-            <Text>
-              Údaje, ktoré musíme uchovávať z účtovných, daňových alebo iných
-              zákonných dôvodov, uchovávame po dobu vyžadovanú príslušnými
-              predpismi. Nahraté fotky môžu byť po vybavení objednávky a
-              uplynutí primeranej doby odstránené.
-            </Text>
-          </LegalSection>
-
-          <LegalSection title="Prístup k údajom">
-            <Text>
-              K údajom má prístup iba osoba spracúvajúca objednávku a technické
-              služby potrebné na prevádzku objednávkového systému. Údaje
-              neposkytujeme tretím stranám na ich vlastné marketingové účely.
-            </Text>
-          </LegalSection>
-
-          <LegalSection title="Vaše práva">
-            <Text>
-              Môžete nás požiadať o informáciu, aké údaje o vás spracúvame, o
-              prístup k údajom, ich opravu, vymazanie, obmedzenie spracúvania
-              alebo prenosnosť údajov, ak sú splnené zákonné podmienky.
-            </Text>
-
-            <Text>
-              Ak sa domnievate, že vaše údaje spracúvame nesprávne, môžete nás
-              kontaktovať alebo sa obrátiť na príslušný dozorný orgán na ochranu
-              osobných údajov.
-            </Text>
-          </LegalSection>
-
-          <LegalSection title="Kontakt">
-            <Text>
-              Ak máte otázky k spracovaniu osobných údajov alebo chcete požiadať
-              o odstránenie údajov, kontaktujte nás e-mailom.
-            </Text>
-
-            <Text className="font-semibold text-primary">
-              E-mail: {CONTACT_EMAIL}
-            </Text>
-          </LegalSection>
-        </div>
-      </div>
-    </main>
+                <CookiebotDeclaration />
+              </div>
+            </>
+          ),
+        },
+        {
+          id: "bezpecnost",
+          title: "Bezpečnosť a automatizované rozhodovanie",
+          body: (
+            <>
+              <LegalText>
+                Fotografie nie sú verejné. Nahrávajú sa cez časovo obmedzené
+                odkazy a k objednávkam pristupuje prihlásený administrátor.
+                Platobné údaje karty do našej databázy neukladáme. Web
+                používa zabezpečené pripojenie. Neuvádzame certifikácie ani
+                šifrovanie, ktoré projekt sám neprevádzkuje.
+              </LegalText>
+              <LegalText>
+                Objednávku neschvaľujeme automatizovaným rozhodnutím s
+                právnym účinkom. Cenu počíta objednávkový formulár podľa
+                variantu, počtu kusov, zľavy a doručenia, aby ste ju videli
+                pred platbou. Profil na reklamné cielenie nezakladáme.
+              </LegalText>
+            </>
+          ),
+        },
+        {
+          id: "prava",
+          title: "Vaše práva",
+          body: (
+            <>
+              <LegalText>
+                Môžete nás požiadať o prístup k údajom, opravu, vymazanie,
+                obmedzenie spracúvania a o prenesenie údajov, ktoré ste nám
+                poskytli a ktoré spracúvame automatizovane na základe zmluvy
+                alebo súhlasu. Voči spracúvaniu založenému na oprávnenom
+                záujme môžete namietať.
+              </LegalText>
+              <LegalText>
+                Súhlas s e-mailovými novinkami aj súhlas so štatistickými
+                cookies môžete odvolať. Odvolanie nemá vplyv na zákonnosť
+                spracúvania pred odvolaním a nie je podmienkou vybavenia už
+                zaplatenej objednávky. Novinky odhlásite e-mailom na{" "}
+                <LegalMailLink />. Cookies upravíte v pätičke.
+              </LegalText>
+              <LegalText>
+                Niektoré údaje nevymažeme hneď, ak ich ešte potrebujeme na
+                rozpracovanú výrobu, reklamáciu alebo zákonnú povinnosť. V
+                odpovedi uvedieme dôvod.
+              </LegalText>
+              <LegalText>
+                Žiadosť vybavíme bezplatne do jedného mesiaca. Ak je žiadosť
+                zložitá alebo opakovaná, lehotu môžeme predĺžiť podľa článku
+                12 GDPR a napíšeme vám o tom.
+              </LegalText>
+            </>
+          ),
+        },
+        {
+          id: "dozor",
+          title: "Sťažnosť",
+          body: (
+            <>
+              <LegalText>
+                Ak sa domnievate, že údaje spracúvame v rozpore s predpismi,
+                môžete podať sťažnosť Úradu na ochranu osobných údajov
+                Slovenskej republiky, Hraničná 12, 820 07 Bratislava 27,{" "}
+                <a
+                  href="https://dataprotection.gov.sk/"
+                  className="font-bold text-[#FC5A61] underline-offset-4 hover:underline"
+                >
+                  dataprotection.gov.sk
+                </a>
+                . Najprv nás môžete kontaktovať na <LegalMailLink />, aby sme
+                vec vyriešili priamo.
+              </LegalText>
+            </>
+          ),
+        },
+        {
+          id: "kontakt",
+          title: "Súvisiace dokumenty",
+          body: (
+            <>
+              <LegalText>
+                Podmienky kúpy sú v dokumente{" "}
+                <Link
+                  href="/obchodne-podmienky"
+                  className="font-bold text-[#FC5A61] underline-offset-4 hover:underline"
+                >
+                  Obchodné podmienky
+                </Link>
+                .
+              </LegalText>
+              <LegalText>
+                Tento dokument platí od {LEGAL_UPDATED_ON}. K objednávke
+                ukladáme čas, kedy ste potvrdili obchodné podmienky. Platí
+                znenie uverejnené v deň odoslania objednávky.
+              </LegalText>
+            </>
+          ),
+        },
+      ]}
+    />
   );
 }

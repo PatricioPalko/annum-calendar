@@ -1,6 +1,6 @@
 import {
-  getBasicLowestUnitPrice,
-  getConsumerHighestPackPrice,
+  getLowestUnitPrice,
+  orderableCalendarTypes,
 } from "@/app/types/types";
 import { AboutSection } from "@/components/sections/about-section";
 import CTASection from "@/components/sections/cta-section";
@@ -11,52 +11,65 @@ import { HeroSection } from "@/components/sections/hero-section";
 import { DeliveryWavesSection } from "@/components/sections/delivery-waves-section";
 import { PricingSection } from "@/components/sections/pricing-section";
 import { JsonLd } from "@/components/seo/json-ld";
+import {
+  createPageMetadata,
+  HOME_DESCRIPTION,
+  HOME_TITLE,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/seo";
 import type { Metadata } from "next";
 
-export const metadata: Metadata = {
-  alternates: {
-    canonical: "/",
-  },
-  openGraph: {
-    title: "Annum | Spomienky z vašich fotiek celý rok",
-    description:
-      "Personalizovaný A3 fotokalendár pripravený zavesiť. Nahrajte fotky, my pripravíme kalendár spomienok — s meninami a narodeninami, pekne zabalený, bez zložitého editora.",
-    url: "https://www.annum.sk",
-  },
-};
+export const metadata: Metadata = createPageMetadata({
+  title: HOME_TITLE,
+  description: HOME_DESCRIPTION,
+  path: "/",
+  absoluteTitle: true,
+});
 
-const lowestUnitPrice = getBasicLowestUnitPrice();
-const highestListedPackPrice = getConsumerHighestPackPrice();
+const fromPrices = orderableCalendarTypes
+  .map((plan) => getLowestUnitPrice(plan))
+  .filter((price): price is number => price !== null);
+
+if (fromPrices.length === 0) {
+  throw new Error("Missing calendar prices for product structured data.");
+}
 
 const productJsonLd = {
   "@context": "https://schema.org",
   "@type": "Product",
-  name: "Personalizovaný A3 nástenný kalendár",
+  name: "Personalizovaný A3 fotokalendár",
   brand: {
     "@type": "Brand",
-    name: "Annum",
+    name: SITE_NAME,
   },
   description:
-    "Kalendár spomienok z vašich fotiek. A3 nástenný kalendár s kovovou väzbou, pripravený zavesiť. Premium variant umožňuje vyznačiť meniny a narodeniny.",
-  image: "https://www.annum.sk/og-image.jpg",
-  category: "Personalizované fotoprodukty",
+    "A3 nástenný fotokalendár z vlastných fotiek s kovovou väzbou. 13 strán, príprava a zabalenie v cene. Varianty Basic, Premium s meninami a narodeninami a Memory set.",
+  image: `${SITE_URL}/og-image.jpg`,
+  category: "Fotokalendáre",
+  url: SITE_URL,
   offers: {
     "@type": "AggregateOffer",
     priceCurrency: "EUR",
-    lowPrice: String(lowestUnitPrice),
-    highPrice: String(highestListedPackPrice),
+    lowPrice: Math.min(...fromPrices),
+    highPrice: Math.max(...fromPrices),
+    offerCount: orderableCalendarTypes.length,
     availability: "https://schema.org/InStock",
-    url: "https://www.annum.sk/#cennik",
+    url: `${SITE_URL}/#cennik`,
+    seller: {
+      "@type": "Organization",
+      name: SITE_NAME,
+    },
   },
 };
 
 const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
-  name: "Annum",
+  name: SITE_NAME,
   legalName: "LAETAS s. r. o.",
-  url: "https://www.annum.sk",
-  logo: "https://www.annum.sk/icon-512.png",
+  url: SITE_URL,
+  logo: `${SITE_URL}/icon-512.png`,
   email: "info@annum.sk",
   address: {
     "@type": "PostalAddress",
@@ -66,17 +79,23 @@ const organizationJsonLd = {
     addressCountry: "SK",
   },
   taxID: "57810133",
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "customer support",
+    email: "info@annum.sk",
+    availableLanguage: ["Slovak"],
+  },
 };
 
 const websiteJsonLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
-  name: "Annum",
-  url: "https://www.annum.sk",
+  name: SITE_NAME,
+  url: SITE_URL,
   inLanguage: "sk-SK",
   publisher: {
     "@type": "Organization",
-    name: "Annum",
+    name: SITE_NAME,
   },
 };
 

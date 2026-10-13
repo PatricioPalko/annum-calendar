@@ -15,7 +15,10 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <main className="flex flex-1 items-center bg-[#FFF7F4] px-4 py-16 text-[#3E0F28] sm:px-6 sm:py-24">
+    <main
+      id="main-content"
+      className="flex flex-1 items-center bg-[#FFF7F4] px-4 py-16 text-[#3E0F28] sm:px-6 sm:py-24"
+    >
       <div className="mx-auto w-full max-w-2xl rounded-2xl bg-white p-6 text-center shadow-xl shadow-[#3E0F28]/10 sm:p-10">
         <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#FC5A61]">
           Chyba 404

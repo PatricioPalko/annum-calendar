@@ -2,14 +2,13 @@ import type { OrderFormValues } from "@/lib/schema";
 
 const ORDER_FORM_DRAFT_KEY = "annum-order-form-draft-v1";
 
-type OrderFormDraft = Omit<OrderFormValues, "photos">;
-
 export function saveOrderFormDraft(values: OrderFormValues) {
   if (typeof window === "undefined") {
     return;
   }
 
-  const { photos: _photos, ...draft } = values;
+  const { photos, ...draft } = values;
+  void photos;
 
   localStorage.setItem(ORDER_FORM_DRAFT_KEY, JSON.stringify(draft));
 }

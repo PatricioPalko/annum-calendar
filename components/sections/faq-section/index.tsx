@@ -7,16 +7,20 @@ import {
 import { JsonLd } from "@/components/seo/json-ld";
 import { Heading, SectionLabel, Text } from "@/components/ui/typography";
 
-import { MAX_PHOTOS, MIN_PHOTOS, ORDER_HANGING_SET_INCLUSION } from "@/lib/order/config";
+import { MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
 
 const faqSections = [
   {
     title: "Spomienky a objednávka",
     items: [
       {
+        question: "Čo je fotokalendár Annum?",
+        answer: `Je to personalizovaný A3 nástenný kalendár z vašich fotiek. Má 13 strán, kovovú väzbu a pripravíme ho za vás, bez grafického editora. Nahrať môžete ${MIN_PHOTOS} až ${MAX_PHOTOS} fotiek. Vybrať si môžete Basic, Premium s meninami a narodeninami alebo Memory set.`,
+      },
+      {
         question: "Je Annum vhodné aj ako darček?",
         answer:
-          "Áno — kalendár spomienok je personalizovaný darček, ktorý obdarovaný uvidí každý deň celý rok. Hodí sa pre rodinu, partnera, starých rodičov aj ako firemný darček.",
+          "Áno. Personalizovaný fotokalendár je darček, ktorý obdarovaný uvidí každý deň celý rok. Hodí sa pre rodinu, partnera, starých rodičov aj ako firemný darček od 10 kusov.",
       },
       {
         question: "Musím niečo layoutovať alebo upravovať fotky?",
@@ -26,7 +30,7 @@ const faqSections = [
       {
         question: "Príde kalendár pekne zabalený?",
         answer:
-          "Áno. V cene je príprava, tlač a zabalenie. Ku každej objednávke pridáme aj set na zavesenie (2× klinček a 1× samolepiaci háčik).",
+          "Áno. V cene je príprava, tlač a zabalenie.",
       },
       {
         question: "Môžem objednať viac rovnakých kalendárov naraz?",
@@ -125,7 +129,7 @@ const faqSections = [
       {
         question: "Čo je zahrnuté v cene kalendára?",
         answer:
-          `Cena zahŕňa spracovanie objednávky, prípravu kalendára z nahraných fotiek, tlač, zabalenie, ${ORDER_HANGING_SET_INCLUSION} a základnú úpravu rozloženia podľa zvoleného variantu. Pri variante Premium je zahrnuté aj zvýraznenie vybraných menín a narodenín. Doručenie sa účtuje samostatne podľa zvoleného spôsobu doručenia.`,
+          "Cena zahŕňa spracovanie objednávky, prípravu kalendára z nahraných fotiek, tlač, zabalenie a základnú úpravu rozloženia podľa zvoleného variantu. Pri variante Premium je zahrnuté aj zvýraznenie vybraných menín a narodenín. Doručenie sa účtuje samostatne podľa zvoleného spôsobu doručenia.",
       },
     ],
   },
@@ -158,7 +162,7 @@ export function FaqSection() {
         </Heading>
 
         <Text variant="lead" className="mx-auto mt-2 max-w-2xl text-sm sm:text-base">
-          Odpovede na otázky k spomienkam, objednávke, platbe a doručeniu.
+          Odpovede na otázky k fotokalendáru, objednávke, platbe a doručeniu.
         </Text>
       </div>
 

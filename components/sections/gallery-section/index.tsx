@@ -28,7 +28,7 @@ const layoutExamples = [
   },
   {
     src: "/hero1.webp",
-    alt: "A3 kalendár spomienok pripravený na zavesenie",
+    alt: "A3 kalendár spomienok",
     label: "Celý rok na jednom mieste",
   },
 ] as const;
@@ -59,7 +59,7 @@ function ShowcaseFigure({
   label,
   className,
   imageClassName,
-  sizes = "(min-width: 1024px) 33vw, 100vw",
+  sizes = "(min-width: 1024px) 360px, (min-width: 640px) 50vw, 100vw",
   priority = false,
   compactPadding = false,
   roundedClassName = "rounded-lg",
@@ -112,7 +112,7 @@ export function GallerySection() {
             </Heading>
 
             <Text variant="lead" className="mt-4 max-w-xl">
-              V cene je príprava kalendára, tlač, zabalenie a set na zavesenie.
+              V cene je príprava kalendára, tlač a zabalenie.
             </Text>
 
             <ul className="mt-6 space-y-3">
@@ -121,8 +121,11 @@ export function GallerySection() {
                   key={item}
                   className="flex items-start gap-3 text-sm font-semibold leading-6 text-[#3E0F28]/85 sm:text-base"
                 >
-                  <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-[#FC5A61] text-white">
-                    <Check className="size-3 stroke-3" aria-hidden />
+                  <span
+                    className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-[#FC5A61] text-white"
+                    aria-hidden
+                  >
+                    <Check className="size-3 stroke-3" />
                   </span>
                   {item}
                 </li>
@@ -134,8 +137,7 @@ export function GallerySection() {
             src={heroShowcase.src}
             alt={heroShowcase.alt}
             label={heroShowcase.label}
-            priority
-            sizes="(min-width: 1024px) 62vw, 100vw"
+            sizes="(min-width: 1024px) 36rem, 100vw"
             imageClassName="min-h-96 sm:min-h-[26rem] lg:min-h-[34rem] xl:min-h-[38rem]"
             className="lg:-mr-4 xl:-mr-8"
             roundedClassName="rounded-2xl"
@@ -175,7 +177,7 @@ export function GallerySection() {
                 src={premiumHighlight.src}
                 alt={premiumHighlight.alt}
                 fill
-                sizes="(min-width: 1024px) 55vw, 100vw"
+                sizes="(min-width: 1024px) 40rem, 100vw"
                 className="object-contain p-1 sm:p-2"
               />
             </div>

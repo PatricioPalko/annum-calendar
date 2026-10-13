@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+import { SITE_URL } from "./lib/seo";
+
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -15,6 +17,20 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  images: {
+    formats: ["image/avif", "image/webp"],
+  },
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "annum.sk" }],
+        destination: `${SITE_URL}/:path*`,
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

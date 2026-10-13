@@ -57,8 +57,7 @@ export function PricingSection() {
         </Heading>
 
         <Text className="mx-auto mt-4 max-w-2xl">
-          V cene je príprava, tlač, zabalenie a set na zavesenie. Všetky ceny
-          sú uvedené s DPH.
+          V cene je príprava, tlač a zabalenie. Všetky ceny sú uvedené s DPH.
         </Text>
       </div>
 
@@ -134,12 +133,16 @@ export function PricingSection() {
                       {useCheckMarker ? (
                         <span
                           className={`flex size-5 items-center justify-center rounded-full ${accentClassName}`}
+                          aria-hidden
                         >
                           <Check className="size-3 stroke-3" />
                         </span>
                       ) : (
-                        <span className="flex size-5 items-center justify-center rounded-full bg-[#FC5A61]/10 text-[#FC5A61]">
-                          <Plus className="size-3 stroke-3" aria-hidden />
+                        <span
+                          className="flex size-5 items-center justify-center rounded-full bg-[#FC5A61]/10 text-[#FC5A61]"
+                          aria-hidden
+                        >
+                          <Plus className="size-3 stroke-3" />
                         </span>
                       )}
                     </span>
@@ -166,12 +169,12 @@ export function PricingSection() {
       </div>
 
       <p className="mx-2 mt-6 max-w-2xl text-center text-sm font-medium leading-6 text-[#3E0F28]/60 sm:mx-auto">
-        Pre firmy a objednávky od 10 kusov s logom pripravíme ponuku na mieru —{" "}
+          Pre firmy a objednávky od 10 kusov s logom pripravíme ponuku na mieru —{" "}
         <Link
           href="/pre-firmy"
-          className="font-bold text-[#FC5A61] underline-offset-4 transition hover:underline"
+          className="rounded-sm font-bold text-[#FC5A61] underline-offset-4 transition hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#FC5A61]/30"
         >
-          nezáväzný dopyt
+          nezáväzná ponuka pre firmy
         </Link>
         .
       </p>

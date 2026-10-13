@@ -1,8 +1,16 @@
 import { GoogleAnalytics } from "@/components/analytics/google-analytics";
-import { CookiebotScript } from "@/components/cookiebot/cookiebot-script";
+import { CookiebotScript } from "@/app/cookiebot-script";
 import { Footer } from "@/components/sections/footer";
 import Navigation from "@/components/sections/navigation";
 import { SiteShell } from "@/components/site-shell";
+import {
+  HOME_DESCRIPTION,
+  HOME_TITLE,
+  OG_IMAGE,
+  SITE_LOCALE,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/seo";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Fraunces, Manrope } from "next/font/google";
@@ -21,43 +29,19 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.annum.sk"),
+  metadataBase: new URL(SITE_URL),
 
   title: {
-    default: "Annum | Spomienky z vašich fotiek celý rok",
-    template: "%s | Annum",
+    default: HOME_TITLE,
+    template: `%s | ${SITE_NAME}`,
   },
 
-  description:
-    "Personalizovaný A3 fotokalendár pripravený zavesiť. Nahrajte fotky, my pripravíme kalendár spomienok — s meninami a narodeninami, pekne zabalený, bez zložitého editora.",
+  description: HOME_DESCRIPTION,
 
-  keywords: [
-    "Annum",
-    "A3 kalendár",
-    "nástenný kalendár",
-    "fotokalendár",
-    "personalizovaný kalendár",
-    "kalendár z fotiek",
-    "rodinný kalendár",
-    "kalendár s meninami",
-    "kalendár s narodeninami",
-    "kalendár s kovovou väzbou",
-    "kalendár spomienok",
-    "vlastný kalendár",
-    "fotokalendár Košice",
-    "A3 kalendár Košice",
-  ],
-
-  applicationName: "Annum",
-  authors: [{ name: "Annum" }],
-  creator: "Annum",
-  publisher: "Annum",
-
-  alternates: {
-    languages: {
-      sk: "/",
-    },
-  },
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
 
   icons: {
     icon: [
@@ -71,28 +55,19 @@ export const metadata: Metadata = {
 
   openGraph: {
     type: "website",
-    locale: "sk_SK",
-    url: "https://www.annum.sk",
-    siteName: "Annum",
-    title: "Annum | Personalizované A3 nástenné kalendáre z fotiek",
-    description:
-      "A3 nástenný kalendár s kovovou väzbou z vašich fotiek. Jednoduchá konfigurácia, až 52 fotiek, Premium variant s meninami a narodeninami a doručenie cez Packetu.",
-    images: [
-      {
-        url: "/og-image.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Annum - personalizovaný A3 nástenný kalendár z fotiek",
-      },
-    ],
+    locale: SITE_LOCALE,
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
+    images: [OG_IMAGE],
   },
 
   twitter: {
     card: "summary_large_image",
-    title: "Annum | Personalizované A3 nástenné kalendáre z fotiek",
-    description:
-      "Vytvorte si A3 nástenný kalendár s kovovou väzbou. Bez zdĺhavého editora, až 52 fotiek a možnosť vyznačiť meniny či narodeniny.",
-    images: ["/og-image.jpg"],
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
+    images: [OG_IMAGE.url],
   },
 
   robots: {
@@ -130,6 +105,12 @@ export default function RootLayout({
         <CookiebotScript />
       </head>
       <body className="min-h-full flex flex-col">
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-md focus:bg-white focus:px-4 focus:py-2 focus:text-sm focus:font-bold focus:text-[#3E0F28] focus:shadow-lg focus:outline-none focus:ring-3 focus:ring-[#FC5A61]/30"
+        >
+          Preskočiť na obsah
+        </a>
         <SiteShell navigation={<Navigation />} footer={<Footer />}>
           {children}
         </SiteShell>

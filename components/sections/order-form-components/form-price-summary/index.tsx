@@ -11,10 +11,6 @@ import { DeliveryWaveNotice } from "@/components/ui/delivery-wave-notice";
 import { Heading, SectionLabel } from "@/components/ui/typography";
 import { getDeliveryLabel, getDeliveryPrice } from "@/helpers/delivery";
 import { getDiscountAmount } from "@/helpers/discount-codes";
-import {
-  ORDER_HANGING_SET_LABEL,
-  ORDER_HANGING_SET_SUMMARY_ITEMS,
-} from "@/lib/order/config";
 import { cn } from "@/lib/utils";
 import {
   orderFormPriceTotalClassName,
@@ -60,7 +56,6 @@ export function PriceSummary({
 
   const quantity = price.quantity;
   const originalTotalPrice = price.totalPrice;
-  const originalPricePerPiece = price.pricePerPiece;
   const savedAmount = price.savedAmount;
 
   const discount = getDiscountAmount(originalTotalPrice, discountCode);
@@ -77,11 +72,6 @@ export function PriceSummary({
   const totalPrice =
     productPriceAfterDiscount !== null
       ? productPriceAfterDiscount + deliveryPrice
-      : null;
-
-  const productPricePerPiece =
-    productPriceAfterDiscount !== null && quantity !== null
-      ? productPriceAfterDiscount / quantity
       : null;
 
   const hasFixedPrice = totalPrice !== null;
@@ -173,28 +163,6 @@ export function PriceSummary({
           </div>
         </div>
 
-        <div className="mt-4 rounded-lg border border-[#EAD6DE] bg-[#FFF7F4]/80 px-3 py-2.5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-[#3E0F28]/50">
-            V balení
-          </p>
-          <p className="mt-1 text-sm font-bold text-[#3E0F28]">
-            {ORDER_HANGING_SET_LABEL}
-          </p>
-          <ul className="mt-2 space-y-1">
-            {ORDER_HANGING_SET_SUMMARY_ITEMS.map((item) => (
-              <li
-                key={item}
-                className="flex items-start gap-2 text-xs font-medium leading-5 text-[#3E0F28]/75 sm:text-sm"
-              >
-                <span
-                  aria-hidden="true"
-                  className="mt-2 size-1.5 shrink-0 rounded-full bg-[#FC5A61]"
-                />
-                <span>{item}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
       </div>
 
       {/* ── Price section ── */}

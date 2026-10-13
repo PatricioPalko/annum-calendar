@@ -71,15 +71,6 @@ export function FormConsentCheckbox({
                 onClick={(event) => event.stopPropagation()}
               >
                 obchodnými podmienkami
-              </Link>{" "}
-              a so spracovaním osobných údajov potrebných na vybavenie
-              objednávky podľa{" "}
-              <Link
-                href="/ochrana-osobnych-udajov"
-                className="font-bold text-[#FC5A61] underline-offset-2 hover:underline"
-                onClick={(event) => event.stopPropagation()}
-              >
-                zásad ochrany osobných údajov
               </Link>
               .
             </ConsentLabel>
@@ -88,6 +79,18 @@ export function FormConsentCheckbox({
           </Field>
         )}
       />
+
+      <p className="px-2 text-sm font-medium leading-6 text-[#3E0F28]/75">
+        Údaje potrebné na vybavenie objednávky spracúvame na základe zmluvy.
+        Viac je v{" "}
+        <Link
+          href="/ochrana-osobnych-udajov"
+          className="font-bold text-[#FC5A61] underline-offset-2 hover:underline"
+        >
+          zásadách ochrany osobných údajov
+        </Link>
+        .
+      </p>
 
       <Controller
         name="marketingConsent"

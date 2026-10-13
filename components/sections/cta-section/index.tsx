@@ -10,7 +10,6 @@ type CTASectionProps = {
 const ctaHighlights = [
   "Bez zložitého editora",
   "Darčekovo zabalené",
-  "Obsahuje set na zavesenie",
 ] as const;
 
 export function CTASection({ className }: CTASectionProps) {

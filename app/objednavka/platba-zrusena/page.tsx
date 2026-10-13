@@ -62,7 +62,10 @@ export default async function PaymentCancelledPage({
   }
 
   return (
-    <main className="min-h-screen bg-[#FFF7F4] px-4 py-12 text-[#3E0F28] sm:px-6 sm:py-20">
+    <main
+      id="main-content"
+      className="min-h-screen bg-[#FFF7F4] px-4 py-12 text-[#3E0F28] sm:px-6 sm:py-20"
+    >
       <div className="mx-auto max-w-2xl rounded-2xl bg-white p-6 text-center shadow-xl shadow-[#3E0F28]/10 sm:p-8">
         <p className="text-sm font-extrabold uppercase tracking-[0.18em] text-[#FC5A61]">
           Platba nebola dokončená
