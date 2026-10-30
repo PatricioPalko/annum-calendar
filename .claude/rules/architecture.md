@@ -28,6 +28,8 @@ Code is split by *where it may run*, not by layer folders. Respect these boundar
 - `lib/upload-finalize-token.ts`
 - `lib/rate-limit.ts`
 - `lib/health-checks.ts`
+- `lib/error-reporting.ts`
+- `lib/env.ts`
 - `lib/auth/admin.ts`
 - `lib/supabase/server.ts`
 - `helpers/order-code.ts` (uses `node:crypto`)

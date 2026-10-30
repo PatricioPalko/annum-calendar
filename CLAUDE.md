@@ -29,7 +29,7 @@ Next.js 16.4.3 (App Router, Turbopack, `proxy.ts`) · React 19.2.4 · TypeScript
 | `npx tsc --noEmit` | Type check |
 | `npm run generate:qr` | Regenerate leaflet QR (`scripts/qr/`) |
 
-CI (`.github/workflows/ci.yml`) runs lint → typecheck → tests → build on every PR and push to `main`. Test conventions: `.claude/rules/testing.md`.
+CI (`.github/workflows/ci.yml`) runs lint → typecheck → tests → build on every PR and push to `main`. `.github/workflows/retry-paid-emails.yml` calls `/api/cron/retry-paid-emails` every 15 minutes (needs the `CRON_SECRET` repo secret). Test conventions: `.claude/rules/testing.md`.
 
 ## Directory map
 
@@ -39,6 +39,7 @@ app/                      routes (App Router)
   admin/                  orders dashboard + login (proxy-protected)
   api/orders/             create order, pay link     api/uploads/  sign + finalize photo uploads
   api/stripe/webhook/     Stripe events             api/admin/    admin-only actions (own auth checks)
+  api/cron/                scheduled jobs (secret-protected, called by GitHub Actions)
   api/health/, api/business-inquiry/, letak/ (QR redirect), pre-firmy/, legal pages, sitemap/robots/manifest
 components/sections/      landing sections + order-form + order-form-components
 components/ui/            shadcn primitives (Button, Field, Dialog, typography, PriceWithVat…)
@@ -57,6 +58,7 @@ proxy.ts                  Supabase session check for /admin pages
 4. **Create the order.** `POST /api/orders` re-validates, recomputes the price on the server, inserts `payment_status='pending'`, creates the Checkout session, and sends the "awaiting payment" email with a 90-day pay link.
 5. **Pay.** Stripe Checkout runs. The return pages are `/objednavka/dakujeme` (which also marks paid as a fallback) and `/objednavka/platba-zrusena` (retry link).
 6. **Confirm.** The `checkout.session.completed` webhook calls `markOrderPaidFromCheckoutSession`: a conditional update to `paid`, then (winner only, after the response) customer and admin emails, recorded in `customer_confirmed_at` / `admin_notified_at`. Payment anomalies trigger an admin alert email.
+   A scheduled job retries unsent paid-order emails; uncaught server errors email the operator (`instrumentation.ts` `onRequestError`).
 7. **Fulfil.** In `/admin` the operator downloads the ZIP (`sharp` re-encodes to JPEG plus `order.json`), creates the Packeta label, sends the fulfilment email (`shipped`/`ready`), and marks the order `completed`.
 
 ## Integration boundaries (summary; details in `.claude/rules/`)

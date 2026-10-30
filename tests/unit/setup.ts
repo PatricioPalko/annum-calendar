@@ -8,3 +8,5 @@ process.env.NEXT_PUBLIC_SUPABASE_URL = "https://example.supabase.co";
 process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "vitest-publishable-key";
 process.env.SUPABASE_SECRET_KEY = "vitest-secret-key";
 process.env.NEXT_PUBLIC_APP_URL = "https://www.annum.sk";
+process.env.UPLOAD_SIGNING_SECRET = "vitest-upload-signing-secret";
+process.env.ORDER_PAYMENT_SIGNING_SECRET = "vitest-order-payment-signing-secret";

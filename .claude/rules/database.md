@@ -60,7 +60,7 @@ paths:
   grant execute on function public.fn(...) to service_role;
   ```
 
-  `next_order_number` and `consume_rate_limit` got the second revoke in `supabase/migrations/20261030_revoke_rpc_client_execute.sql` (review N-2). Whether it has been applied in production is unverified.
+  `next_order_number` and `consume_rate_limit` got the second revoke in `supabase/migrations/20261030_revoke_rpc_client_execute.sql` (review N-2). Applied and verified in production on 2026-10-30.
 
 ## Writes and state transitions
 

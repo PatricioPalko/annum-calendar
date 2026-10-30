@@ -1,0 +1,47 @@
+name: Retry paid-order emails
+
+# Calls the shop's retry endpoint, which resends paid-order emails that were
+# not recorded as sent (see app/api/cron/retry-paid-emails/route.ts).
+# Requires the repository secret CRON_SECRET (same value as the CRON_SECRET
+# env var in Vercel Production). Skips quietly until it is set.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: retry-paid-emails
+  cancel-in-progress: false
+
+jobs:
+  retry:
+    name: Retry paid-order emails
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call retry endpoint
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "CRON_SECRET is not set; skipping."
+            exit 0
+          fi
+
+          status=$(curl --silent --show-error --output response.json \
+            --write-out "%{http_code}" --max-time 90 \
+            --request POST \
+            --header "Authorization: Bearer $CRON_SECRET" \
+            https://www.annum.sk/api/cron/retry-paid-emails)
+
+          # The endpoint returns counts only (no order ids or customer data).
+          cat response.json
+          echo
+
+          if [ "$status" != "200" ]; then
+            echo "Retry endpoint returned HTTP $status"
+            exit 1
+          fi

@@ -34,7 +34,11 @@ paths:
 
 ## Priority coverage (P0 before taking money; from both audits)
 
-Implemented: pricing (`tests/unit/pricing.test.ts`), webhook and mark-paid including concurrency (`tests/unit/order-payments.test.ts`), admin delete guard (`tests/unit/admin-delete-order.test.ts`). Still missing: `POST /api/orders`, admin authorization for the other `app/api/admin/**` routes, delivery waves.
+All P0 unit tests are implemented: pricing (`pricing.test.ts`), webhook and mark-paid including concurrency (`order-payments.test.ts`), admin delete guard (`admin-delete-order.test.ts`), `POST /api/orders` (`orders-route.test.ts`), admin authorization for every `app/api/admin/**` route (`admin-routes-auth.test.ts`, table-driven: add new admin routes to `orderRoutes`), delivery waves and the N-1 `revalidate` check (`delivery-waves.test.ts`), plus the paid-email retry job (`retry-paid-emails.test.ts`) and error alerts (`error-reporting.test.ts`). Still missing: E2E (needs approval).
+
+The fake Supabase client supports select / insert / update / delete, eq / neq / is / lt / gt / or (`col.is.null`, `col.eq.value`), order and limit. Mock `@/lib/rate-limit`'s `consumeRateLimit` (keep the rest via `importOriginal`) instead of faking the RPC.
+
+Auth tests must make the guard under test the **only** reason to reject (e.g. a paid order for Origin tests) and assert the message, otherwise a later guard can mask a missing one. Validation tests should send payloads shaped like the real client, including **omitted** optional keys (`value || undefined` drops them from the JSON; see V-1).
 
 | Area | Must assert |
 | --- | --- |

@@ -154,7 +154,8 @@ export default async function AdminOrdersPage({
 
             {envProblems.missingRecommended.length > 0 && (
               <p className="mt-1">
-                Chýbajú premenné pre Packeta štítky:{" "}
+                Chýbajú voliteľné premenné (Packeta štítky alebo automatické
+                opakovanie e-mailov):{" "}
                 <span className="font-mono text-xs">
                   {envProblems.missingRecommended.join(", ")}
                 </span>

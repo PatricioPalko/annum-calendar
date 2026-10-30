@@ -24,7 +24,7 @@ These rules govern the code Claude writes. They are instructions, not enforcemen
   - `NEXT_PUBLIC_PACKETA_API_KEY`
   - `NEXT_PUBLIC_COOKIEBOT_ID`
   - `NEXT_PUBLIC_GA_MEASUREMENT_ID`
-- Server-only: `SUPABASE_SECRET_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL`, `ADMIN_EMAILS`, `ORDER_PAYMENT_SIGNING_SECRET`, `UPLOAD_SIGNING_SECRET`, `TURNSTILE_SECRET_KEY`, `PACKETA_API_PASSWORD`, `PACKETA_ESHOP`. Never give these a `NEXT_PUBLIC_` prefix or reference them in client code.
+- Server-only: `SUPABASE_SECRET_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `EMAIL_FROM`, `ADMIN_EMAIL`, `ADMIN_EMAILS`, `ORDER_PAYMENT_SIGNING_SECRET`, `UPLOAD_SIGNING_SECRET`, `TURNSTILE_SECRET_KEY`, `PACKETA_API_PASSWORD`, `PACKETA_ESHOP`, `CRON_SECRET`. Never give these a `NEXT_PUBLIC_` prefix or reference them in client code.
 
 ## Admin authorization (required sequence)
 
@@ -40,7 +40,7 @@ if (error || !user || !isAdminEmail(user.email)) return 401;
 - Admin pages call `await requireAdmin()` (`lib/auth/admin.ts`) as their first statement.
 - Never add auth bypasses, debug flags, alternate cookies, or hard-coded admin emails.
 - Customer data actions (download, Packeta, notify, complete) must also check `payment_status === "paid"`.
-- The allowlist checks only `user.email`. Supabase public sign-ups must be disabled; whether they are is unverified (review U-4). Never add sign-up UI.
+- The allowlist checks only `user.email`. Supabase public sign-ups must stay disabled (verified 2026-10-30, U-4). Never add sign-up UI.
 
 ## Capability tokens
 

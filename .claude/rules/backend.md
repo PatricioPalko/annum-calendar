@@ -37,7 +37,7 @@ GET handlers must not mutate state. The pay link `GET /api/orders/[orderCode]/pa
 - Clients get short **Slovak** messages with no stack traces, SQL errors or provider responses. Admin routes may return actionable messages (e.g. mapped `PacketaApiError`).
 - Log server-side as `console.error("UPPER_SNAKE_CODE:", context)`. Reuse the existing code style (`CREATE_ORDER_ERROR`, `MARK_ORDER_PAID_UPDATE_ERROR`, `PAID_ORDER_EMAIL_ERROR`, …).
 - **Never log** full request bodies, emails, phones, names, notes, dedications, photo names or tokens. Log ids (`orderId`, Stripe ids), status codes and error objects.
-- There is no error monitoring yet (H-4). Make failures in money-relevant paths log a distinct code, so alerting can be attached later.
+- Uncaught server errors email the operator via `onRequestError` (`instrumentation.ts` → `lib/error-reporting.ts`); errors a handler catches and logs do **not**. Make failures in money-relevant paths log a distinct code, and call `sendAdminAlertEmail` (ids only) where the operator must act.
 
 ## Outbound calls
 
@@ -70,6 +70,10 @@ GET handlers must not mutate state. The pay link `GET /api/orders/[orderCode]/pa
 ## Turnstile
 
 `app/api/uploads/sign/route.ts` verifies `turnstileToken` server-side before reserving an order number. Don't move ordering steps in front of that check. New anonymous write endpoints should use Turnstile too.
+
+## Scheduled jobs
+
+`POST /api/cron/retry-paid-emails` resends paid-order emails not recorded as sent. It is called every 15 minutes by `.github/workflows/retry-paid-emails.yml` with `Authorization: Bearer ${CRON_SECRET}` (compared timing-safe; 503 when unset). Cron responses contain counts only, because Actions logs on the public repo are public. New scheduled work follows the same pattern: POST, secret header, bounded batch, idempotent.
 
 ## Health endpoints
 

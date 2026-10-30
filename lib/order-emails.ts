@@ -599,11 +599,18 @@ type SendAdminAlertEmailParams = {
   orderId?: string | null;
   checkoutSessionId?: string | null;
   paymentIntentId?: string | null;
+  /** Extra label/value rows (no customer data). */
+  details?: Array<[label: string, value: string]>;
+  /** Overrides the default dedupe id (session, order or payment intent). */
+  dedupeId?: string;
+  title?: string;
+  footer?: string;
 };
 
 /**
- * Operator alert for payment anomalies. Contains ids only (no customer data)
- * and is deduplicated by Resend for 24 h per code and Stripe session / order.
+ * Operator alert for payment anomalies and server errors. Contains ids only
+ * (no customer data) and is deduplicated by Resend for 24 h per code and
+ * dedupe id.
  */
 export async function sendAdminAlertEmail({
   code,
@@ -611,6 +618,10 @@ export async function sendAdminAlertEmail({
   orderId,
   checkoutSessionId,
   paymentIntentId,
+  details = [],
+  dedupeId,
+  title = "Upozornenie na platbu",
+  footer = "Skontrolujte platbu v Stripe a objednávku v admin paneli.",
 }: SendAdminAlertEmailParams) {
   const adminRecipients = getAdminEmailRecipients();
 
@@ -618,7 +629,8 @@ export async function sendAdminAlertEmail({
     throw new Error("Missing ADMIN_EMAIL");
   }
 
-  const dedupeId = checkoutSessionId ?? orderId ?? paymentIntentId ?? "none";
+  const resolvedDedupeId =
+    dedupeId ?? checkoutSessionId ?? orderId ?? paymentIntentId ?? "none";
 
   await sendEmail(
     {
@@ -626,7 +638,7 @@ export async function sendAdminAlertEmail({
       to: adminRecipients,
       subject: `Upozornenie: ${code}`,
       html: renderEmailShell(
-        "Upozornenie na platbu",
+        escapeHtml(title),
         `
           <p>${escapeHtml(summary)}</p>
 
@@ -635,15 +647,16 @@ export async function sendAdminAlertEmail({
             ${orderId ? renderDetailRow("ID objednávky", escapeHtml(orderId)) : ""}
             ${checkoutSessionId ? renderDetailRow("Stripe Checkout session", escapeHtml(checkoutSessionId)) : ""}
             ${paymentIntentId ? renderDetailRow("Stripe PaymentIntent", escapeHtml(paymentIntentId)) : ""}
+            ${details.map(([label, value]) => renderDetailRow(label, escapeHtml(value))).join("")}
           </div>
 
           <p style="font-size: 13px; color: rgba(62, 15, 40, 0.65);">
-            Skontrolujte platbu v Stripe a objednávku v admin paneli.
+            ${escapeHtml(footer)}
           </p>
         `,
       ),
     },
-    { idempotencyKey: `alert/${code}/${dedupeId}` },
+    { idempotencyKey: `alert/${code}/${resolvedDedupeId}` },
   );
 }
 

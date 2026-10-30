@@ -232,11 +232,13 @@ export type ResendPaidOrderEmailsResult =
   | { status: "error"; message: string };
 
 /**
- * Admin-triggered retry: sends only the paid-order emails that have not been
- * recorded as sent. No idempotency key, because the resend is intentional.
+ * Sends only the paid-order emails that have not been recorded as sent.
+ * The admin button passes no idempotency key, because the resend is
+ * intentional; the scheduled retry passes one per time bucket.
  */
 export async function resendMissingPaidOrderEmails(
   orderId: string,
+  options: { idempotencyKeyPrefix?: string } = {},
 ): Promise<ResendPaidOrderEmailsResult> {
   const { data, error } = await supabaseAdmin
     .from("orders")
@@ -272,6 +274,7 @@ export async function resendMissingPaidOrderEmails(
   const result = await sendPaidOrderEmails(order, {
     customer: customerRequested,
     admin: adminRequested,
+    idempotencyKeyPrefix: options.idempotencyKeyPrefix,
   });
 
   if (!result) {

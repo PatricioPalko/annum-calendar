@@ -1,7 +1,8 @@
 /**
  * Minimal in-memory stand-in for the supabase-js query builder, covering the
- * chains used by the order and payment code: select / update / delete with
- * eq / neq / is filters, `.select()` returning rows, `.single()`,
+ * chains used by the order and payment code: select / insert / update /
+ * delete with eq / neq / is / lt / gt / or (`col.is.null` and `col.eq.value`
+ * terms) filters, order / limit, `.select()` returning rows, `.single()`,
  * `.maybeSingle()` and awaiting the builder directly.
  *
  * Each terminal call applies its filters and mutation in one synchronous step,
@@ -12,16 +13,26 @@ type Row = Record<string, unknown>;
 type QueryResult<T> = { data: T; error: null } | { data: null; error: { message: string } };
 
 class FakeQuery {
-  private operation: "select" | "update" | "delete" = "select";
+  private operation: "select" | "insert" | "update" | "delete" = "select";
   private patch: Row = {};
+  private inserted: Row[] = [];
   private filters: Array<(row: Row) => boolean> = [];
+  private sort: { column: string; ascending: boolean } | null = null;
+  private maxRows: number | null = null;
 
   constructor(
     private readonly table: Row[],
     private readonly failWith: string | null,
+    private readonly nextId: () => string,
   ) {}
 
   select() {
+    return this;
+  }
+
+  insert(rows: Row | Row[]) {
+    this.operation = "insert";
+    this.inserted = Array.isArray(rows) ? rows : [rows];
     return this;
   }
 
@@ -51,14 +62,74 @@ class FakeQuery {
     return this;
   }
 
+  lt(column: string, value: string | number) {
+    this.filters.push((row) => row[column] !== null && row[column] !== undefined && (row[column] as string | number) < value);
+    return this;
+  }
+
+  gt(column: string, value: string | number) {
+    this.filters.push((row) => row[column] !== null && row[column] !== undefined && (row[column] as string | number) > value);
+    return this;
+  }
+
+  /** Supports PostgREST `or` terms of the form `col.is.null` and `col.eq.value`. */
+  or(expression: string) {
+    const terms = expression.split(",").map((term) => {
+      const [column, operator, ...rest] = term.split(".");
+      const value = rest.join(".");
+
+      if (operator === "is" && value === "null") {
+        return (row: Row) => (row[column!] ?? null) === null;
+      }
+
+      if (operator === "eq") {
+        return (row: Row) => String(row[column!]) === value;
+      }
+
+      throw new Error(`fake-supabase: unsupported or() term "${term}"`);
+    });
+
+    this.filters.push((row) => terms.some((term) => term(row)));
+    return this;
+  }
+
+  order(column: string, options: { ascending?: boolean } = {}) {
+    this.sort = { column, ascending: options.ascending ?? true };
+    return this;
+  }
+
+  limit(count: number) {
+    this.maxRows = count;
+    return this;
+  }
+
   private run(): QueryResult<Row[]> {
     if (this.failWith) {
       return { data: null, error: { message: this.failWith } };
     }
 
-    const matched = this.table.filter((row) =>
+    if (this.operation === "insert") {
+      const rows = this.inserted.map((row) => ({ id: this.nextId(), ...row }));
+      this.table.push(...rows);
+      return { data: rows.map((row) => ({ ...row })), error: null };
+    }
+
+    let matched = this.table.filter((row) =>
       this.filters.every((filter) => filter(row)),
     );
+
+    if (this.sort) {
+      const { column, ascending } = this.sort;
+      matched = [...matched].sort((a, b) => {
+        const left = a[column] as string | number;
+        const right = b[column] as string | number;
+        return (left < right ? -1 : left > right ? 1 : 0) * (ascending ? 1 : -1);
+      });
+    }
+
+    if (this.maxRows !== null) {
+      matched = matched.slice(0, this.maxRows);
+    }
 
     if (this.operation === "update") {
       for (const row of matched) {
@@ -104,13 +175,15 @@ export function createFakeSupabase() {
   const tables: Record<string, Row[]> = { orders: [] };
   const storageRemove: Array<string[]> = [];
   let failNextQueryWith: string | null = null;
+  let idCounter = 0;
+  const nextId = () => `generated-${++idCounter}`;
 
   const client = {
     from(table: string) {
       tables[table] ??= [];
       const failWith = failNextQueryWith;
       failNextQueryWith = null;
-      return new FakeQuery(tables[table]!, failWith);
+      return new FakeQuery(tables[table]!, failWith, nextId);
     },
     storage: {
       from() {
@@ -136,6 +209,7 @@ export function createFakeSupabase() {
       tables.orders = [];
       storageRemove.length = 0;
       failNextQueryWith = null;
+      idCounter = 0;
     },
   };
 }

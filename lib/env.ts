@@ -22,8 +22,15 @@ const REQUIRED_SERVER_ENV = [
   "ADMIN_EMAILS",
 ] as const;
 
-/** Needed for admin Packeta labels; ordering works without them. */
-const RECOMMENDED_SERVER_ENV = ["PACKETA_API_PASSWORD", "PACKETA_ESHOP"] as const;
+/**
+ * Ordering works without these: Packeta labels need the first two, the
+ * scheduled paid-email retry (`/api/cron/retry-paid-emails`) needs CRON_SECRET.
+ */
+const RECOMMENDED_SERVER_ENV = [
+  "PACKETA_API_PASSWORD",
+  "PACKETA_ESHOP",
+  "CRON_SECRET",
+] as const;
 
 export type EnvProblems = {
   missingRequired: string[];

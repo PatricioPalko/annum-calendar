@@ -47,9 +47,12 @@ export const optionalDedicationSchema = optionalNullableStringSchema.pipe(
   ),
 );
 
-export const optionalNoteSchema = optionalNullableStringSchema.pipe(
-  z.string().max(500, "Poznámka môže mať maximálne 500 znakov"),
-);
+// `.optional()` is required on the note and discount code: the order form
+// omits them from the JSON when empty, and Zod rejects a missing object key
+// unless the schema is explicitly optional (a union with undefined is not).
+export const optionalNoteSchema = optionalNullableStringSchema
+  .pipe(z.string().max(500, "Poznámka môže mať maximálne 500 znakov"))
+  .optional();
 
 export const optionalDiscountCodeSchema = optionalNullableStringSchema
   .pipe(z.string().max(40))
@@ -57,7 +60,8 @@ export const optionalDiscountCodeSchema = optionalNullableStringSchema
     const normalized = value.trim().toUpperCase();
 
     return normalized.length > 0 ? normalized : undefined;
-  });
+  })
+  .optional();
 
 export const orderSchema = z
   .object({
