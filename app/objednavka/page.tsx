@@ -5,6 +5,10 @@ import { createPageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Image from "next/image";
 
+// The price summary shows the current delivery batch; keep the prerendered HTML
+// close to today's batch so it matches what the client renders.
+export const revalidate = 600;
+
 export const metadata: Metadata = createPageMetadata({
   title: "Objednať fotokalendár",
   description:

@@ -1,4 +1,5 @@
 import { OrderRow } from "@/app/types/types";
+import { AdminResendPaidEmailsButton } from "@/components/admin/admin-resend-paid-emails-button";
 import { formatDateOnly, formatTimeOnly } from "@/helpers/format-date-time";
 import { getOrderCheckoutPaymentUrl } from "@/helpers/admin-order-payment-url";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,12 @@ export function AdminOrderPayment({
 }: AdminOrderPaymentProps) {
   const checkoutPaymentUrl = getOrderCheckoutPaymentUrl(order);
 
+  // Strict null: the columns are undefined until the email-tracking migration
+  // is applied, and then no warning should show.
+  const isPaid = order.payment_status === "paid";
+  const customerEmailMissing = isPaid && order.customer_confirmed_at === null;
+  const adminEmailMissing = isPaid && order.admin_notified_at === null;
+
   return (
     <div
       className={cn(
@@ -38,6 +45,14 @@ export function AdminOrderPayment({
 
       {order.payment_status === "paid" && (
         <AdminStripePaymentLink order={order} />
+      )}
+
+      {(customerEmailMissing || adminEmailMissing) && (
+        <AdminResendPaidEmailsButton
+          orderId={order.id}
+          customerMissing={customerEmailMissing}
+          adminMissing={adminEmailMissing}
+        />
       )}
 
       {checkoutPaymentUrl && (

@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    # Placeholders only, so modules that read env at import time can load
+    # during `next build`. Tests mock every external service. Never put real
+    # keys here; production secrets live in the hosting provider.
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      NEXT_PUBLIC_APP_URL: https://www.annum.sk
+      NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder
+      SUPABASE_SECRET_KEY: ci-placeholder
+      STRIPE_SECRET_KEY: ci-placeholder
+      STRIPE_WEBHOOK_SECRET: ci-placeholder
+      ORDER_PAYMENT_SIGNING_SECRET: ci-placeholder
+      UPLOAD_SIGNING_SECRET: ci-placeholder
+      NEXT_PUBLIC_TURNSTILE_SITE_KEY: ci-placeholder
+      NEXT_PUBLIC_PACKETA_API_KEY: ci-placeholder
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build

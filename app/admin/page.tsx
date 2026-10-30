@@ -9,6 +9,7 @@ import {
   sortOrders,
 } from "@/helpers/admin-table";
 import { requireAdmin } from "@/lib/auth/admin";
+import { getEnvProblems, hasEnvProblems } from "@/lib/env";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 import { OrderRow, SearchParams, SortKey } from "../types/types";
@@ -47,6 +48,7 @@ export default async function AdminOrdersPage({
     throw new Error(error.message);
   }
 
+  const envProblems = getEnvProblems();
   const allOrders = (data ?? []) as OrderRow[];
   const availableYears = getAvailableYears(allOrders);
   const orders = sortOrders(
@@ -130,6 +132,42 @@ export default async function AdminOrdersPage({
             </p>
           </div>
         </div>
+
+        {hasEnvProblems(envProblems) && (
+          <div
+            role="alert"
+            className="mb-6 rounded-xl border border-[#FC5A61]/40 bg-white p-4 text-sm text-[#3E0F28]"
+          >
+            <p className="font-bold text-[#FC5A61]">
+              Konfigurácia servera nie je úplná
+            </p>
+
+            {envProblems.missingRequired.length > 0 && (
+              <p className="mt-1">
+                Chýbajú premenné prostredia (objednávky, platby alebo e-maily
+                nemusia fungovať):{" "}
+                <span className="font-mono text-xs">
+                  {envProblems.missingRequired.join(", ")}
+                </span>
+              </p>
+            )}
+
+            {envProblems.missingRecommended.length > 0 && (
+              <p className="mt-1">
+                Chýbajú premenné pre Packeta štítky:{" "}
+                <span className="font-mono text-xs">
+                  {envProblems.missingRecommended.join(", ")}
+                </span>
+              </p>
+            )}
+
+            {envProblems.warnings.map((warning) => (
+              <p key={warning} className="mt-1">
+                {warning}
+              </p>
+            ))}
+          </div>
+        )}
 
         <div className="mb-6">
           <Suspense fallback={null}>

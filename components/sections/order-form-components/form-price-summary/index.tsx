@@ -5,19 +5,19 @@ import {
   type QuantityOption,
 } from "@/app/types/types";
 import { Button } from "@/components/ui/button";
+import { DeliveryWaveNotice } from "@/components/ui/delivery-wave-notice";
 import { Input } from "@/components/ui/input";
 import { PriceWithVat } from "@/components/ui/price-with-vat";
-import { DeliveryWaveNotice } from "@/components/ui/delivery-wave-notice";
 import { Heading, SectionLabel } from "@/components/ui/typography";
 import { getDeliveryLabel, getDeliveryPrice } from "@/helpers/delivery";
 import { getDiscountAmount } from "@/helpers/discount-codes";
 import { cn } from "@/lib/utils";
+import { Check, Tag, X } from "lucide-react";
+import type { ReactNode } from "react";
 import {
   orderFormPriceTotalClassName,
   orderFormPriceTotalVatClassName,
 } from "../order-form-styles";
-import { Check, Tag, X } from "lucide-react";
-import type { ReactNode } from "react";
 
 type DeliveryMethod = "pickup" | "packeta";
 
@@ -178,12 +178,12 @@ export function PriceSummary({
                   Pôvodná cena
                 </span>
                 <span className="whitespace-nowrap text-primary/50 font-medium">
-                <PriceWithVat
-                  value={referencePrice}
-                  className="justify-end text-sm font-medium text-primary/50"
-                  amountClassName="text-primary/50"
-                  vatClassName="text-[10px] font-medium text-primary/35"
-                />
+                  <PriceWithVat
+                    value={referencePrice}
+                    className="justify-end text-sm font-medium text-primary/50"
+                    amountClassName="text-primary/50"
+                    vatClassName="text-[10px] font-medium text-primary/35"
+                  />
                 </span>
               </div>
             )}
@@ -250,15 +250,15 @@ export function PriceSummary({
                   Spolu
                 </span>
                 <span className={cn("whitespace-nowrap leading-none", orderFormPriceTotalClassName)}>
-                {displayTotal !== null ? (
-                  <PriceWithVat
-                    value={displayTotal}
-                    className={cn("justify-end", orderFormPriceTotalClassName)}
-                    vatClassName={orderFormPriceTotalVatClassName}
-                  />
-                ) : (
-                  "—"
-                )}
+                  {displayTotal !== null ? (
+                    <PriceWithVat
+                      value={displayTotal}
+                      className={cn("justify-end", orderFormPriceTotalClassName)}
+                      vatClassName={orderFormPriceTotalVatClassName}
+                    />
+                  ) : (
+                    "—"
+                  )}
                 </span>
               </div>
             </div>
@@ -391,7 +391,7 @@ export function PriceSummary({
                   Objednaj viac a ušetri
                 </p>
                 <p className="mt-1 text-sm font-medium leading-5 text-primary/60">
-                  až 10€ na 1 kalendári
+                  až 4€ na 1 kalendári
                 </p>
                 <div className="mt-3 grid grid-cols-2 gap-2">
                   <Button

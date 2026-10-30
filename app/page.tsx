@@ -20,6 +20,10 @@ import {
 } from "@/lib/seo";
 import type { Metadata } from "next";
 
+// DeliveryWavesSection picks the current batch with new Date(); without this the
+// static page would keep showing the batch from build time.
+export const revalidate = 600;
+
 export const metadata: Metadata = createPageMetadata({
   title: HOME_TITLE,
   description: HOME_DESCRIPTION,

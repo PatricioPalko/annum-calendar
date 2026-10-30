@@ -376,6 +376,9 @@ export type OrderRow = {
 
   payment_status: string | null;
   paid_at: string | null;
+  /** Undefined until the email-tracking migration is applied. */
+  customer_confirmed_at?: string | null;
+  admin_notified_at?: string | null;
   stripe_checkout_session_id: string | null;
   stripe_payment_intent_id: string | null;
   delivery_method: "pickup" | "packeta" | string | null;

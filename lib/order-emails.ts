@@ -4,12 +4,13 @@ import {
 } from "@/lib/order/delivery-waves";
 import { MEMORY_SET_LABEL } from "@/lib/order/config";
 import { OPERATOR } from "@/lib/legal";
-import { resend } from "@/lib/resend";
+import { getResend } from "@/lib/resend";
 import { SITE_URL } from "@/lib/seo";
+import type { Resend } from "resend";
 
 const emailFrom = process.env.EMAIL_FROM!;
 
-function getAdminEmailRecipients() {
+export function getAdminEmailRecipients() {
   return (process.env.ADMIN_EMAIL ?? "")
     .split(",")
     .map((item) => item.trim())
@@ -68,8 +69,17 @@ type SendOrderFulfillmentEmailParams = {
   trackingNumber?: string | null;
 };
 
-async function sendEmail(options: Parameters<typeof resend.emails.send>[0]) {
-  const { error } = await resend.emails.send(options);
+type SendEmailPayload = Parameters<Resend["emails"]["send"]>[0];
+
+async function sendEmail(
+  options: SendEmailPayload,
+  requestOptions?: { idempotencyKey?: string },
+) {
+  if (!emailFrom) {
+    throw new Error("Missing EMAIL_FROM");
+  }
+
+  const { error } = await getResend().emails.send(options, requestOptions);
 
   if (error) {
     throw new Error(`Resend: ${error.name} — ${error.message}`);
@@ -427,26 +437,54 @@ export async function sendOrderCreatedEmail({
   });
 }
 
-export async function sendOrderPaidEmail({
-  orderCode,
-  firstName,
-  lastName,
-  email,
-  phone,
-  totalPrice,
-  calendarType,
-  quantity,
-  goodsPrice,
-  discountCode,
-  discountAmount,
-  delivery,
-  deliveryWaveKey,
-  photoCount,
-  birthdaysCount,
-  namedaysCount,
-  dedications,
-  note,
-}: SendOrderPaidEmailParams) {
+export type SendOrderPaidEmailOptions = {
+  /** Which of the two emails to send. Defaults to both. */
+  customer?: boolean;
+  admin?: boolean;
+  /**
+   * Prefix for Resend idempotency keys (deduplicated by Resend for 24 h).
+   * Omit for intentional manual resends.
+   */
+  idempotencyKeyPrefix?: string;
+};
+
+export type OrderPaidEmailResult = {
+  customerSent: boolean;
+  adminSent: boolean;
+  customerError?: unknown;
+  adminError?: unknown;
+};
+
+export async function sendOrderPaidEmail(
+  {
+    orderCode,
+    firstName,
+    lastName,
+    email,
+    phone,
+    totalPrice,
+    calendarType,
+    quantity,
+    goodsPrice,
+    discountCode,
+    discountAmount,
+    delivery,
+    deliveryWaveKey,
+    photoCount,
+    birthdaysCount,
+    namedaysCount,
+    dedications,
+    note,
+  }: SendOrderPaidEmailParams,
+  options: SendOrderPaidEmailOptions = {},
+): Promise<OrderPaidEmailResult> {
+  const sendToCustomer = options.customer ?? true;
+  const sendToAdmin = options.admin ?? true;
+  const idempotencyKey = (recipient: "customer" | "admin") =>
+    options.idempotencyKeyPrefix
+      ? { idempotencyKey: `${options.idempotencyKeyPrefix}/${recipient}` }
+      : undefined;
+
   const safeFirstName = escapeHtml(firstName);
   const summary: OrderSummary = {
     orderCode,
@@ -471,7 +509,7 @@ export async function sendOrderPaidEmail({
     phone,
   };
 
-  await Promise.all([
+  const sendCustomerEmail = () =>
     sendEmail({
       from: emailFrom,
       to: email,
@@ -502,11 +540,18 @@ export async function sendOrderPaidEmail({
           ${renderSignature()}
         `,
       ),
-    }),
+    }, idempotencyKey("customer"));
 
-    sendEmail({
+  const sendAdminEmail = () => {
+    const adminRecipients = getAdminEmailRecipients();
+
+    if (adminRecipients.length === 0) {
+      throw new Error("Missing ADMIN_EMAIL");
+    }
+
+    return sendEmail({
       from: emailFrom,
-      to: getAdminEmailRecipients(),
+      to: adminRecipients,
       replyTo: email,
       subject: `Zaplatená objednávka ${orderCode}`,
       html: renderEmailShell(
@@ -528,8 +573,78 @@ export async function sendOrderPaidEmail({
           </p>
         `,
       ),
-    }),
+    }, idempotencyKey("admin"));
+  };
+
+  // Independent sends: one failing must not hide whether the other went out.
+  const [customerResult, adminResult] = await Promise.allSettled([
+    sendToCustomer ? sendCustomerEmail() : Promise.resolve(),
+    sendToAdmin ? sendAdminEmail() : Promise.resolve(),
   ]);
+
+  return {
+    customerSent: sendToCustomer && customerResult.status === "fulfilled",
+    adminSent: sendToAdmin && adminResult.status === "fulfilled",
+    customerError:
+      customerResult.status === "rejected" ? customerResult.reason : undefined,
+    adminError: adminResult.status === "rejected" ? adminResult.reason : undefined,
+  };
+}
+
+type SendAdminAlertEmailParams = {
+  /** Log code, e.g. PAYMENT_AMOUNT_MISMATCH. */
+  code: string;
+  /** Short operator-facing explanation in Slovak. No customer personal data. */
+  summary: string;
+  orderId?: string | null;
+  checkoutSessionId?: string | null;
+  paymentIntentId?: string | null;
+};
+
+/**
+ * Operator alert for payment anomalies. Contains ids only (no customer data)
+ * and is deduplicated by Resend for 24 h per code and Stripe session / order.
+ */
+export async function sendAdminAlertEmail({
+  code,
+  summary,
+  orderId,
+  checkoutSessionId,
+  paymentIntentId,
+}: SendAdminAlertEmailParams) {
+  const adminRecipients = getAdminEmailRecipients();
+
+  if (adminRecipients.length === 0) {
+    throw new Error("Missing ADMIN_EMAIL");
+  }
+
+  const dedupeId = checkoutSessionId ?? orderId ?? paymentIntentId ?? "none";
+
+  await sendEmail(
+    {
+      from: emailFrom,
+      to: adminRecipients,
+      subject: `Upozornenie: ${code}`,
+      html: renderEmailShell(
+        "Upozornenie na platbu",
+        `
+          <p>${escapeHtml(summary)}</p>
+
+          <div style="margin: 24px 0;">
+            ${renderDetailRow("Kód", escapeHtml(code))}
+            ${orderId ? renderDetailRow("ID objednávky", escapeHtml(orderId)) : ""}
+            ${checkoutSessionId ? renderDetailRow("Stripe Checkout session", escapeHtml(checkoutSessionId)) : ""}
+            ${paymentIntentId ? renderDetailRow("Stripe PaymentIntent", escapeHtml(paymentIntentId)) : ""}
+          </div>
+
+          <p style="font-size: 13px; color: rgba(62, 15, 40, 0.65);">
+            Skontrolujte platbu v Stripe a objednávku v admin paneli.
+          </p>
+        `,
+      ),
+    },
+    { idempotencyKey: `alert/${code}/${dedupeId}` },
+  );
 }
 
 /** @deprecated Use sendOrderCreatedEmail */

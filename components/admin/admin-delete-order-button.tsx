@@ -29,8 +29,19 @@ export function AdminDeleteOrderButton({
 
   const [open, setOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  function handleOpenChange(nextOpen: boolean) {
+    setOpen(nextOpen);
+
+    if (!nextOpen) {
+      setErrorMessage(null);
+    }
+  }
 
   async function handleDelete() {
+    setErrorMessage(null);
+
     try {
       setIsDeleting(true);
 
@@ -38,12 +49,25 @@ export function AdminDeleteOrderButton({
         method: "DELETE",
       });
 
+      const result = (await response.json().catch(() => null)) as {
+        message?: string;
+      } | null;
+
       if (!response.ok) {
-        throw new Error("Delete failed");
+        setErrorMessage(
+          result?.message ?? "Objednávku sa nepodarilo zmazať. Skúste to znova.",
+        );
+        return;
+      }
+
+      if (result?.message) {
+        window.alert(result.message);
       }
 
       setOpen(false);
       router.refresh();
+    } catch {
+      setErrorMessage("Objednávku sa nepodarilo zmazať. Skúste to znova.");
     } finally {
       setIsDeleting(false);
     }
@@ -72,7 +96,7 @@ export function AdminDeleteOrderButton({
         </Button>
       )}
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="rounded-2xl border border-[#EAD6DE] bg-white p-6 shadow-2xl sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="font-heading text-2xl font-bold text-[#3E0F28]">
@@ -85,11 +109,20 @@ export function AdminDeleteOrderButton({
             </DialogDescription>
           </DialogHeader>
 
+          {errorMessage && (
+            <p
+              role="alert"
+              className="mt-2 text-sm font-semibold text-[#FC5A61]"
+            >
+              {errorMessage}
+            </p>
+          )}
+
           <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button
               type="button"
               variant="secondary"
-              onClick={() => setOpen(false)}
+              onClick={() => handleOpenChange(false)}
               disabled={isDeleting}
               className="h-8 px-3 text-xs sm:h-8 sm:px-3 sm:text-xs"
             >

@@ -7,9 +7,10 @@ const HEADER_OFFSET_PX = 112;
 export function useActiveSection(sectionIds: string[], enabled: boolean) {
   const [activeSection, setActiveSection] = useState<string | null>(null);
 
+  const isTracking = enabled && sectionIds.length > 0;
+
   useEffect(() => {
-    if (!enabled || sectionIds.length === 0) {
-      setActiveSection(null);
+    if (!isTracking) {
       return;
     }
 
@@ -41,7 +42,8 @@ export function useActiveSection(sectionIds: string[], enabled: boolean) {
       window.removeEventListener("scroll", updateActiveSection);
       window.removeEventListener("resize", updateActiveSection);
     };
-  }, [enabled, sectionIds]);
+  }, [isTracking, sectionIds]);
 
-  return activeSection;
+  // Derived during render instead of resetting state inside the effect.
+  return isTracking ? activeSection : null;
 }

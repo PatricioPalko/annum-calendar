@@ -1,24 +1,8 @@
 import { CalendarCheck, Images, MailCheck } from "lucide-react";
-import Link from "next/link";
 
 import { Heading, SectionLabel, Text } from "@/components/ui/typography";
 
-import { MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
-
-const productFacts = [
-  {
-    term: "Formát",
-    detail: "A3 nástenný fotokalendár, 13 strán a kovová väzba.",
-  },
-  {
-    term: "Fotky",
-    detail: `Od ${MIN_PHOTOS} do ${MAX_PHOTOS} vlastných fotiek, na výšku aj na šírku. Editor nepotrebujete.`,
-  },
-  {
-    term: "Varianty",
-    detail: "Basic, Premium s meninami a narodeninami, alebo Memory set.",
-  },
-] as const;
+import { MIN_PHOTOS } from "@/lib/order/config";
 
 const steps = [
   {
@@ -58,39 +42,6 @@ export function AboutSection() {
           </Text>
         </div>
 
-        <dl className="mx-auto mt-8 grid max-w-4xl gap-3 text-left sm:grid-cols-3">
-          {productFacts.map((fact) => (
-            <div
-              key={fact.term}
-              className="rounded-xl border border-[#EAD6DE] bg-white px-4 py-3"
-            >
-              <dt className="text-xs font-extrabold uppercase tracking-[0.14em] text-[#FC5A61]">
-                {fact.term}
-              </dt>
-              <dd className="mt-1 text-sm font-semibold leading-6 text-[#3E0F28]/80">
-                {fact.detail}
-              </dd>
-            </div>
-          ))}
-        </dl>
-
-        <p className="mt-4 text-center text-sm font-bold text-[#3E0F28]/75">
-          <Link
-            href="/#cennik"
-            className="rounded-sm underline-offset-4 hover:text-[#FC5A61] hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#FC5A61]/30"
-          >
-            Cenník fotokalendára
-          </Link>
-          <span aria-hidden="true" className="px-2 text-[#3E0F28]/35">
-            ·
-          </span>
-          <Link
-            href="/objednavka"
-            className="rounded-sm underline-offset-4 hover:text-[#FC5A61] hover:underline focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-[#FC5A61]/30"
-          >
-            Objednať fotokalendár z vlastných fotiek
-          </Link>
-        </p>
 
         <div className="mt-8 grid gap-3 sm:mt-10 sm:gap-4 md:grid-cols-3">
           {steps.map((step, index) => {

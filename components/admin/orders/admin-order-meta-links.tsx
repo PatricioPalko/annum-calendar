@@ -14,15 +14,22 @@ export function AdminOrderMetaLinks({
   orderCode,
   order,
 }: AdminOrderMetaLinksProps) {
+  // Paid orders are accounting records; the API refuses to delete them too.
+  const canDelete = order.payment_status !== "paid";
+
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] font-semibold">
       <AdminOrderJsonPreview order={order} variant="link" />
-      <span className="text-[#3E0F28]/20">·</span>
-      <AdminDeleteOrderButton
-        orderId={orderId}
-        orderCode={orderCode}
-        variant="link"
-      />
+      {canDelete && (
+        <>
+          <span className="text-[#3E0F28]/20">·</span>
+          <AdminDeleteOrderButton
+            orderId={orderId}
+            orderCode={orderCode}
+            variant="link"
+          />
+        </>
+      )}
     </div>
   );
 }
