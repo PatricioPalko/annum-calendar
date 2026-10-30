@@ -103,6 +103,8 @@ as $$
 $$;
 
 revoke all on function public.next_order_number() from public;
+-- Supabase default privileges grant execute to these roles explicitly.
+revoke execute on function public.next_order_number() from anon, authenticated;
 grant execute on function public.next_order_number() to service_role;
 
 -- ---------------------------------------------------------------------------
@@ -196,6 +198,13 @@ alter table public.orders
 alter table public.orders
   add column if not exists completed_at timestamptz;
 
+-- When the paid-order emails were accepted by Resend (null = not sent yet).
+alter table public.orders
+  add column if not exists customer_confirmed_at timestamptz;
+
+alter table public.orders
+  add column if not exists admin_notified_at timestamptz;
+
 -- ---------------------------------------------------------------------------
 -- Rate limiting (shared across serverless instances)
 -- ---------------------------------------------------------------------------
@@ -271,5 +280,7 @@ $$;
 
 revoke all on function public.consume_rate_limit(text, text, bigint, integer)
   from public;
+revoke execute on function public.consume_rate_limit(text, text, bigint, integer)
+  from anon, authenticated;
 grant execute on function public.consume_rate_limit(text, text, bigint, integer)
   to service_role;
