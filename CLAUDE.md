@@ -16,7 +16,7 @@ Production readiness context:
 
 ## Stack (installed versions)
 
-Next.js 16.4.3 (App Router, Turbopack, `proxy.ts`) · React 19.2.4 · TypeScript 5.9 (`strict`) · Tailwind CSS 4.3 + shadcn (`radix-nova`, `radix-ui`, `lucide-react`) · react-hook-form 7 + Zod 4.6 · @supabase/ssr 0.10 + supabase-js 2.106 · Resend 6.12 · sharp 0.35 + jszip (admin ZIP export) · react-dropzone 15 · Cloudflare Turnstile · Cookiebot + GA4. (`stripe` is still listed in `package.json` but no longer imported.) Hosting is assumed to be Vercel (unverified).
+Next.js 16.4.6 (App Router, Turbopack, `proxy.ts`) · React 19.2.4 · TypeScript 5.9 (`strict`) · Tailwind CSS 4.3 + shadcn (`radix-nova`, `radix-ui`, `lucide-react`) · react-hook-form 7 + Zod 4.6 · @supabase/ssr 0.10 + supabase-js 2.106 · Resend 6.12 · sharp 0.35 + jszip (admin ZIP export) · react-dropzone 15 · Cloudflare Turnstile · Cookiebot + GA4. (`stripe` is still listed in `package.json` but no longer imported.) Hosting is assumed to be Vercel (unverified).
 
 ## Commands
 
