@@ -2,21 +2,13 @@ export type DiscountCode = {
   code: string;
   type: "percent" | "fixed";
   value: number;
-  allowsPickup?: boolean;
 };
 
 export const discountCodes: DiscountCode[] = [
   {
-    code: "ANNUM10",
+    code: "ANNUM20",
     type: "percent",
-    value: 10,
-  },
-
-  {
-    code: "RODINA15",
-    type: "percent",
-    value: 15,
-    allowsPickup: true,
+    value: 20,
   },
 ];
 
@@ -32,12 +24,6 @@ export function getDiscountCode(code?: string | null) {
   }
 
   return discountCodes.find((item) => item.code === normalizedCode) ?? null;
-}
-
-export function discountAllowsPickup(code?: string | null) {
-  const discount = getDiscountCode(code);
-
-  return Boolean(discount?.allowsPickup);
 }
 
 export function getDiscountAmount(

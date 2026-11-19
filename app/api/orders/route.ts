@@ -5,16 +5,19 @@ import {
 } from "@/app/types/types";
 import { isValidCalendarDayMonth } from "@/helpers/calendar-date";
 import { getDeliveryPrice } from "@/helpers/delivery";
-import { getDiscountAmount, discountAllowsPickup } from "@/helpers/discount-codes";
+import { getDiscountAmount } from "@/helpers/discount-codes";
 import { isStorageFolderForOrderNumber } from "@/helpers/order-code";
+import {
+  OFFLINE_PAYMENT_STATUS,
+  PAYMENT_METHODS,
+} from "@/helpers/payment-method";
 import {
   isValidSlovakPhone,
   normalizePhone,
 } from "@/helpers/phone";
-import { getOrCreateOrderCheckoutSession } from "@/lib/order-checkout";
-import { sendOrderCreatedEmail } from "@/lib/order-emails";
 import { getDeliveryWaveForDate } from "@/lib/order/delivery-waves";
-import { buildOrderPaymentUrl } from "@/lib/order-payment-token";
+import { sendAdminAlertEmail } from "@/lib/order-emails";
+import { resendMissingOrderEmails } from "@/lib/order-notifications";
 import {
   consumeRateLimit,
   getClientIp,
@@ -22,7 +25,7 @@ import {
 } from "@/lib/rate-limit";
 import { verifyFinalizeToken } from "@/lib/upload-finalize-token";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { z } from "zod";
 
 import {
@@ -42,12 +45,6 @@ const uploadedPhotoSchema = z.object({
   type: z.string(),
   size: z.number(),
   path: z.string(),
-});
-
-const packetaPointSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().min(1),
-  address: z.string().min(1),
 });
 
 const orderBodySchema = z.object({
@@ -91,8 +88,7 @@ const orderBodySchema = z.object({
     }),
   ),
 
-  deliveryMethod: z.enum(["pickup", "packeta"]),
-  packetaPoint: packetaPointSchema.optional(),
+  paymentMethod: z.enum(PAYMENT_METHODS),
 
   termsAccepted: z.literal(true),
   marketingConsent: z.boolean().optional(),
@@ -100,17 +96,6 @@ const orderBodySchema = z.object({
 
   dedications: z.array(optionalDedicationSchema).optional(),
 });
-
-function getCalendarTypeLabel(type: "basic" | "premium" | "memory" | "business") {
-  const labels = {
-    basic: "Basic",
-    premium: "Premium",
-    memory: MEMORY_SET_LABEL,
-    business: "Business",
-  } as const;
-
-  return labels[type];
-}
 
 export async function POST(request: Request) {
   const ip = getClientIp(request);
@@ -125,17 +110,6 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { message: limited.message },
       { status: limited.status, headers: limited.headers },
-    );
-  }
-
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-
-  if (!appUrl || !process.env.ORDER_PAYMENT_SIGNING_SECRET) {
-    console.error("CREATE_ORDER_CONFIG_ERROR: missing NEXT_PUBLIC_APP_URL or ORDER_PAYMENT_SIGNING_SECRET");
-
-    return NextResponse.json(
-      { message: "Server nie je správne nakonfigurovaný." },
-      { status: 500 },
     );
   }
 
@@ -200,39 +174,6 @@ export async function POST(request: Request) {
         { status: 400 },
       );
     }
-  }
-
-  if (values.deliveryMethod === "packeta" && !values.packetaPoint) {
-    return NextResponse.json(
-      {
-        message: "Invalid order payload",
-        errors: {
-          fieldErrors: {
-            packetaPoint: ["Vyberte výdajné miesto alebo Z-BOX Packety."],
-          },
-        },
-      },
-      { status: 400 },
-    );
-  }
-
-  if (
-    values.deliveryMethod === "pickup" &&
-    !discountAllowsPickup(values.discountCode)
-  ) {
-    return NextResponse.json(
-      {
-        message: "Invalid order payload",
-        errors: {
-          fieldErrors: {
-            deliveryMethod: [
-              "Osobný odber je dostupný len so zľavovým kódom RODINA15.",
-            ],
-          },
-        },
-      },
-      { status: 400 },
-    );
   }
 
   if (
@@ -309,7 +250,8 @@ export async function POST(request: Request) {
       quantityOption === CUSTOM_QUANTITY_VALUE ? values.quantity : undefined,
   });
 
-  const deliveryPrice = getDeliveryPrice(values.deliveryMethod);
+  // Personal pickup is the only delivery method.
+  const deliveryPrice = getDeliveryPrice();
 
   const discount = getDiscountAmount(price.totalPrice, values.discountCode);
 
@@ -319,7 +261,7 @@ export async function POST(request: Request) {
   if (finalTotalPrice === null || finalTotalPrice <= 0) {
     return NextResponse.json(
       {
-        message: "Objednávka nemá platnú cenu pre online platbu.",
+        message: "Objednávka nemá platnú cenu.",
       },
       { status: 400 },
     );
@@ -347,7 +289,8 @@ export async function POST(request: Request) {
       discount_code: discount.isValid ? discount.code : null,
       discount_amount: discount.discountAmount,
 
-      payment_status: "pending",
+      payment_status: OFFLINE_PAYMENT_STATUS,
+      payment_method: values.paymentMethod,
 
       photos: values.photos,
       birthdays,
@@ -357,18 +300,15 @@ export async function POST(request: Request) {
       dedications,
       dedication: dedications.find((entry) => entry.length > 0) ?? null,
 
-      delivery_method: values.deliveryMethod,
+      delivery_method: "pickup",
       delivery_price: deliveryPrice,
-      packeta_point_id: values.packetaPoint?.id ?? null,
-      packeta_point_name: values.packetaPoint?.name ?? null,
-      packeta_point_address: values.packetaPoint?.address ?? null,
 
       terms_accepted_at: new Date().toISOString(),
       marketing_consent_at: values.marketingConsent
         ? new Date().toISOString()
         : null,
     })
-    .select("id, order_code, storage_folder")
+    .select("id, order_code")
     .single();
 
   if (error) {
@@ -382,89 +322,52 @@ export async function POST(request: Request) {
     );
   }
 
-  const checkoutResult = await getOrCreateOrderCheckoutSession({
-    order: {
-      id: data.id,
-      order_code: data.order_code,
-      email: values.email,
-      calendar_type: values.type,
-      quantity: values.quantity,
-      total_price: finalTotalPrice,
-      delivery_method: values.deliveryMethod,
-      stripe_checkout_session_id: null,
-    },
-    appUrl,
-    productDescription: `${getCalendarTypeLabel(values.type)} · ${
-      values.quantity
-    } ks · ${values.deliveryMethod === "packeta" ? "Packeta" : "Osobný odber KE"} · ${
-      data.order_code
-    }`,
-  });
+  // Customer confirmation (with payment instructions) and admin notification.
+  // Sent results are recorded on the order; the scheduled retry and the
+  // "Odoslať znova" button in /admin cover failures.
+  after(async () => {
+    const result = await resendMissingOrderEmails(data.id, {
+      idempotencyKeyPrefix: `order-created/${data.id}`,
+    });
 
-  if (checkoutResult.status !== "ok") {
-    console.error("CREATE_ORDER_CHECKOUT_ERROR:", checkoutResult);
+    const failed =
+      result.status === "error" ||
+      result.status === "not_found" ||
+      (result.status === "sent" &&
+        ((result.customerRequested && !result.customerSent) ||
+          (result.adminRequested && !result.adminSent)));
 
-    const { error: cleanupError } = await supabaseAdmin
-      .from("orders")
-      .delete()
-      .eq("id", data.id)
-      .eq("payment_status", "pending");
-
-    if (cleanupError) {
-      console.error("CREATE_ORDER_CHECKOUT_CLEANUP_ERROR:", cleanupError);
+    if (!failed) {
+      return;
     }
 
-    return NextResponse.json(
-      {
-        message: "Platbu sa nepodarilo spustiť. Skúste to prosím znova.",
-      },
-      { status: 500 },
-    );
-  }
-
-  try {
-    const paymentUrl = buildOrderPaymentUrl(data.id, data.order_code);
-
-    await sendOrderCreatedEmail({
-      orderCode: data.order_code,
-      firstName: values.firstName,
-      lastName: values.lastName,
-      email: values.email,
-      phone: values.phone ?? null,
-      totalPrice: finalTotalPrice,
-      goodsPrice: price.totalPrice,
-      discountCode: discount.isValid ? discount.code : null,
-      discountAmount: discount.discountAmount,
-      calendarType: values.type,
-      quantity: values.quantity,
-      photoCount: values.photos.length,
-      birthdaysCount: birthdays.length,
-      namedaysCount: namedays.length,
-      dedications,
-      note: values.note?.trim() || null,
-      paymentUrl,
-      deliveryWaveKey: deliveryWave.key,
-      delivery: {
-        method: values.deliveryMethod,
-        price: deliveryPrice,
-        packetaPoint:
-          values.deliveryMethod === "packeta" && values.packetaPoint
-            ? {
-                id: values.packetaPoint.id,
-                name: values.packetaPoint.name,
-                address: values.packetaPoint.address,
-              }
-            : null,
-      },
+    console.error("ORDER_CREATED_EMAIL_ERROR:", {
+      orderId: data.id,
+      status: result.status,
     });
-  } catch (emailError) {
-    console.error("ORDER_CREATED_EMAIL_ERROR:", emailError);
-  }
+
+    // Without this the operator may never learn about the order (e.g. a
+    // missing email-tracking migration makes the lookup fail).
+    try {
+      await sendAdminAlertEmail({
+        code: "ORDER_CREATED_EMAIL_FAILED",
+        title: "E-mail k novej objednávke",
+        summary:
+          "Prišla nová objednávka, ale potvrdenie zákazníkovi alebo upozornenie adminovi sa nepodarilo odoslať.",
+        orderId: data.id,
+        footer:
+          "Skontrolujte objednávku v admin paneli a e-mail odošlite tlačidlom „Odoslať znova“.",
+      });
+    } catch (alertError) {
+      console.error("ADMIN_ALERT_EMAIL_ERROR:", {
+        code: "ORDER_CREATED_EMAIL_FAILED",
+        error: alertError,
+      });
+    }
+  });
 
   return NextResponse.json({
     orderId: data.id,
     orderCode: data.order_code,
-    storageFolder: data.storage_folder,
-    checkoutUrl: checkoutResult.url,
   });
 }

@@ -2,7 +2,11 @@ import { AdminOrdersFilterPersistence } from "@/components/admin/orders/admin-or
 import { AdminOrdersFilters } from "@/components/admin/orders/admin-orders-filters";
 import { AdminOrdersSummary } from "@/components/admin/orders/admin-orders-summary";
 import { AdminOrdersTable } from "@/components/admin/orders/admin-orders-table";
-import { getOrderDiscountAmount } from "@/helpers/admin-orders";
+import {
+  getOrderDiscountAmount,
+  getOrderPaymentGroup,
+  type OrderPaymentGroup,
+} from "@/helpers/admin-orders";
 import {
   filterAdminOrders,
   getAvailableYears,
@@ -39,7 +43,7 @@ export default async function AdminOrdersPage({
   const currentYear = params.year ?? "all";
   const currentMonth = params.month ?? "all";
   const currentCalendar = params.calendar ?? "all";
-  const currentDelivery = params.delivery ?? "all";
+  const currentPayment = params.payment ?? "all";
   const currentWave = params.wave ?? "all";
 
   const { data, error } = await supabaseAdmin.from("orders").select("*");
@@ -56,7 +60,7 @@ export default async function AdminOrdersPage({
       year: currentYear,
       month: currentMonth,
       calendar: currentCalendar,
-      delivery: currentDelivery,
+      payment: currentPayment,
       wave: currentWave,
     }),
     currentSort,
@@ -67,13 +71,28 @@ export default async function AdminOrdersPage({
     (order) => !order.downloaded_at,
   ).length;
 
-  const paidCount = orders.filter(
-    (order) => order.payment_status === "paid",
-  ).length;
+  const paymentCounts: Record<OrderPaymentGroup, number> = {
+    bank_transfer: 0,
+    cash: 0,
+    online: 0,
+    pending: 0,
+  };
+  const paymentTotals: Record<OrderPaymentGroup, number> = {
+    bank_transfer: 0,
+    cash: 0,
+    online: 0,
+    pending: 0,
+  };
 
-  const pendingPaymentCount = orders.filter(
-    (order) => order.payment_status !== "paid",
-  ).length;
+  for (const order of orders) {
+    const group = getOrderPaymentGroup(order);
+
+    paymentCounts[group] += 1;
+
+    if (order.total_price !== null && order.total_price !== undefined) {
+      paymentTotals[group] += Number(order.total_price);
+    }
+  }
 
   const totalQuantity = orders.reduce(
     (sum, order) => sum + Number(order.quantity ?? 0),
@@ -82,18 +101,6 @@ export default async function AdminOrdersPage({
 
   const totalPrice = orders.reduce((sum, order) => {
     if (order.total_price === null || order.total_price === undefined) {
-      return sum;
-    }
-
-    return sum + Number(order.total_price);
-  }, 0);
-
-  const paidTotalPrice = orders.reduce((sum, order) => {
-    if (
-      order.payment_status !== "paid" ||
-      order.total_price === null ||
-      order.total_price === undefined
-    ) {
       return sum;
     }
 
@@ -128,7 +135,8 @@ export default async function AdminOrdersPage({
 
             <p className="mt-2 break-words text-sm font-medium text-[#3E0F28]/60">
               Spolu {orders.length} objednávok · nestiahnuté {undownloadedCount}{" "}
-              · zaplatené {paidCount}
+              · prevodom {paymentCounts.bank_transfer} · hotovosť{" "}
+              {paymentCounts.cash}
             </p>
           </div>
         </div>
@@ -144,20 +152,10 @@ export default async function AdminOrdersPage({
 
             {envProblems.missingRequired.length > 0 && (
               <p className="mt-1">
-                Chýbajú premenné prostredia (objednávky, platby alebo e-maily
-                nemusia fungovať):{" "}
+                Chýbajú premenné prostredia (objednávky alebo e-maily nemusia
+                fungovať):{" "}
                 <span className="font-mono text-xs">
                   {envProblems.missingRequired.join(", ")}
-                </span>
-              </p>
-            )}
-
-            {envProblems.missingRecommended.length > 0 && (
-              <p className="mt-1">
-                Chýbajú voliteľné premenné (Packeta štítky alebo automatické
-                opakovanie e-mailov):{" "}
-                <span className="font-mono text-xs">
-                  {envProblems.missingRecommended.join(", ")}
                 </span>
               </p>
             )}
@@ -170,6 +168,29 @@ export default async function AdminOrdersPage({
           </div>
         )}
 
+        {envProblems.missingRecommended.length > 0 && (
+          <div className="mb-6 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-[#3E0F28]">
+            <p className="font-bold text-amber-900">
+              Odporúčané nastavenie (objednávky fungujú aj bez neho)
+            </p>
+
+            <ul className="mt-1 space-y-1">
+              {envProblems.missingRecommended.map((entry) => (
+                <li key={entry.name}>
+                  <span className="font-mono text-xs">{entry.name}</span>:{" "}
+                  {entry.purpose}
+                </li>
+              ))}
+            </ul>
+
+            <p className="mt-2 text-xs text-[#3E0F28]/60">
+              Premenné nastavíte v hostingu (Vercel → Settings → Environment
+              Variables) a lokálne v súbore .env.local. Po zmene treba
+              aplikáciu znova nasadiť alebo reštartovať.
+            </p>
+          </div>
+        )}
+
         <div className="mb-6">
           <Suspense fallback={null}>
             <AdminOrdersFilterPersistence />
@@ -178,7 +199,7 @@ export default async function AdminOrdersPage({
               currentYear={currentYear}
               currentMonth={currentMonth}
               currentCalendar={currentCalendar}
-              currentDelivery={currentDelivery}
+              currentPayment={currentPayment}
               currentWave={currentWave}
               undownloadedCount={undownloadedCount}
             />
@@ -193,16 +214,15 @@ export default async function AdminOrdersPage({
             currentYear={currentYear}
             currentMonth={currentMonth}
             currentCalendar={currentCalendar}
-            currentDelivery={currentDelivery}
+            currentPayment={currentPayment}
             currentWave={currentWave}
           />
           <AdminOrdersSummary
             ordersCount={orders.length}
-            paidCount={paidCount}
-            pendingPaymentCount={pendingPaymentCount}
+            paymentCounts={paymentCounts}
+            paymentTotals={paymentTotals}
             totalQuantity={totalQuantity}
             totalPrice={totalPrice}
-            paidTotalPrice={paidTotalPrice}
             totalOriginalPrice={totalOriginalPrice}
             totalDiscountAmount={totalDiscountAmount}
             customPriceCount={customPriceCount}

@@ -15,7 +15,7 @@ function SortLink({
   currentYear,
   currentMonth,
   currentCalendar,
-  currentDelivery,
+  currentPayment,
   currentWave,
   children,
 }: {
@@ -25,7 +25,7 @@ function SortLink({
   currentYear?: string;
   currentMonth?: string;
   currentCalendar?: string;
-  currentDelivery?: string;
+  currentPayment?: string;
   currentWave?: string;
   children: React.ReactNode;
 }) {
@@ -37,7 +37,7 @@ function SortLink({
         year: currentYear,
         month: currentMonth,
         calendar: currentCalendar,
-        delivery: currentDelivery,
+        payment: currentPayment,
         wave: currentWave,
       })}
       className="inline-flex items-center gap-1 font-bold transition hover:text-[#FC5A61]"
@@ -57,7 +57,7 @@ type AdminOrdersTableProps = {
   currentYear?: string;
   currentMonth?: string;
   currentCalendar?: string;
-  currentDelivery?: string;
+  currentPayment?: string;
   currentWave?: string;
 };
 
@@ -68,7 +68,7 @@ export function AdminOrdersTable({
   currentYear,
   currentMonth,
   currentCalendar,
-  currentDelivery,
+  currentPayment,
   currentWave,
 }: AdminOrdersTableProps) {
   if (orders.length === 0) {
@@ -76,7 +76,7 @@ export function AdminOrdersTable({
       currentYear !== "all" ||
       currentMonth !== "all" ||
       currentCalendar !== "all" ||
-      currentDelivery !== "all" ||
+      currentPayment !== "all" ||
       currentWave !== "all";
 
     const emptyMessage = hasActiveFilters
@@ -123,7 +123,7 @@ export function AdminOrdersTable({
                   currentYear={currentYear}
                   currentMonth={currentMonth}
                   currentCalendar={currentCalendar}
-                  currentDelivery={currentDelivery}
+                  currentPayment={currentPayment}
                   currentWave={currentWave}
                 >
                   Objednávka
@@ -138,7 +138,7 @@ export function AdminOrdersTable({
                   currentYear={currentYear}
                   currentMonth={currentMonth}
                   currentCalendar={currentCalendar}
-                  currentDelivery={currentDelivery}
+                  currentPayment={currentPayment}
                   currentWave={currentWave}
                 >
                   Zákazník
@@ -153,7 +153,7 @@ export function AdminOrdersTable({
                   currentYear={currentYear}
                   currentMonth={currentMonth}
                   currentCalendar={currentCalendar}
-                  currentDelivery={currentDelivery}
+                  currentPayment={currentPayment}
                   currentWave={currentWave}
                 >
                   Kalendár

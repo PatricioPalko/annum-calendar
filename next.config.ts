@@ -14,6 +14,10 @@ const securityHeaders = [
     key: "Strict-Transport-Security",
     value: "max-age=63072000; includeSubDomains; preload",
   },
+  // Not listed in search engines (orders from family and friends only).
+  // robots.txt must keep allowing crawling, or crawlers never see this header
+  // and already indexed pages stay in results.
+  { key: "X-Robots-Tag", value: "noindex, nofollow" },
 ];
 
 const nextConfig: NextConfig = {

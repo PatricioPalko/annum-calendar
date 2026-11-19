@@ -2,6 +2,7 @@ import JSZip from "jszip";
 import { NextResponse } from "next/server";
 import sharp from "sharp";
 
+import { OFFLINE_PAYMENT_STATUS } from "@/helpers/payment-method";
 import { isAdminEmail, isAdminMutationOriginAllowed } from "@/lib/auth/admin";
 import { buildOrderExportData } from "@/lib/order-export";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -75,7 +76,7 @@ export async function GET(request: Request) {
   const { data: orders, error: ordersError } = await supabaseAdmin
     .from("orders")
     .select("*")
-    .eq("payment_status", "paid")
+    .or(`payment_status.eq.paid,payment_status.eq.${OFFLINE_PAYMENT_STATUS}`)
     .is("downloaded_at", null)
     .neq("status", "completed")
     .order("created_at", { ascending: true });

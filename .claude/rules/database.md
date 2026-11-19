@@ -4,8 +4,7 @@ paths:
   - "lib/supabase/**"
   - "lib/rate-limit.ts"
   - "lib/health-checks.ts"
-  - "lib/order-payments.ts"
-  - "lib/order-checkout.ts"
+  - "lib/order-notifications.ts"
   - "app/api/**/*.ts"
   - "app/admin/**"
   - "app/objednavka/**"
@@ -43,9 +42,11 @@ paths:
 - Identity: `id uuid`, `order_number` (sequence `order_number_seq` via RPC `next_order_number`), `order_code` (`lastname-firstname-year-<type><qty>-<rand4>`, **contains the customer's name**), `storage_folder`.
 - Money: `numeric(10,2)` EUR (`total_price`, `delivery_price`, `discount_amount`).
 - Statuses are free text today (no CHECK constraint):
-  - `payment_status`: `pending` → `paid` | `failed`. `refunded` is read in `helpers/admin-order-payment-url.ts` but never written (H-2).
-  - `status`: `new` → `ready` (pickup) or `shipped` (Packeta) → `completed`.
-- Timestamps use the `*_at` naming (`paid_at`, `downloaded_at`, `completed_at`, `ready_at`, `shipped_at`, `terms_accepted_at`, `marketing_consent_at`, `customer_confirmed_at`, `admin_notified_at`). The last two are `null` while a paid-order email is unsent, and `undefined` in rows until migration `20261030_order_email_tracking.sql` is applied.
+  - `payment_status`: new orders are `offline` (paid outside the site, never confirmed by the app). `pending` / `paid` / `failed` exist only on older orders from the removed Stripe flow.
+  - `payment_method`: `bank_transfer` | `cash` (CHECK constraint, migration `20261119_order_payment_method.sql`); `null` on older orders.
+  - `status`: `new` → `ready` (ready for pickup) → `completed`. `shipped` exists only on older Packeta orders.
+  - Columns from the removed integrations (`stripe_*`, `packeta_point_*`, `tracking_number`, `shipped_at`) stay for older rows; new code doesn't read or write them.
+- Timestamps use the `*_at` naming (`paid_at`, `downloaded_at`, `completed_at`, `ready_at`, `shipped_at`, `terms_accepted_at`, `marketing_consent_at`, `customer_confirmed_at`, `admin_notified_at`). The last two are `null` while an order email is unsent, and `undefined` in rows until migration `20261030_order_email_tracking.sql` is applied.
 - JSON columns: `photos`, `birthdays`, `namedays`, `dedications`.
 
 `public.rate_limit_counters` is only accessed through RPC `consume_rate_limit` (`lib/rate-limit.ts`).
@@ -64,8 +65,8 @@ paths:
 
 ## Writes and state transitions
 
-- Every state transition is a **conditional update** (compare-and-set) with `.select(...).maybeSingle()`. Treat a `null` result as "lost the race" and re-read. Patterns: `.neq("payment_status", "paid")` in `markOrderPaidFromCheckoutSession`, and the session-id CAS in `persistCheckoutSessionId`.
-- Run side effects (emails, refunds) only from the branch that won the update.
+- Every state transition is a **conditional update** (compare-and-set) with `.select(...).maybeSingle()`. Treat a `null` result as "lost the race" and re-read. Pattern: the conditional delete `.neq("payment_status", "paid")` in `app/api/admin/orders/[orderId]/route.ts`.
+- Run side effects (emails) only from the branch that won the update.
 - Supabase-js returns `{ data, error }` and doesn't throw. Always check `error` and handle `data === null` separately from errors.
 
 ## Reads

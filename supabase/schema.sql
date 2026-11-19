@@ -36,6 +36,8 @@ create table if not exists public.orders (
   namedays jsonb not null default '[]'::jsonb,
 
   payment_status text not null default 'pending',
+  payment_method text
+    check (payment_method is null or payment_method in ('bank_transfer', 'cash')),
   paid_at timestamptz,
   stripe_checkout_session_id text,
   stripe_payment_intent_id text,
@@ -204,6 +206,16 @@ alter table public.orders
 
 alter table public.orders
   add column if not exists admin_notified_at timestamptz;
+
+-- Offline payment chosen by the customer (null = older Stripe order).
+alter table public.orders
+  add column if not exists payment_method text;
+
+alter table public.orders drop constraint if exists orders_payment_method_check;
+
+alter table public.orders
+  add constraint orders_payment_method_check
+  check (payment_method is null or payment_method in ('bank_transfer', 'cash'));
 
 -- ---------------------------------------------------------------------------
 -- Rate limiting (shared across serverless instances)

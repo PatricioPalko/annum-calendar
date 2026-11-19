@@ -11,6 +11,10 @@ import { PriceWithVat } from "@/components/ui/price-with-vat";
 import { Heading, SectionLabel } from "@/components/ui/typography";
 import { getDeliveryLabel, getDeliveryPrice } from "@/helpers/delivery";
 import { getDiscountAmount } from "@/helpers/discount-codes";
+import {
+  getPaymentMethodLabel,
+  type PaymentMethod,
+} from "@/helpers/payment-method";
 import { cn } from "@/lib/utils";
 import { Check, Tag, X } from "lucide-react";
 import type { ReactNode } from "react";
@@ -19,14 +23,12 @@ import {
   orderFormPriceTotalVatClassName,
 } from "../order-form-styles";
 
-type DeliveryMethod = "pickup" | "packeta";
-
 type PriceSummaryProps = {
   type: CalendarTypes;
   quantityOption: QuantityOption;
   customQuantity?: number;
   selectedPhotosQuantity?: number;
-  deliveryMethod?: DeliveryMethod;
+  paymentMethod?: PaymentMethod;
   onQuantityChange?: (quantity: 3 | 5) => void;
   discountCode?: string;
   discountCodeError?: string;
@@ -41,7 +43,7 @@ export function PriceSummary({
   quantityOption,
   customQuantity,
   selectedPhotosQuantity,
-  deliveryMethod = "pickup",
+  paymentMethod,
   onQuantityChange,
   discountCode = "",
   discountCodeError,
@@ -59,8 +61,8 @@ export function PriceSummary({
   const savedAmount = price.savedAmount;
 
   const discount = getDiscountAmount(originalTotalPrice, discountCode);
-  const deliveryPrice = getDeliveryPrice(deliveryMethod);
-  const deliveryLabel = getDeliveryLabel(deliveryMethod);
+  const deliveryPrice = getDeliveryPrice();
+  const deliveryLabel = getDeliveryLabel();
 
   const hasAppliedDiscount =
     discount.isValid &&
@@ -96,8 +98,7 @@ export function PriceSummary({
         : null;
 
   //  Show breakdown list only when there are actual savings/discounts to itemise
-  const hasDeliveryPrice = deliveryPrice > 0;
-  const showBreakdown = hasSavings || hasAppliedDiscount || hasDeliveryPrice;
+  const showBreakdown = hasSavings || hasAppliedDiscount;
 
   //  The "before all discounts" reference price used in the breakdown
   const referencePrice = computedTotalPrice ?? originalTotalPrice;
@@ -144,21 +145,26 @@ export function PriceSummary({
 
           <div className="flex items-start justify-between gap-3 text-sm">
             <span className="min-w-0 shrink font-medium text-[#3E0F28]/55">
-              Doručenie
+              Odber
             </span>
             <span className="max-w-[58%] shrink-0 text-right font-bold text-[#3E0F28]">
-              {deliveryPrice > 0 ? (
-                <span className="inline-flex flex-col items-end gap-0.5">
-                  <span>{deliveryLabel}</span>
-                  <PriceWithVat
-                    value={deliveryPrice}
-                    className="justify-end text-sm font-bold"
-                    vatClassName="text-[10px] font-medium text-primary/40"
-                  />
-                </span>
-              ) : (
-                deliveryLabel
+              {deliveryLabel}
+            </span>
+          </div>
+
+          <div className="flex items-start justify-between gap-3 text-sm">
+            <span className="min-w-0 shrink font-medium text-[#3E0F28]/55">
+              Platba
+            </span>
+            <span
+              className={cn(
+                "max-w-[58%] shrink-0 text-right font-bold",
+                paymentMethod ? "text-[#3E0F28]" : "text-[#3E0F28]/55",
               )}
+            >
+              {paymentMethod
+                ? getPaymentMethodLabel(paymentMethod)
+                : "Zatiaľ nevybraná"}
             </span>
           </div>
         </div>
@@ -220,24 +226,6 @@ export function PriceSummary({
                     className="justify-end text-sm font-semibold text-emerald-700"
                     amountClassName="text-emerald-700"
                     vatClassName="text-[10px] font-medium text-emerald-600/70"
-                  />
-                </span>
-              </div>
-            )}
-
-            {/* Delivery */}
-            {hasDeliveryPrice && (
-              <div className="flex justify-between text-sm">
-                <span className="text-primary/50 font-medium">
-                  {deliveryLabel}
-                </span>
-                <span className="whitespace-nowrap text-primary/70 font-semibold">
-                  <PriceWithVat
-                    value={deliveryPrice}
-                    sign="+"
-                    className="justify-end text-sm font-semibold text-primary/70"
-                    amountClassName="text-primary/70"
-                    vatClassName="text-[10px] font-medium text-primary/40"
                   />
                 </span>
               </div>

@@ -1,6 +1,6 @@
 ---
 name: production-audit
-description: Full production-readiness audit of Annum Calendar (architecture, order and payment consistency, Stripe, Supabase RLS and Storage, uploads and photo privacy, Resend, Packeta, admin auth, validation, UX and accessibility, SEO, error handling, configuration, tests). Produces a dated report in docs/ that compares against the previous audits. Use before a launch, after large changes, or periodically.
+description: Full production-readiness audit of Annum Calendar (architecture, order and offline-payment consistency, Supabase RLS and Storage, uploads and photo privacy, Resend, admin auth, validation, UX and accessibility, SEO, error handling, configuration, tests). Produces a dated report in docs/ that compares against the previous audits. Use before a launch, after large changes, or periodically.
 argument-hint: "[focus-area or output-path]"
 disable-model-invocation: true
 ---
@@ -39,7 +39,7 @@ Run and record exit codes and the relevant output:
 - `npx tsc --noEmit`
 - `npm run build`: record the route table. Flag any time-dependent Server Component on a `○` route (N-1). `.next/prerender-manifest.json` → `routes["/"].initialRevalidateSeconds`.
 - Tests, if a runner now exists.
-- Bundle leak check: `grep -rl "RODINA15\|ANNUM10" .next/static` (M-4), and grep `.next/static` for server env var **names** that must not appear (`SUPABASE_SECRET_KEY`, `STRIPE_SECRET_KEY`, …). Report names only, never values.
+- Bundle leak check: `grep -rl "ANNUM20" .next/static` (M-4), and grep `.next/static` for server env var **names** that must not appear (`SUPABASE_SECRET_KEY`, `RESEND_API_KEY`, …). Report names only, never values.
 
 ### 3. Manual review, area by area
 
@@ -48,11 +48,10 @@ For each area, read the implementation (not just the referenced lines), then re-
 | Area | Files to read |
 | --- | --- |
 | Order creation | `app/api/uploads/sign/route.ts`, `app/api/uploads/finalize/route.ts`, `lib/upload-order-photos.ts`, `app/api/orders/route.ts`, `components/sections/order-form/index.tsx` |
-| Payments | run the `stripe-review` skill workflow |
+| Payments | `.claude/rules/payments.md`, `helpers/payment-method.ts`, `app/api/orders/route.ts`, `lib/order-notifications.ts` |
 | Supabase / RLS / Storage | run the `supabase-review` skill workflow |
 | Admin | `proxy.ts`, `lib/auth/admin.ts`, every `app/api/admin/**/route.ts`, `app/admin/**`, `components/admin/**` |
 | Emails | `lib/resend.ts`, `lib/order-emails.ts`, callers in `lib/order-payments.ts`, `app/api/orders/route.ts`, the notify-fulfillment route |
-| Packeta | `lib/packeta.ts`, `components/delivery/packeta-picker/index.tsx`, the create-packeta-packet route |
 | Privacy | `components/analytics/google-analytics.tsx`, `lib/analytics.ts`, `lib/order-from-draft.ts`, logs (`grep -rn "console\.\(log\|error\)" app lib`), URLs containing `order_code` |
 | Frontend / UX / accessibility | order-form components, mobile bar, dropzone, thank-you and cancel pages. Check the viewports 375×812, 390×844, 768×1024, 1024×768 and 1440×900 by reading the code; do visual checks only if a server is already running and browser tooling is available. |
 | SEO / performance | `app/layout.tsx`, `lib/seo.ts`, `app/robots.ts`, `app/sitemap.ts`, `next.config.ts`, `public/` asset sizes |
@@ -80,8 +79,8 @@ Then propose (don't apply without asking) the matching updates to `docs/IMPLEMEN
 
 ## Project-specific must-checks
 
-- The server recomputes the price, and the `Math.round(x*100)` conversion is consistent across checkout, DB and webhook.
-- The webhook verifies its signature on the raw body. Mark-paid is a conditional update with side effects only for the winner. Duplicate paid sessions are refunded with an idempotency key.
+- The server recomputes the price (pickup 0 €), and the `Math.round(x*100)` conversion matches the `numeric(10,2)` column.
+- New orders are `offline` with a required `payment_method`; nothing marks orders paid. Order emails are recorded and retried without duplicates.
 - Every `/api/admin/**` handler runs Origin → `getUser()` → `isAdminEmail()`, and actions on customer data gate on `paid`.
 - No public photo URLs. The upload HMAC chain is intact.
 - Personal data (including `order_code`) stays out of logs, analytics and new URLs.
@@ -91,5 +90,5 @@ Then propose (don't apply without asking) the matching updates to `docs/IMPLEMEN
 ## Safety restrictions
 
 - Read-only on application code: don't fix anything during an audit.
-- Never read `.env*`, print env values, request secrets, open dashboards, connect MCP servers, run SQL, call Stripe, Resend, Packeta or Turnstile, submit orders, or touch customer photos or data.
+- Never read `.env*`, print env values, request secrets, open dashboards, connect MCP servers, run SQL, call Resend or Turnstile, submit orders, or touch customer photos or data.
 - `npm run build` writes only to `.next/`. Don't run `npm install` or delete files.

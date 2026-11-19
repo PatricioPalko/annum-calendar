@@ -1,4 +1,9 @@
 import { OrderRow } from "@/app/types/types";
+import {
+  getPaymentMethodLabel,
+  isPaymentMethod,
+  OFFLINE_PAYMENT_STATUS,
+} from "@/helpers/payment-method";
 
 export function truncateText(value: string, maxLength = 80) {
   if (value.length <= maxLength) {
@@ -24,14 +29,19 @@ export function hasOrderDiscount(order: OrderRow) {
   return Boolean(order.discount_code) && getOrderDiscountAmount(order) > 0;
 }
 
-export function getDeliveryLabel(method?: string | null) {
-  switch (method) {
-    case "packeta":
-      return "Packeta";
-    case "pickup":
-    default:
-      return "Odber";
+export type OrderPaymentGroup = "bank_transfer" | "cash" | "online" | "pending";
+
+/** Offline method chosen by the customer, an older online payment, or unpaid. */
+export function getOrderPaymentGroup(order: OrderRow): OrderPaymentGroup {
+  if (order.payment_status === "paid") {
+    return "online";
   }
+
+  if (order.payment_status === OFFLINE_PAYMENT_STATUS) {
+    return order.payment_method === "cash" ? "cash" : "bank_transfer";
+  }
+
+  return "pending";
 }
 
 export function getOrderJsonPreview(order: OrderRow) {
@@ -43,24 +53,18 @@ export function getOrderJsonPreview(order: OrderRow) {
 
     payment: {
       status: order.payment_status,
+      method: order.payment_method ?? null,
+      methodLabel: isPaymentMethod(order.payment_method)
+        ? getPaymentMethodLabel(order.payment_method)
+        : null,
       paidAt: order.paid_at,
-      stripeCheckoutSessionId: order.stripe_checkout_session_id,
-      stripePaymentIntentId: order.stripe_payment_intent_id,
     },
 
     delivery: {
-      method: order.delivery_method ?? "pickup",
-      label: getDeliveryLabel(order.delivery_method),
+      method: "pickup",
+      label: "Osobný odber",
       price: Number(order.delivery_price ?? 0),
-      packetaPoint: order.packeta_point_id
-        ? {
-            id: order.packeta_point_id,
-            name: order.packeta_point_name,
-            address: order.packeta_point_address,
-          }
-        : null,
-      trackingNumber: order.tracking_number ?? null,
-      shippedAt: order.shipped_at ?? null,
+      readyAt: order.ready_at ?? null,
     },
 
     customer: {

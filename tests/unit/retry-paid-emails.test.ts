@@ -6,7 +6,7 @@ const mocks = await vi.hoisted(async () => {
 
   return {
     supabase: createFakeSupabase(),
-    sendOrderPaidEmail: hoistedVi.fn(),
+    sendOrderReceivedEmails: hoistedVi.fn(),
     sendAdminAlertEmail: hoistedVi.fn(),
   };
 });
@@ -14,11 +14,9 @@ const mocks = await vi.hoisted(async () => {
 vi.mock("@/lib/supabase/admin", () => ({ supabaseAdmin: mocks.supabase.client }));
 
 vi.mock("@/lib/order-emails", () => ({
-  sendOrderPaidEmail: mocks.sendOrderPaidEmail,
+  sendOrderReceivedEmails: mocks.sendOrderReceivedEmails,
   sendAdminAlertEmail: mocks.sendAdminAlertEmail,
 }));
-
-vi.mock("@/lib/stripe", () => ({ stripe: {} }));
 
 const { POST } = await import("@/app/api/cron/retry-paid-emails/route");
 
@@ -38,11 +36,12 @@ function seedOrder(id: string, overrides: Record<string, unknown> = {}) {
     email: "test@example.com",
     calendar_type: "basic",
     quantity: 1,
-    total_price: 30.9,
-    delivery_price: 3.9,
-    delivery_method: "packeta",
-    payment_status: "paid",
-    paid_at: minutesAgo(30),
+    total_price: 23.9,
+    delivery_price: 0,
+    delivery_method: "pickup",
+    payment_status: "offline",
+    payment_method: "cash",
+    created_at: minutesAgo(35),
     customer_confirmed_at: null,
     admin_notified_at: null,
     ...overrides,
@@ -65,7 +64,7 @@ function callCron(authorization: string | null = `Bearer ${SECRET}`) {
 beforeEach(() => {
   process.env.CRON_SECRET = SECRET;
   mocks.supabase.reset();
-  mocks.sendOrderPaidEmail.mockReset().mockImplementation(async (_params, options) => ({
+  mocks.sendOrderReceivedEmails.mockReset().mockImplementation(async (_params, options) => ({
     customerSent: options.customer ?? true,
     adminSent: options.admin ?? true,
   }));
@@ -78,7 +77,7 @@ describe("POST /api/cron/retry-paid-emails (H-4)", () => {
     seedOrder("a");
 
     expect((await callCron()).status).toBe(503);
-    expect(mocks.sendOrderPaidEmail).not.toHaveBeenCalled();
+    expect(mocks.sendOrderReceivedEmails).not.toHaveBeenCalled();
   });
 
   it.each([null, "Bearer wrong", SECRET, `Bearer ${SECRET}x`])(
@@ -87,7 +86,7 @@ describe("POST /api/cron/retry-paid-emails (H-4)", () => {
       seedOrder("a");
 
       expect((await callCron(authorization)).status).toBe(401);
-      expect(mocks.sendOrderPaidEmail).not.toHaveBeenCalled();
+      expect(mocks.sendOrderReceivedEmails).not.toHaveBeenCalled();
     },
   );
 
@@ -98,34 +97,34 @@ describe("POST /api/cron/retry-paid-emails (H-4)", () => {
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ checked: 1, sent: 1, failed: 0 });
-    expect(mocks.sendOrderPaidEmail).toHaveBeenCalledOnce();
+    expect(mocks.sendOrderReceivedEmails).toHaveBeenCalledOnce();
 
-    const options = mocks.sendOrderPaidEmail.mock.calls[0]![1];
+    const options = mocks.sendOrderReceivedEmails.mock.calls[0]![1];
     const hourBucket = Math.floor(Date.now() / (60 * MINUTE));
     expect(options).toEqual({
       customer: false,
       admin: true,
-      idempotencyKeyPrefix: `order-paid-retry/a/${hourBucket}`,
+      idempotencyKeyPrefix: `order-email-retry/a/${hourBucket}`,
     });
     expect(order("a").admin_notified_at).toEqual(expect.any(String));
   });
 
-  it("skips orders that are unpaid, fully notified, too recent or too old", async () => {
-    seedOrder("unpaid", { payment_status: "pending" });
+  it("skips older online orders and orders that are fully notified, too recent or too old", async () => {
+    seedOrder("paid-online", { payment_status: "paid", payment_method: null });
+    seedOrder("unpaid", { payment_status: "pending", payment_method: null });
     seedOrder("done", { customer_confirmed_at: minutesAgo(29), admin_notified_at: minutesAgo(29) });
-    seedOrder("recent", { paid_at: minutesAgo(2) });
-    seedOrder("old", { paid_at: minutesAgo(8 * 24 * 60) });
-    seedOrder("never-paid", { paid_at: null });
+    seedOrder("recent", { created_at: minutesAgo(2) });
+    seedOrder("old", { created_at: minutesAgo(8 * 24 * 60) });
 
     const response = await callCron();
 
     expect(await response.json()).toEqual({ checked: 0, sent: 0, failed: 0 });
-    expect(mocks.sendOrderPaidEmail).not.toHaveBeenCalled();
+    expect(mocks.sendOrderReceivedEmails).not.toHaveBeenCalled();
   });
 
   it("processes at most 20 orders per run, oldest first", async () => {
     for (let index = 0; index < 25; index += 1) {
-      seedOrder(`o${index}`, { paid_at: minutesAgo(100 - index) });
+      seedOrder(`o${index}`, { created_at: minutesAgo(100 - index) });
     }
 
     expect(await (await callCron()).json()).toEqual({ checked: 20, sent: 20, failed: 0 });
@@ -135,7 +134,7 @@ describe("POST /api/cron/retry-paid-emails (H-4)", () => {
 
   it("counts a failed resend and alerts the operator with the order id only", async () => {
     seedOrder("a");
-    mocks.sendOrderPaidEmail.mockResolvedValue({
+    mocks.sendOrderReceivedEmails.mockResolvedValue({
       customerSent: false,
       adminSent: true,
       customerError: new Error("resend down"),
@@ -146,7 +145,7 @@ describe("POST /api/cron/retry-paid-emails (H-4)", () => {
     expect(await response.json()).toEqual({ checked: 1, sent: 0, failed: 1 });
     expect(order("a").customer_confirmed_at).toBeNull();
     expect(mocks.sendAdminAlertEmail).toHaveBeenCalledWith(
-      expect.objectContaining({ code: "PAID_ORDER_EMAIL_RETRY_FAILED", orderId: "a" }),
+      expect.objectContaining({ code: "ORDER_EMAIL_RETRY_FAILED", orderId: "a" }),
     );
   });
 

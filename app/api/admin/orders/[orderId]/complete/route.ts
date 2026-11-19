@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { isFulfillablePaymentStatus } from "@/helpers/payment-method";
 import { isAdminEmail, isAdminMutationOriginAllowed } from "@/lib/auth/admin";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -30,7 +31,7 @@ export async function POST(request: Request, { params }: RouteParams) {
 
   const { data: order, error: orderError } = await supabaseAdmin
     .from("orders")
-    .select("id, payment_status, status, delivery_method")
+    .select("id, payment_status, status")
     .eq("id", orderId)
     .single();
 
@@ -41,7 +42,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     );
   }
 
-  if (order.payment_status !== "paid") {
+  if (!isFulfillablePaymentStatus(order.payment_status)) {
     return NextResponse.json(
       { message: "Objednávka ešte nie je zaplatená." },
       { status: 403 },
@@ -49,13 +50,10 @@ export async function POST(request: Request, { params }: RouteParams) {
   }
 
   if (order.status === "completed") {
-    const revertedStatus =
-      order.delivery_method === "packeta" ? "shipped" : "ready";
-
     const { error: revertError } = await supabaseAdmin
       .from("orders")
       .update({
-        status: revertedStatus,
+        status: "ready",
         completed_at: null,
       })
       .eq("id", order.id);

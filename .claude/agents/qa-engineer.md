@@ -31,14 +31,14 @@ Prevent regressions in the flows that move money, photos and personal data. Turn
 2. For E2E or anything needing a new runner or library (e.g. Playwright), produce a proposal listing the exact devDependencies and scripts. **Do not install or edit `package.json`** without explicit approval.
 3. For the change or flow under test, enumerate:
    - happy path;
-   - validation boundaries (min/max photos 14/52, quantity 1/200, dedication count = quantity, birthday dates, Slovak phone format, pickup only with `RODINA15`);
-   - concurrency (webhook versus thank-you page mark-paid, double submit);
-   - replay (webhook retries, reused tokens);
+   - validation boundaries (min/max photos 14/52, quantity 1/200, dedication count = quantity, birthday dates, Slovak phone format, payment method required, pickup only);
+   - concurrency (double submit, email retry running while the order route's `after()` sends);
+   - replay (cron retries, reused tokens);
    - expiry (finalize token 10 min, payment token 90 days, upload token 1 h);
-   - partial failure (Resend error, Stripe error after DB insert, storage missing object);
+   - partial failure (Resend error after DB insert, storage missing object);
    - authorization (admin 401/403);
    - time (delivery wave boundaries in the shop timezone, static-page freeze).
-4. Map each case to a layer: unit (pure helpers), route handler (mocked `@/lib/supabase/admin`, `@/lib/stripe`, `@/lib/resend`, `fetch`), or E2E (test-mode services only).
+4. Map each case to a layer: unit (pure helpers), route handler (mocked `@/lib/supabase/admin`, `@/lib/order-emails`, `@/lib/resend`, `fetch`), or E2E (test-mode services only).
 5. When writing tests: one behavior per test, synthetic fixtures, no network, no real data. Run the suite and report the results verbatim.
 6. Prioritize using the P0/P1 lists in `.claude/rules/testing.md` and the roadmap IDs.
 
@@ -52,7 +52,7 @@ Prevent regressions in the flows that move money, photos and personal data. Turn
 ## Restrictions
 
 - Never use real customer data, photos, emails or phone numbers. Use `@example.com` addresses and generated images.
-- Never call live Stripe, Supabase, Resend, Packeta or Turnstile, never read `.env*`, never request keys, and never send email or create payments.
+- Never call live Supabase, Resend or Turnstile, never read `.env*`, never request keys, and never send email or create payments.
 - No dependency installs or `package.json` edits without approval. No production code edits. No commits unless asked.
 
 ## Output format

@@ -24,7 +24,7 @@ Base ref: `$ARGUMENTS` (default `main`).
 
 - `git status --short`. Uncommitted changes mean NO-GO unless the user confirms they are intentionally excluded.
 - `git log --oneline <base>..HEAD` and `git diff --stat <base>...HEAD`.
-- Flag high-risk files in the diff: `app/api/stripe/**`, `lib/order-payments.ts`, `lib/order-checkout.ts`, `app/api/orders/**`, `app/api/uploads/**`, `app/api/admin/**`, `proxy.ts`, `lib/auth/**`, `supabase/**`, `next.config.ts`, `package.json`. If any are present, recommend running `/stripe-review` or `/supabase-review` or invoking `security-auditor` before release.
+- Flag high-risk files in the diff: `lib/order-notifications.ts`, `lib/order-emails.ts`, `app/api/orders/**`, `app/api/uploads/**`, `app/api/admin/**`, `proxy.ts`, `lib/auth/**`, `supabase/**`, `next.config.ts`, `package.json`. If any are present, recommend running `/supabase-review` or invoking `security-auditor` before release.
 
 ### 2. Automated gates (run all; don't stop at the first failure)
 
@@ -40,7 +40,7 @@ Base ref: `$ARGUMENTS` (default `main`).
 
 - Route table: the `/`, `/objednavka`, `/pre-firmy` and legal pages should be `○`. `/admin`, `/objednavka/dakujeme`, `/objednavka/platba-zrusena` and all `/api/*` should be `ƒ`.
 - `node -p "require('./.next/prerender-manifest.json').routes['/']"`: if `initialRevalidateSeconds` is `false` and the homepage still renders delivery batches server-side, flag N-1 (content frozen at build) and state which batch is baked in: `grep -o "[0-9]\{1,2\}\. [0-9]\{1,2\}\. 20[0-9][0-9]" .next/server/app/index.html | sort -u`.
-- Bundle leaks: `grep -rlE "SUPABASE_SECRET_KEY|STRIPE_SECRET_KEY|STRIPE_WEBHOOK_SECRET|RESEND_API_KEY|UPLOAD_SIGNING_SECRET|ORDER_PAYMENT_SIGNING_SECRET|TURNSTILE_SECRET_KEY|PACKETA_API_PASSWORD" .next/static` must return nothing. Report variable names only. Note whether discount codes still appear (M-4, known).
+- Bundle leaks: `grep -rlE "SUPABASE_SECRET_KEY|RESEND_API_KEY|UPLOAD_SIGNING_SECRET|TURNSTILE_SECRET_KEY|CRON_SECRET|BANK_ACCOUNT_IBAN" .next/static` must return nothing. Report variable names only. Note whether discount codes still appear (M-4, known).
 
 ### 4. Diff hygiene scan
 
@@ -61,12 +61,10 @@ Read `docs/IMPLEMENTATION-ROADMAP.md` and report the status of every item in the
 Print this checklist. Claude cannot verify it.
 
 - [ ] Production env vars set (names from the roadmap checklist). `NEXT_PUBLIC_APP_URL` = `https://www.annum.sk`.
-- [ ] Stripe live webhook endpoint subscribed to the handled events, with the live `STRIPE_WEBHOOK_SECRET`.
-- [ ] Stripe payment methods reviewed (H-1).
+- [ ] `BANK_ACCOUNT_IBAN` set in production (bank transfer instructions in the order email).
 - [ ] Supabase: pending migrations applied. Sign-ups disabled, and admin accounts exist for all `ADMIN_EMAILS` (U-4).
 - [ ] Resend domain verified. `ADMIN_EMAIL` and `EMAIL_FROM` set.
-- [ ] Packeta sender approved.
-- [ ] After deploy: one test-mode order or a live order that is refunded, the admin notification received, the homepage showing the correct current batch.
+- [ ] After deploy: one test order (then deleted in /admin), the customer and admin emails received, the homepage showing the correct current batch.
 
 ## Expected output
 
@@ -84,6 +82,6 @@ Decision: GO | GO WITH RISKS | NO-GO
 
 ## Safety restrictions
 
-- Don't deploy, push, merge, tag, or run `vercel`/`supabase`/`stripe` CLIs.
+- Don't deploy, push, merge, tag, or run `vercel`/`supabase` CLIs.
 - Don't read `.env*` or print secret values (even ones found in the diff). Don't contact production services or send email.
 - Commands are limited to local, read-only checks plus `npm run build` (writes `.next/` only). No `npm install`.

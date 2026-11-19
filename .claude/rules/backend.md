@@ -27,22 +27,22 @@ Next.js 16 specifics:
 
 - Dynamic `params` are a `Promise`: `{ params }: { params: Promise<{ orderId: string }> }` → `await params`.
 - `cookies()` and `headers()` are async.
-- Use `export const runtime = "nodejs"` where the file already does (webhook, ZIP routes). It is the default.
+- Use `export const runtime = "nodejs"` where the file already does (cron, ZIP routes). It is the default.
 - Long-running routes set `export const maxDuration`.
 
-GET handlers must not mutate state. The pay link `GET /api/orders/[orderCode]/pay` is a known exception, because it can create a Checkout session. Don't add more.
+GET handlers must not mutate state. (`GET /api/orders/[orderCode]/pay` only redirects old payment links to `/`.)
 
 ## Errors and logging
 
-- Clients get short **Slovak** messages with no stack traces, SQL errors or provider responses. Admin routes may return actionable messages (e.g. mapped `PacketaApiError`).
-- Log server-side as `console.error("UPPER_SNAKE_CODE:", context)`. Reuse the existing code style (`CREATE_ORDER_ERROR`, `MARK_ORDER_PAID_UPDATE_ERROR`, `PAID_ORDER_EMAIL_ERROR`, …).
-- **Never log** full request bodies, emails, phones, names, notes, dedications, photo names or tokens. Log ids (`orderId`, Stripe ids), status codes and error objects.
-- Uncaught server errors email the operator via `onRequestError` (`instrumentation.ts` → `lib/error-reporting.ts`); errors a handler catches and logs do **not**. Make failures in money-relevant paths log a distinct code, and call `sendAdminAlertEmail` (ids only) where the operator must act.
+- Clients get short **Slovak** messages with no stack traces, SQL errors or provider responses. Admin routes may return actionable messages.
+- Log server-side as `console.error("UPPER_SNAKE_CODE:", context)`. Reuse the existing code style (`CREATE_ORDER_ERROR`, `ORDER_CREATED_EMAIL_ERROR`, `ORDER_CUSTOMER_EMAIL_ERROR`, …).
+- **Never log** full request bodies, emails, phones, names, notes, dedications, photo names or tokens. Log ids (`orderId`), status codes and error objects.
+- Uncaught server errors email the operator via `onRequestError` (`instrumentation.ts` → `lib/error-reporting.ts`); errors a handler catches and logs do **not**. Make failures in order and email paths log a distinct code, and call `sendAdminAlertEmail` (ids only) where the operator must act.
 
 ## Outbound calls
 
-- Add `AbortSignal.timeout(...)` when touching any `fetch` to Turnstile or Packeta (N-8).
-- Every Stripe create or refund needs an `idempotencyKey` (pattern: `duplicate-refund:${session.id}` in `lib/order-payments.ts`).
+- Add `AbortSignal.timeout(...)` when touching any `fetch` to Turnstile (N-8).
+- Resend sends that can be retried pass an `idempotencyKey` (pattern: `order-created/${orderId}` in `app/api/orders/route.ts`).
 - Work that must not delay the response (emails, notifications) belongs in `after()` from `next/server`. It is supported in Route Handlers; see `node_modules/next/dist/docs/01-app/03-api-reference/04-functions/after.md`.
 
 ## Resend (email)
@@ -53,19 +53,17 @@ GET handlers must not mutate state. The pay link `GET /api/orders/[orderCode]/pa
   - `ADMIN_EMAILS` is the **login allowlist**, a different variable.
   - `EMAIL_FROM` is the sender.
 - Existing emails:
-  - `sendOrderCreatedEmail`: awaiting payment, with the payment link.
-  - `sendOrderPaidEmail`: customer confirmation plus admin notification.
-  - `sendOrderFulfillmentEmail`: shipped or ready for pickup.
+  - `sendOrderReceivedEmails`: customer confirmation with payment instructions (bank transfer or cash) plus admin notification.
+  - `sendOrderFulfillmentEmail`: ready for pickup.
+  - `sendAdminAlertEmail`: operator alerts (failed email retry, server errors), ids only.
   - `sendBusinessInquiryEmail`.
-- An email failure must **never** undo or block a payment state change. Paid-order emails run via `after()` in `sendPaidOrderEmails` (`lib/order-payments.ts`), which records `customer_confirmed_at` / `admin_notified_at`; unsent ones show a warning and an "Odoslať znova" button in `/admin`. Payment anomalies go to the operator through `sendAdminAlertEmail` (ids only, no customer data, deduplicated per code and session).
-- When computing the price breakdown, goods − discount + delivery must equal the total. The paid email currently violates this (review N-3).
+- An email failure must **never** undo or block an order. Order emails run via `after()` in `resendMissingOrderEmails` (`lib/order-notifications.ts`), which records `customer_confirmed_at` / `admin_notified_at`; unsent ones show a warning and an "Odoslať znova" button in `/admin`.
+- When computing the price breakdown, goods − discount + delivery must equal the total (review N-3, fixed in `lib/order-notifications.ts`).
 - Never send to real addresses while developing or testing. Claude must not trigger any send.
 
-## Packeta
+## Payments and delivery
 
-- API calls only via `createPacketaPacket` in `lib/packeta.ts` (XML REST at `zasilkovna.cz/api/rest`). Escape every value with `escapeXml`, map errors to `PacketaApiError`, and use the env vars `PACKETA_API_PASSWORD` and `PACKETA_ESHOP`.
-- Packet creation is **admin-only, paid-only, Packeta-delivery-only**, and short-circuits when `tracking_number` exists (`app/api/admin/orders/[orderId]/create-packeta-packet/route.ts`). The packet `number` is `order_number`.
-- The pickup point (`packeta_point_id/name/address`) comes from the client widget (`components/delivery/packeta-picker`, SK vendors, Z-BOX preferred) and is **untrusted**. Validate its shape and length; never use it for anything but display and `addressId`.
+No payment provider and no carrier: personal pickup only, bank transfer or cash checked by the operator outside the site. See `payments.md`.
 
 ## Turnstile
 
@@ -73,8 +71,8 @@ GET handlers must not mutate state. The pay link `GET /api/orders/[orderCode]/pa
 
 ## Scheduled jobs
 
-`POST /api/cron/retry-paid-emails` resends paid-order emails not recorded as sent. It is called every 15 minutes by `.github/workflows/retry-paid-emails.yml` with `Authorization: Bearer ${CRON_SECRET}` (compared timing-safe; 503 when unset). Cron responses contain counts only, because Actions logs on the public repo are public. New scheduled work follows the same pattern: POST, secret header, bounded batch, idempotent.
+`POST /api/cron/retry-paid-emails` (path kept for the existing workflow) resends order emails of offline orders not recorded as sent. It is called every 15 minutes by `.github/workflows/retry-paid-emails.yml` with `Authorization: Bearer ${CRON_SECRET}` (compared timing-safe; 503 when unset). Cron responses contain counts only, because Actions logs on the public repo are public. New scheduled work follows the same pattern: POST, secret header, bounded batch, idempotent.
 
 ## Health endpoints
 
-`/api/health` is a public liveness check. `/api/health/deep` checks the DB, storage and Stripe and is currently public (L-5). Don't add more checks that call paid APIs or reveal configuration.
+`/api/health` is a public liveness check. `/api/health/deep` checks the DB, storage and the Resend config and is currently public (L-5). Don't add more checks that call paid APIs or reveal configuration.

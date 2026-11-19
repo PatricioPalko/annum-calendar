@@ -31,7 +31,7 @@ export function CTASection({ className }: CTASectionProps) {
             <Text variant="lead" className="mt-4 max-w-xl text-[#FFF7F4]/85">
               Vyberte fotografie, ktoré vám vždy vyčaria úsmev. My z nich
               vytvoríme kalendár plný vašich spomienok, s láskou ho zabalíme a
-              doručíme pripravený robiť radosť po celý rok.
+              odovzdáme pripravený robiť radosť po celý rok.
             </Text>
 
             <ul className="mt-6 space-y-2">

@@ -3,7 +3,7 @@ import {
   orderableCalendarTypesValues,
 } from "@/app/types/types";
 import { isValidCalendarDayMonth } from "@/helpers/calendar-date";
-import { discountAllowsPickup } from "@/helpers/discount-codes";
+import { PAYMENT_METHODS } from "@/helpers/payment-method";
 import { normalizePhone } from "@/helpers/phone";
 import { MEMORY_SET_LABEL, MAX_BIRTHDAY_NAME_LENGTH, MAX_DEDICATION_LENGTH, MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
 import { z } from "zod";
@@ -115,19 +115,22 @@ export const orderSchema = z
         "Pred odoslaním objednávky je potrebné súhlasiť s obchodnými podmienkami.",
     }),
     marketingConsent: z.boolean().optional(),
-    deliveryMethod: z.enum(["pickup", "packeta"]),
-    packetaPoint: z
-      .object({
-        id: z.string().min(1),
-        name: z.string().min(1),
-        address: z.string().min(1),
-      })
-      .optional(),
+    // Optional in the type so the form can start without a choice; the
+    // superRefine below still requires one before submit.
+    paymentMethod: z.enum(PAYMENT_METHODS, "Vyberte spôsob platby.").optional(),
     discountCode: optionalDiscountCodeSchema,
 
     dedications: z.array(optionalDedicationSchema),
   })
   .superRefine((data, ctx) => {
+    if (!data.paymentMethod) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["paymentMethod"],
+        message: "Vyberte spôsob platby.",
+      });
+    }
+
     if (
       data.quantityOption === CUSTOM_QUANTITY_VALUE &&
       data.customQuantity === undefined
@@ -136,25 +139,6 @@ export const orderSchema = z
         code: "custom",
         path: ["customQuantity"],
         message: "Zadajte vlastný počet kusov",
-      });
-    }
-
-    if (data.deliveryMethod === "packeta" && !data.packetaPoint) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["packetaPoint"],
-        message: "Vyberte výdajné miesto alebo Z-BOX Packety.",
-      });
-    }
-
-    if (
-      data.deliveryMethod === "pickup" &&
-      !discountAllowsPickup(data.discountCode)
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["deliveryMethod"],
-        message: "Osobný odber je dostupný len so zľavovým kódom RODINA15.",
       });
     }
 

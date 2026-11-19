@@ -1,14 +1,15 @@
 import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 
+import { OFFLINE_PAYMENT_STATUS } from "@/helpers/payment-method";
 import { sendAdminAlertEmail } from "@/lib/order-emails";
-import { resendMissingPaidOrderEmails } from "@/lib/order-payments";
+import { resendMissingOrderEmails } from "@/lib/order-notifications";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-/** Leaves the webhook's own after() send time to finish first. */
+/** Leaves the order route's own after() send time to finish first. */
 const MIN_AGE_MS = 5 * 60 * 1000;
 const MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const BATCH_SIZE = 20;
@@ -28,25 +29,25 @@ function isAuthorized(request: Request, secret: string) {
 async function alertRetryFailed(orderId: string) {
   try {
     await sendAdminAlertEmail({
-      code: "PAID_ORDER_EMAIL_RETRY_FAILED",
-      title: "E-mail k zaplatenej objednávke",
+      code: "ORDER_EMAIL_RETRY_FAILED",
+      title: "E-mail k objednávke",
       summary:
-        "Automatické opätovné odoslanie e-mailu k zaplatenej objednávke zlyhalo.",
+        "Automatické opätovné odoslanie e-mailu k objednávke zlyhalo.",
       orderId,
       footer:
         "Skontrolujte Resend a odošlite e-mail ručne tlačidlom „Odoslať znova“ v admin paneli.",
     });
   } catch (error) {
     console.error("ADMIN_ALERT_EMAIL_ERROR:", {
-      code: "PAID_ORDER_EMAIL_RETRY_FAILED",
+      code: "ORDER_EMAIL_RETRY_FAILED",
       error,
     });
   }
 }
 
 /**
- * Scheduled retry (GitHub Actions, every 15 min) for paid-order emails that
- * were not recorded as sent. Uses an hourly Resend idempotency key, so one
+ * Scheduled retry (GitHub Actions, every 15 min) for order emails that were
+ * not recorded as sent. Uses an hourly Resend idempotency key, so one
  * order gets at most one attempt per recipient per hour. Responds with counts
  * only: the caller's logs may be public.
  */
@@ -68,15 +69,15 @@ export async function POST(request: Request) {
   const { data, error } = await supabaseAdmin
     .from("orders")
     .select("id")
-    .eq("payment_status", "paid")
+    .eq("payment_status", OFFLINE_PAYMENT_STATUS)
     .or("customer_confirmed_at.is.null,admin_notified_at.is.null")
-    .lt("paid_at", new Date(now - MIN_AGE_MS).toISOString())
-    .gt("paid_at", new Date(now - MAX_AGE_MS).toISOString())
-    .order("paid_at", { ascending: true })
+    .lt("created_at", new Date(now - MIN_AGE_MS).toISOString())
+    .gt("created_at", new Date(now - MAX_AGE_MS).toISOString())
+    .order("created_at", { ascending: true })
     .limit(BATCH_SIZE);
 
   if (error) {
-    console.error("RETRY_PAID_EMAILS_LOOKUP_ERROR:", error);
+    console.error("RETRY_ORDER_EMAILS_LOOKUP_ERROR:", error);
 
     return NextResponse.json({ message: "Lookup failed." }, { status: 500 });
   }
@@ -86,13 +87,13 @@ export async function POST(request: Request) {
   let failed = 0;
 
   for (const { id } of (data ?? []) as Array<{ id: string }>) {
-    const result = await resendMissingPaidOrderEmails(id, {
-      idempotencyKeyPrefix: `order-paid-retry/${id}/${hourBucket}`,
+    const result = await resendMissingOrderEmails(id, {
+      idempotencyKeyPrefix: `order-email-retry/${id}/${hourBucket}`,
     });
 
     const ok =
       result.status === "nothing_to_send" ||
-      result.status === "not_paid" ||
+      result.status === "not_eligible" ||
       result.status === "not_found" ||
       (result.status === "sent" &&
         (!result.customerRequested || result.customerSent) &&

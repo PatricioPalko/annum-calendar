@@ -1,7 +1,7 @@
 import { SITE_URL } from "@/lib/seo";
 
 /**
- * Server env vars the order and payment flow cannot work without.
+ * Server env vars the order flow cannot work without.
  * Names only: values are never read into logs or the UI.
  */
 const REQUIRED_SERVER_ENV = [
@@ -9,13 +9,9 @@ const REQUIRED_SERVER_ENV = [
   "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
   "SUPABASE_SECRET_KEY",
   "NEXT_PUBLIC_APP_URL",
-  "STRIPE_SECRET_KEY",
-  "STRIPE_WEBHOOK_SECRET",
-  "ORDER_PAYMENT_SIGNING_SECRET",
   "UPLOAD_SIGNING_SECRET",
   "TURNSTILE_SECRET_KEY",
   "NEXT_PUBLIC_TURNSTILE_SITE_KEY",
-  "NEXT_PUBLIC_PACKETA_API_KEY",
   "RESEND_API_KEY",
   "EMAIL_FROM",
   "ADMIN_EMAIL",
@@ -23,18 +19,31 @@ const REQUIRED_SERVER_ENV = [
 ] as const;
 
 /**
- * Ordering works without these: Packeta labels need the first two, the
- * scheduled paid-email retry (`/api/cron/retry-paid-emails`) needs CRON_SECRET.
+ * Ordering works without these. Each entry says what is missing without it
+ * (shown in /admin). `productionOnly` vars are not reported in development.
  */
 const RECOMMENDED_SERVER_ENV = [
-  "PACKETA_API_PASSWORD",
-  "PACKETA_ESHOP",
-  "CRON_SECRET",
+  {
+    name: "BANK_ACCOUNT_IBAN",
+    purpose:
+      "číslo účtu v e-maile pri platbe prevodom (bez neho zákazník dostane správu, že číslo účtu mu pošlete samostatne)",
+    productionOnly: false,
+  },
+  {
+    // Used only by the scheduled email retry: GitHub Actions calls
+    // `/api/cron/retry-paid-emails` on the production site.
+    name: "CRON_SECRET",
+    purpose:
+      "automatické opakovanie neodoslaných e-mailov (rovnakú hodnotu treba aj v GitHub repo secrets)",
+    productionOnly: true,
+  },
 ] as const;
+
+export type MissingRecommendedEnv = { name: string; purpose: string };
 
 export type EnvProblems = {
   missingRequired: string[];
-  missingRecommended: string[];
+  missingRecommended: MissingRecommendedEnv[];
   /** Human-readable configuration warnings (no values). */
   warnings: string[];
 };
@@ -45,7 +54,10 @@ function isMissing(name: string) {
 
 export function getEnvProblems(): EnvProblems {
   const missingRequired = REQUIRED_SERVER_ENV.filter(isMissing);
-  const missingRecommended = RECOMMENDED_SERVER_ENV.filter(isMissing);
+  const isProduction = process.env.NODE_ENV === "production";
+  const missingRecommended = RECOMMENDED_SERVER_ENV.filter(
+    (entry) => (isProduction || !entry.productionOnly) && isMissing(entry.name),
+  ).map(({ name, purpose }) => ({ name, purpose }));
   const warnings: string[] = [];
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
@@ -76,12 +88,9 @@ export function getEnvProblems(): EnvProblems {
   return { missingRequired, missingRecommended, warnings };
 }
 
+/** Problems that can break orders or admin actions (red banner in /admin). */
 export function hasEnvProblems(problems: EnvProblems) {
-  return (
-    problems.missingRequired.length > 0 ||
-    problems.missingRecommended.length > 0 ||
-    problems.warnings.length > 0
-  );
+  return problems.missingRequired.length > 0 || problems.warnings.length > 0;
 }
 
 /** Called once at server start from instrumentation.ts. */
@@ -97,7 +106,7 @@ export function logEnvProblems() {
 
   if (problems.missingRecommended.length > 0) {
     console.warn("ENV_CONFIG_WARNING:", {
-      missingRecommended: problems.missingRecommended,
+      missingRecommended: problems.missingRecommended.map(({ name }) => name),
     });
   }
 }

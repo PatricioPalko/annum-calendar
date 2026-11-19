@@ -22,17 +22,10 @@ type OrderExportRow = {
   storage_folder: string | null;
   created_at: string;
   payment_status: string;
+  payment_method?: string | null;
   paid_at: string | null;
-  stripe_checkout_session_id: string | null;
-  stripe_payment_intent_id: string | null;
-  delivery_method: string | null;
   delivery_price: number | string | null;
   delivery_wave_key: string | null;
-  packeta_point_id: string | null;
-  packeta_point_name: string | null;
-  packeta_point_address: string | null;
-  tracking_number: string | null;
-  shipped_at: string | null;
   first_name: string;
   last_name: string;
   email: string;
@@ -86,14 +79,13 @@ export function buildOrderExportData(
 
     payment: {
       status: order.payment_status,
+      method: order.payment_method ?? null,
       paidAt: order.paid_at,
-      stripeCheckoutSessionId: order.stripe_checkout_session_id,
-      stripePaymentIntentId: order.stripe_payment_intent_id,
     },
 
     delivery: {
-      method: order.delivery_method ?? "pickup",
-      label: order.delivery_method === "packeta" ? "Packeta" : "Osobný odber",
+      method: "pickup",
+      label: "Osobný odber",
       price: Number(order.delivery_price ?? 0),
       wave: order.delivery_wave_key
         ? {
@@ -103,15 +95,6 @@ export function buildOrderExportData(
               order.delivery_wave_key,
           }
         : null,
-      packetaPoint: order.packeta_point_id
-        ? {
-            id: order.packeta_point_id,
-            name: normalizeOptionalString(order.packeta_point_name),
-            address: normalizeOptionalString(order.packeta_point_address),
-          }
-        : null,
-      trackingNumber: order.tracking_number ?? null,
-      shippedAt: order.shipped_at ?? null,
     },
 
     customer: {

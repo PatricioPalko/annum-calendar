@@ -8,7 +8,7 @@ const footerNavigationLinks = [
   { label: "Ako to prebieha", sectionId: "ako-to-funguje" },
   { label: "Čo je v balení", sectionId: "co-je-v-baleni" },
   { label: "Cenník", sectionId: "cennik" },
-  { label: "Termíny doručenia", sectionId: "terminy-dorucenia" },
+  { label: "Termíny odberu", sectionId: "terminy-dorucenia" },
   { label: "FAQ", sectionId: "faq" },
 ];
 
@@ -39,7 +39,7 @@ export function Footer() {
 
           <p className="mt-2 max-w-sm text-sm font-medium leading-6 text-[#3E0F28]/60">
             Personalizované A3 fotokalendáre z vlastných fotiek, s kovovou
-            väzbou a doručením cez Packetu.
+            väzbou a osobným odberom v Košiciach.
           </p>
 
           <div className="mt-4 space-y-1 text-sm font-semibold text-[#3E0F28]/65">

@@ -94,19 +94,16 @@ export function isOrderNamedaysStepComplete(
   );
 }
 
+/** Pickup is fixed, so the step is complete once a payment method is set. */
 export function isOrderDeliveryStepComplete(
-  values: Pick<OrderFormValues, "deliveryMethod" | "packetaPoint">,
+  values: Pick<OrderFormValues, "paymentMethod">,
   errors: FieldErrors<OrderFormValues>,
 ) {
-  if (errors.deliveryMethod || errors.packetaPoint) {
+  if (errors.paymentMethod) {
     return false;
   }
 
-  if (values.deliveryMethod === "packeta") {
-    return Boolean(values.packetaPoint);
-  }
-
-  return values.deliveryMethod === "pickup";
+  return values.paymentMethod === "bank_transfer" || values.paymentMethod === "cash";
 }
 
 export function isOrderContactStepComplete(

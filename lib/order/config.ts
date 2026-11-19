@@ -29,7 +29,7 @@ export const ORDER_SHARED_INCLUSIONS = [
   "13 strán (titulná strana + 12 mesiacov)",
   "Vaše fotky rozložené do 12 mesiacov (min. 14, odporúčame 30+)",
   "Príprava, tlač a pekné zabalenie v cene",
-  "Doručenie cez Packetu sa účtuje samostatne",
+  "Osobný odber v Košiciach zdarma",
   "Darčekovo zabalené, vhodné na darovanie",
 ] as const;
 

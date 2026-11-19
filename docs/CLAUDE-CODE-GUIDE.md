@@ -16,7 +16,7 @@ AGENTS.md                     ← Next.js agent rules block + shared Next.js rul
     code-reviewer.md  security-auditor.md  frontend-developer.md
     backend-developer.md  qa-engineer.md
   skills/                     ← reusable workflows, invoked as /<name>
-    production-audit/  stripe-review/  supabase-review/
+    production-audit/  supabase-review/
     code-quality/      pre-release-check/
 docs/
   PRODUCTION-AUDIT.md         ← first audit (historical)
@@ -39,10 +39,10 @@ docs/
 | `CLAUDE.md` | Business context, stack, commands, directory map, order lifecycle, integration boundaries, conventions, **safety boundaries**, change workflow | Always |
 | `rules/architecture.md` | Server/client/shared module split, single sources of truth, adapters, import-time side effects, static vs dynamic rendering, where new code goes | `app`, `components`, `lib`, `helpers`, `proxy.ts`, `next.config.ts` |
 | `rules/frontend.md` | Component structure, shadcn primitives, Tailwind tokens vs brand hex, mobile viewports, accessibility, forms, analytics and privacy in the browser, Slovak copy, SEO | components, pages, layouts, client modules |
-| `rules/backend.md` | Route handler sequence, Next 16 async APIs, errors and logging, timeouts and idempotency, `after()`, Resend, Packeta, Turnstile, health endpoints | `app/api`, server pages, `lib`, `proxy.ts` |
+| `rules/backend.md` | Route handler sequence, Next 16 async APIs, errors and logging, timeouts and idempotency, `after()`, Resend, Turnstile, health endpoints | `app/api`, server pages, `lib`, `proxy.ts` |
 | `rules/database.md` | Which Supabase client to use, migration process (files only), the `orders` model and statuses, RLS and function privileges, conditional updates, storage rules | `supabase`, `lib/supabase`, API and admin code |
 | `rules/security.md` | Env var classification, the mandatory admin auth sequence, capability tokens, personal data and photo handling, input and output encoding, headers, abuse controls | all application code |
-| `rules/payments.md` | Payment invariants, webhook semantics, payment links, business rules (variants, pricing tiers, pickup code, waves), admin order actions | order, payment, upload, admin-order files |
+| `rules/payments.md` | Offline payments (bank transfer, cash), order emails, business rules (variants, pricing tiers, pickup, waves), admin order actions | order, payment, upload, admin-order files |
 | `rules/testing.md` | Vitest setup and conventions, mocking approach, P0/P1 coverage, fixture rules, approval needed for new test libraries | test files plus critical logic files |
 
 The rules hold the detail and `CLAUDE.md` holds only summaries, so the two don't repeat each other.
@@ -54,9 +54,9 @@ The rules hold the detail and `CLAUDE.md` holds only summaries, so the two don't
 | Agent | Use it for | Edits code? | Preloaded skills |
 | --- | --- | --- | --- |
 | `code-reviewer` | Correctness, regressions and maintainability of a diff | No | `code-quality` |
-| `security-auditor` | Vulnerabilities, authorization, RLS and storage, personal data and photo privacy, payment abuse | No | `stripe-review`, `supabase-review` |
+| `security-auditor` | Vulnerabilities, authorization, RLS and storage, personal data and photo privacy, payment abuse | No | `supabase-review` |
 | `frontend-developer` | UI: components, pages, order-form UX, styling, accessibility | Yes (UI scope only) | none |
-| `backend-developer` | API routes, order and payment logic, webhook, emails, Packeta, SQL migration files | Yes (server scope only) | none |
+| `backend-developer` | API routes, order and payment-method logic, emails, SQL migration files | Yes (server scope only) | none |
 | `qa-engineer` | Test plans, edge cases, writing tests once a runner is approved | Tests only | none |
 
 The responsibilities don't overlap. Reviewers hand fixes to developers, developers hand verification to QA, and anything security-sensitive goes to the auditor.
@@ -75,7 +75,6 @@ All agents set `disallowedTools: mcp__*`, so they can't use MCP servers. The rev
 | Skill | Invoke | What it does |
 | --- | --- | --- |
 | `/production-audit [focus\|output]` | manual | Full readiness audit. Compares against both audits and the roadmap, runs lint, tsc and build plus bundle checks, writes `docs/PRODUCTION-AUDIT-<date>.md`. |
-| `/stripe-review [scope]` | manual or auto on payment files | Event matrix, price authority, session creation, idempotency, payment links, lifecycle coupling |
 | `/supabase-review [scope]` | manual or auto on Supabase, auth or upload files | Client and key separation, auth, RLS and grants, storage privacy, query patterns. Outputs read-only SQL for **you** to run. |
 | `/code-quality [scope]` | manual or auto | TypeScript, sources of truth, boundaries, validation alignment, logging, React/Next/Tailwind patterns |
 | `/pre-release-check [base]` | manual | GO / NO-GO: gates, build-output inspection (static routes, bundle leaks), diff hygiene, launch-blocker status, your manual checklist |
@@ -102,7 +101,7 @@ Skills are executable workflows with the commands to run and the files to read. 
 
 ### Security review
 
-1. Targeted: `/stripe-review` or `/supabase-review` with the scope, or `@agent-security-auditor` with the diff or area.
+1. Targeted: `/supabase-review` with the scope, or `@agent-security-auditor` with the diff or area.
 2. Periodic or full: `@agent-security-auditor` on the whole repository, or `/production-audit security`.
 3. Run the read-only production checks the auditor lists yourself, in the dashboards.
 4. Turn the findings into roadmap entries before fixing.
@@ -110,10 +109,10 @@ Skills are executable workflows with the commands to run and the files to read. 
 ### Before a production release
 
 1. `/pre-release-check main`.
-2. If high-risk files changed: `/stripe-review` / `/supabase-review` / `@agent-security-auditor`.
+2. If high-risk files changed: `/supabase-review` / `@agent-security-auditor`.
 3. Apply pending SQL migrations in Supabase **yourself**, before deploying the code that needs them.
-4. Complete the manual checklist the skill prints (env, Stripe webhook and methods, Supabase auth, Resend, Packeta).
-5. After deploy: a test order (or a live order that you refund), the admin email received, the homepage showing the current delivery batch.
+4. Complete the manual checklist the skill prints (env incl. `BANK_ACCOUNT_IBAN`, Supabase auth, Resend).
+5. After deploy: a test order (then deleted in /admin), the customer and admin emails received, the homepage showing the current delivery batch.
 
 ## 6. Safety model and its limits
 

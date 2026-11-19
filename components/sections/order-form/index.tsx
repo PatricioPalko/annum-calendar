@@ -28,6 +28,7 @@ import { OrderFormValues, orderSchema } from "@/lib/schema";
 import { uploadOrderPhotos } from "@/lib/upload-order-photos";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Controller, type Resolver, useForm } from "react-hook-form";
 import { BirthdaysFieldArray } from "../order-form-components/form-birthdays";
@@ -36,13 +37,17 @@ import { FormDedication } from "../order-form-components/form-dedication";
 import { FormDeliveryMethod } from "../order-form-components/form-delivery-method";
 import { FormInput } from "../order-form-components/form-input";
 import { NamedaysFieldArray } from "../order-form-components/form-namedays";
+import { FormPaymentMethod } from "../order-form-components/form-payment-method";
 import { PhotoDropzone } from "../order-form-components/form-photo-dropzone";
 import { PriceSummary } from "../order-form-components/form-price-summary";
 import { FormQuantity } from "../order-form-components/form-quantity";
 import { FormRadioGroup } from "../order-form-components/form-radiogroup";
 import { FormTextarea } from "../order-form-components/form-textarea";
 import { OrderFormMobileBar } from "../order-form-components/order-form-mobile-bar";
-import { orderFormFieldHintClassName } from "../order-form-components/order-form-styles";
+import {
+  orderFormFieldHintClassName,
+  orderFormSubsectionLabelClassName,
+} from "../order-form-components/order-form-styles";
 import OrderSection from "../order-section";
 
 const orderFormDefaultValues: OrderFormValues = {
@@ -61,13 +66,13 @@ const orderFormDefaultValues: OrderFormValues = {
   marketingConsent: false,
   discountCode: "",
   dedications: [],
-  deliveryMethod: "packeta",
-  packetaPoint: undefined,
+  paymentMethod: undefined,
 };
 
 import { MAX_PHOTOS, MIN_PHOTOS } from "@/lib/order/config";
 
 export default function OrderForm() {
+  const router = useRouter();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string>("");
   const turnstileRef = useRef<TurnstileWidgetHandle>(null);
@@ -92,15 +97,13 @@ export default function OrderForm() {
   const selectedCalendarType = form.watch("types");
   const customQuantity = form.watch("customQuantity");
   const selectedPhotosQuantity = form.watch("photos")?.length ?? 0;
+  const selectedPaymentMethod = form.watch("paymentMethod");
   const isSubmitting = form.formState.isSubmitting;
 
   const [discountCodeTouched, setDiscountCodeTouched] = useState(false);
 
   const discountCode = form.watch("discountCode") ?? "";
   const normalizedDiscountCode = discountCode.trim().toUpperCase();
-
-  const appliedDiscount = getDiscountCode(normalizedDiscountCode);
-  const showPickupOption = Boolean(appliedDiscount?.allowsPickup);
 
   const discountCodeError =
     normalizedDiscountCode && !getDiscountCode(normalizedDiscountCode)
@@ -115,9 +118,7 @@ export default function OrderForm() {
     errors.quantityOption || errors.customQuantity,
   );
   const hasBirthdayError = Boolean(errors.birthdays);
-  const hasDeliveryError = Boolean(
-    errors.deliveryMethod || errors.packetaPoint,
-  );
+  const hasDeliveryError = Boolean(errors.paymentMethod);
   const hasContactError = Boolean(
     errors.firstName ||
     errors.lastName ||
@@ -132,7 +133,6 @@ export default function OrderForm() {
   const hasSubmitError = Boolean(submitError);
   const turnstileConfigured = Boolean(turnstileSiteKey);
   const canSubmitWithTurnstile = !turnstileConfigured || Boolean(turnstileToken);
-  const selectedDeliveryMethod = form.watch("deliveryMethod");
   const watchedFormValues = form.watch();
   /* eslint-enable react-hooks/incompatible-library */
   const formErrors = form.formState.errors;
@@ -233,19 +233,6 @@ export default function OrderForm() {
   }, [isMemoryType, dedicationQuantity, form]);
 
   useEffect(() => {
-    if (showPickupOption) {
-      return;
-    }
-
-    if (form.getValues("deliveryMethod") === "pickup") {
-      form.setValue("deliveryMethod", "packeta", {
-        shouldDirty: true,
-        shouldValidate: true,
-      });
-    }
-  }, [showPickupOption, form]);
-
-  useEffect(() => {
     if (!submitError) {
       return;
     }
@@ -326,9 +313,7 @@ export default function OrderForm() {
           ? values.namedays
           : [],
 
-        deliveryMethod: values.deliveryMethod,
-        packetaPoint:
-          values.deliveryMethod === "packeta" ? values.packetaPoint : undefined,
+        paymentMethod: values.paymentMethod,
 
         termsAccepted: values.termsAccepted,
         marketingConsent: values.marketingConsent ?? false,
@@ -356,13 +341,13 @@ export default function OrderForm() {
 
       const result = await response.json();
 
-      if (result.checkoutUrl) {
+      if (result.orderId) {
         resetOrderFormState();
-        window.location.href = result.checkoutUrl;
+        router.push("/objednavka/dakujeme");
         return;
       }
 
-      throw new Error("Missing checkout URL");
+      throw new Error("Missing order id");
     } catch (error) {
       console.error("ORDER_SUBMIT_ERROR:", error);
 
@@ -405,7 +390,7 @@ export default function OrderForm() {
               stepNumber={2}
               totalSteps={totalSteps}
               title="Počet kusov"
-              description="Viac kusov = nižšia cena za kalendár. Všetky kusy posielame v jednom balíku."
+              description="Viac kusov = nižšia cena za kalendár. Všetky kusy si prevezmete naraz."
               isComplete={stepCompletion.quantity}
               isActive={activeStep === "quantity"}
             >
@@ -513,20 +498,21 @@ export default function OrderForm() {
             <OrderSection
               stepNumber={deliveryStepNumber}
               totalSteps={totalSteps}
-              title="Doručenie"
-              description={
-                showPickupOption
-                  ? "Osobný odber v Košiciach alebo Packeta."
-                  : "Packeta na výdajné miesto alebo Z-BOX."
-              }
+              title="Odber a platba"
+              description="Osobný odber v Košiciach. Zaplatiť môžete prevodom alebo v hotovosti."
               isComplete={stepCompletion.delivery}
               isActive={activeStep === "delivery"}
             >
-              <FormDeliveryMethod
-                control={form.control}
-                showPickup={showPickupOption}
-                isSubmitting={isSubmitting}
-              />
+              <div className="space-y-4">
+                <FormDeliveryMethod />
+
+                <div className="space-y-2">
+                  <p className={orderFormSubsectionLabelClassName}>
+                    Spôsob platby
+                  </p>
+                  <FormPaymentMethod control={form.control} />
+                </div>
+              </div>
             </OrderSection>
           </div>
           <div data-error-section={hasContactError ? "true" : undefined}>
@@ -615,6 +601,7 @@ export default function OrderForm() {
               quantityOption={selectedQuantityOption}
               customQuantity={customQuantity}
               selectedPhotosQuantity={selectedPhotosQuantity}
+              paymentMethod={selectedPaymentMethod}
               onQuantityChange={
                 isSubmitting
                   ? undefined
@@ -654,7 +641,6 @@ export default function OrderForm() {
                   shouldValidate: true,
                 });
               }}
-              deliveryMethod={selectedDeliveryMethod}
             />
             <div data-error-section={hasTermsError ? "true" : undefined}>
               <FormConsentCheckbox control={form.control} className="px-4 sm:px-5" />
@@ -727,7 +713,6 @@ export default function OrderForm() {
         type={selectedCalendarType}
         quantityOption={selectedQuantityOption}
         customQuantity={customQuantity}
-        deliveryMethod={selectedDeliveryMethod}
         discountCode={discountCode}
         isSubmitting={isSubmitting}
         submitDisabled={!canSubmitWithTurnstile}

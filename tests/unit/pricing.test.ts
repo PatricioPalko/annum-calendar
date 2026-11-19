@@ -7,10 +7,7 @@ import {
   orderableCalendarTypesValues,
 } from "@/app/types/types";
 import { getDeliveryPrice } from "@/helpers/delivery";
-import {
-  discountAllowsPickup,
-  getDiscountAmount,
-} from "@/helpers/discount-codes";
+import { getDiscountAmount } from "@/helpers/discount-codes";
 
 /** Same call shape as app/api/orders/route.ts uses for the server-side price. */
 function priceFor(type: (typeof orderableCalendarTypesValues)[number], quantity: number) {
@@ -83,21 +80,22 @@ describe("getCalendarPrice", () => {
 });
 
 describe("discounts and delivery", () => {
-  it("applies ANNUM10 as 10 % of the goods price", () => {
-    expect(getDiscountAmount(83.7, "ANNUM10")).toMatchObject({
-      isValid: true,
-      discountAmount: 8.37,
-      finalPrice: 75.33,
-    });
-  });
-
-  it("applies RODINA15 as 15 % and normalizes case and whitespace", () => {
-    const discount = getDiscountAmount(49, "  rodina15 ");
+  it("applies ANNUM20 as 20 % of the goods price", () => {
+    const discount = getDiscountAmount(83.7, "ANNUM20");
 
     expect(discount.isValid).toBe(true);
-    expect(discount.code).toBe("RODINA15");
-    expect(discount.discountAmount).toBeCloseTo(7.35, 2);
-    expect(discount.finalPrice).toBeCloseTo(41.65, 2);
+    expect(discount.discountAmount).toBe(16.74);
+    // Float subtraction; the numeric(10,2) column stores 66.96 (see below).
+    expect(discount.finalPrice).toBeCloseTo(66.96, 2);
+  });
+
+  it("normalizes case and whitespace of the code", () => {
+    const discount = getDiscountAmount(49, "  annum20 ");
+
+    expect(discount.isValid).toBe(true);
+    expect(discount.code).toBe("ANNUM20");
+    expect(discount.discountAmount).toBeCloseTo(9.8, 2);
+    expect(discount.finalPrice).toBeCloseTo(39.2, 2);
   });
 
   it("ignores unknown codes without changing the price", () => {
@@ -108,51 +106,44 @@ describe("discounts and delivery", () => {
     });
   });
 
-  it("allows personal pickup only with a code that permits it", () => {
-    expect(discountAllowsPickup("RODINA15")).toBe(true);
-    expect(discountAllowsPickup("rodina15")).toBe(true);
-    expect(discountAllowsPickup("ANNUM10")).toBe(false);
-    expect(discountAllowsPickup(undefined)).toBe(false);
+  it("no longer accepts the retired ANNUM10 and RODINA15 codes", () => {
+    expect(getDiscountAmount(49, "ANNUM10").isValid).toBe(false);
+    expect(getDiscountAmount(49, "RODINA15").isValid).toBe(false);
   });
 
-  it("charges 3.90 € for Packeta and nothing for pickup", () => {
-    expect(getDeliveryPrice("packeta")).toBe(3.9);
-    expect(getDeliveryPrice("pickup")).toBe(0);
+  it("charges nothing for personal pickup", () => {
+    expect(getDeliveryPrice()).toBe(0);
   });
 });
 
-describe("price consistency between checkout, database and webhook", () => {
-  it("produces identical cents on every path for all orderable combinations", () => {
+describe("price consistency between the order route and the database", () => {
+  it("stores a positive total with exact cents for all orderable combinations", () => {
     const mismatches: string[] = [];
     let combinations = 0;
 
     for (const type of orderableCalendarTypesValues) {
       for (let quantity = 1; quantity <= 200; quantity++) {
-        for (const code of [undefined, "ANNUM10", "RODINA15"]) {
-          for (const delivery of ["packeta", "pickup"] as const) {
-            combinations++;
+        for (const code of [undefined, "ANNUM20"]) {
+          combinations++;
 
-            const goods = priceFor(type, quantity);
-            const discount = getDiscountAmount(goods, code);
-            // Same expression as app/api/orders/route.ts (finalTotalPrice).
-            const total = discount.finalPrice! + getDeliveryPrice(delivery);
+          const goods = priceFor(type, quantity);
+          const discount = getDiscountAmount(goods, code);
+          // Same expression as app/api/orders/route.ts (finalTotalPrice).
+          const total = discount.finalPrice! + getDeliveryPrice();
 
-            // lib/order-checkout.ts: unit_amount for Stripe Checkout.
-            const stripeCents = Math.round(total * 100);
-            // Value stored in orders.total_price (numeric(10,2)).
-            const storedCents = postgresNumeric2Cents(total);
-            // lib/order-payments.ts: expectedAmountCents from the stored value.
-            const webhookCents = Math.round((storedCents / 100) * 100);
+          // Cents shown in the order email (formatPrice) and the admin.
+          const displayedCents = Math.round(total * 100);
+          // Value stored in orders.total_price (numeric(10,2)).
+          const storedCents = postgresNumeric2Cents(total);
 
-            if (total <= 0 || stripeCents !== webhookCents) {
-              mismatches.push(`${type} × ${quantity} ${code ?? "-"} ${delivery}: ${total}`);
-            }
+          if (total <= 0 || displayedCents !== storedCents) {
+            mismatches.push(`${type} × ${quantity} ${code ?? "-"}: ${total}`);
           }
         }
       }
     }
 
-    expect(combinations).toBe(3600);
+    expect(combinations).toBe(1200);
     expect(mismatches).toEqual([]);
   });
 });

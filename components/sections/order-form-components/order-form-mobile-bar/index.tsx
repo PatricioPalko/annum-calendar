@@ -11,13 +11,10 @@ import { PriceWithVat } from "@/components/ui/price-with-vat";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
-type DeliveryMethod = "pickup" | "packeta";
-
 type OrderFormMobileBarProps = {
   type: CalendarTypes;
   quantityOption: QuantityOption;
   customQuantity?: number;
-  deliveryMethod: DeliveryMethod;
   discountCode?: string;
   isSubmitting: boolean;
   submitDisabled?: boolean;
@@ -28,14 +25,13 @@ export function OrderFormMobileBar({
   type,
   quantityOption,
   customQuantity,
-  deliveryMethod,
   discountCode = "",
   isSubmitting,
   submitDisabled = false,
 }: OrderFormMobileBarProps) {
   const price = getCalendarPrice({ type, quantityOption, customQuantity });
   const discount = getDiscountAmount(price.totalPrice, discountCode);
-  const deliveryPrice = getDeliveryPrice(deliveryMethod);
+  const deliveryPrice = getDeliveryPrice();
   const totalPrice =
     discount.finalPrice !== null ? discount.finalPrice + deliveryPrice : null;
 

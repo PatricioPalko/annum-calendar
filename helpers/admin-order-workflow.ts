@@ -1,6 +1,7 @@
 import { OrderRow } from "@/app/types/types";
+import { isFulfillablePaymentStatus } from "@/helpers/payment-method";
 
-export type WorkflowStepId = "download" | "packeta" | "notify" | "complete";
+export type WorkflowStepId = "download" | "notify" | "complete";
 
 export type WorkflowStep = {
   id: WorkflowStepId;
@@ -12,18 +13,21 @@ export type WorkflowStep = {
 };
 
 export function isOrderFullyProcessed(order: OrderRow) {
-  return order.payment_status === "paid" && order.status === "completed";
+  return (
+    isFulfillablePaymentStatus(order.payment_status) &&
+    order.status === "completed"
+  );
 }
 
 export function getWorkflowSteps(order: OrderRow): {
   isPaid: boolean;
-  isPacketa: boolean;
   isCompleted: boolean;
   currentStepId: WorkflowStepId | null;
   steps: WorkflowStep[];
 } {
-  const isPaid = order.payment_status === "paid";
-  const isPacketa = order.delivery_method === "packeta";
+  // Placed with an offline payment (not verified on the site) or an older
+  // order paid online.
+  const isPaid = isFulfillablePaymentStatus(order.payment_status);
   const isCompleted = order.status === "completed";
   const isNotified = ["ready", "shipped", "completed"].includes(order.status);
 
@@ -31,8 +35,6 @@ export function getWorkflowSteps(order: OrderRow): {
 
   if (isPaid && !order.downloaded_at) {
     currentStepId = "download";
-  } else if (isPaid && isPacketa && !order.tracking_number) {
-    currentStepId = "packeta";
   } else if (isPaid && !isNotified) {
     currentStepId = "notify";
   } else if (
@@ -60,19 +62,9 @@ export function getWorkflowSteps(order: OrderRow): {
       clickable: isPaid,
     },
     {
-      id: "packeta",
-      label: "Štítok",
-      actionLabel: "Vytvoriť štítok",
-      done: Boolean(order.tracking_number),
-      show: isPaid && isPacketa,
-      clickable: isPaid && isPacketa,
-    },
-    {
       id: "notify",
-      label: isPacketa ? "Odoslané" : "Pripravené",
-      actionLabel: isPacketa
-        ? "Odoslať info o odoslaní"
-        : "Odoslať info o odberu",
+      label: "Pripravené",
+      actionLabel: "Odoslať info o odbere",
       done: isNotified,
       show: isPaid,
       clickable: isPaid,
@@ -104,7 +96,6 @@ export function getWorkflowSteps(order: OrderRow): {
 
   return {
     isPaid,
-    isPacketa,
     isCompleted,
     currentStepId,
     steps,
@@ -125,10 +116,8 @@ export function getWorkflowConfirmMessage(
   switch (stepId) {
     case "download":
       return `${prefix} „Stiahnuté“?`;
-    case "packeta":
-      return `${prefix} „Štítok“? Ak už existuje, Packeta vráti existujúci štítok.`;
     case "notify":
-      return `${prefix} „Odoslané / Pripravené“ a odoslať email zákazníkovi?`;
+      return `${prefix} „Pripravené“ a odoslať zákazníkovi e-mail o odbere?`;
     case "complete":
       return `${prefix} „Vybavené“ a uzavrieť objednávku?`;
     default:

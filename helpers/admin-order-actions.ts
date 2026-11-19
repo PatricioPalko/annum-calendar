@@ -22,38 +22,10 @@ export async function downloadOrderPhotos(orderId: string, fileName: string) {
   window.URL.revokeObjectURL(url);
 }
 
-export async function createPacketaLabel(orderId: string) {
-  const response = await fetch(
-    `/api/admin/orders/${orderId}/create-packeta-packet`,
-    { method: "POST" },
-  );
-
-  if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as {
-      message?: string;
-    } | null;
-
-    throw new Error(
-      payload?.message ?? "Nepodarilo sa vytvoriť štítok v Packete.",
-    );
-  }
-}
-
-export async function notifyOrderFulfillment(
-  orderId: string,
-  trackingNumber?: string,
-) {
+export async function notifyOrderFulfillment(orderId: string) {
   const response = await fetch(
     `/api/admin/orders/${orderId}/notify-fulfillment`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        trackingNumber: trackingNumber || undefined,
-      }),
-    },
+    { method: "POST" },
   );
 
   if (!response.ok) {

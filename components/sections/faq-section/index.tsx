@@ -79,37 +79,32 @@ const faqSections = [
       {
         question: "Ako prebieha platba?",
         answer:
-          "Po odoslaní objednávky Vás presmerujeme na bezpečnú platobnú stránku Stripe, kde môžete zaplatiť kartou alebo dostupnou peňaženkou, napríklad Apple Pay alebo Google Pay. Objednávku začneme spracovávať po úspešnej platbe.",
-      },
-      {
-        question: "Čo ak platbu nedokončím alebo zavriem platobnú stránku?",
-        answer:
-          "Objednávka zostane uložená a nemusíte znova nahrávať fotky. Po vytvorení objednávky Vám pošleme e-mail s odkazom na dokončenie platby. Platbu môžete zopakovať aj zo stránky, na ktorú sa vrátite po zrušení platby.",
+          "V objednávke si vyberiete platbu prevodom na účet alebo v hotovosti pri odbere. Pri prevode Vám platobné údaje (číslo účtu, variabilný symbol a správu pre prijímateľa) pošleme e-mailom hneď po objednaní. Prosíme o úhradu pred odberom kalendára.",
       },
     ],
   },
   {
-    title: "Doručenie",
+    title: "Odber",
     items: [
       {
-        question: "Aké možnosti doručenia ponúkate?",
+        question: "Ako si kalendár prevezmem?",
         answer:
-          "Kalendár doručujeme cez Packetu. V objednávke si vyberiete výdajné miesto alebo Z-BOX, ktorý vám najviac vyhovuje.",
+          "Kalendár si prevezmete osobne v Košiciach. Keď bude pripravený, ozveme sa Vám a dohodneme čas odberu.",
       },
       {
-        question: "Ako fungujú termíny doručenia a várky výroby?",
+        question: "Ako fungujú termíny odberu a várky výroby?",
         answer:
-          "Objednávky pripravujeme v spoločných várkach tlače — pri objednávke vám v súhrne ukážeme aktuálnu várku a odhadovaný termín doručenia. Presný termín potvrdíme po zaplatení.",
+          "Objednávky pripravujeme v spoločných várkach tlače — pri objednávke vám v súhrne ukážeme aktuálnu várku a odhadovaný termín, kedy bude kalendár pripravený na odber. Presný termín potvrdíme e-mailom.",
       },
       {
         question: "Stihnem kalendár ako darček na Vianoce?",
         answer:
-          "Áno — pri vianočnej várke stačí objednávku odoslať a zaplatiť do uvedeného termínu na stránke Termíny doručenia. Odporúčame objednať skôr, aby sme mali rezervu na prípravu a tlač.",
+          "Áno — pri vianočnej várke stačí objednávku odoslať do uvedeného termínu v časti Termíny odberu. Odporúčame objednať skôr, aby sme mali rezervu na prípravu a tlač.",
       },
       {
-        question: "Je doručenie zahrnuté v cene?",
+        question: "Platím niečo za odber?",
         answer:
-          "Doručenie cez Packetu sa účtuje samostatne. Cena doručenia sa pripočíta k objednávke a zobrazí sa v súhrne ešte pred platbou (s DPH).",
+          "Nie, osobný odber v Košiciach je zdarma.",
       },
     ],
   },
@@ -119,17 +114,17 @@ const faqSections = [
       {
         question: "Čo sa stane po odoslaní objednávky?",
         answer:
-          "Po odoslaní objednávky sa objednávka uloží a prejdete na online platbu. E-mailom dostanete informáciu, že objednávka čaká na platbu. Po úspešnej platbe Vám príde potvrdenie a objednávku zaradíme na spracovanie.",
+          "Objednávka sa uloží a e-mailom Vám príde potvrdenie so súhrnom a pokynmi k platbe. Objednávku zaradíme do najbližšej várky na spracovanie.",
       },
       {
-        question: "Ako zistím, že je kalendár pripravený alebo odoslaný?",
+        question: "Ako zistím, že je kalendár pripravený?",
         answer:
-          "Keď bude kalendár odoslaný cez Packetu, pošleme vám e-mail. V e-maile zašleme aj informácie k zásielke, ak budú dostupné.",
+          "Keď bude kalendár pripravený na odber, pošleme vám e-mail a dohodneme sa na čase odberu.",
       },
       {
         question: "Čo je zahrnuté v cene kalendára?",
         answer:
-          "Cena zahŕňa spracovanie objednávky, prípravu kalendára z nahraných fotiek, tlač, zabalenie a základnú úpravu rozloženia podľa zvoleného variantu. Pri variante Premium je zahrnuté aj zvýraznenie vybraných menín a narodenín. Doručenie sa účtuje samostatne podľa zvoleného spôsobu doručenia.",
+          "Cena zahŕňa spracovanie objednávky, prípravu kalendára z nahraných fotiek, tlač, zabalenie a základnú úpravu rozloženia podľa zvoleného variantu. Pri variante Premium je zahrnuté aj zvýraznenie vybraných menín a narodenín. Osobný odber v Košiciach je zdarma.",
       },
     ],
   },
@@ -162,7 +157,7 @@ export function FaqSection() {
         </Heading>
 
         <Text variant="lead" className="mx-auto mt-2 max-w-2xl text-sm sm:text-base">
-          Odpovede na otázky k fotokalendáru, objednávke, platbe a doručeniu.
+          Odpovede na otázky k fotokalendáru, objednávke, platbe a odberu.
         </Text>
       </div>
 

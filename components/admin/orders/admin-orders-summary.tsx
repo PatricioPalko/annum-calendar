@@ -1,12 +1,12 @@
 import { formatPrice } from "@/helpers/admin-order-price";
+import type { OrderPaymentGroup } from "@/helpers/admin-orders";
 
 type AdminOrdersSummaryProps = {
   ordersCount: number;
-  paidCount: number;
-  pendingPaymentCount: number;
+  paymentCounts: Record<OrderPaymentGroup, number>;
+  paymentTotals: Record<OrderPaymentGroup, number>;
   totalQuantity: number;
   totalPrice: number;
-  paidTotalPrice: number;
   totalOriginalPrice: number;
   totalDiscountAmount: number;
   customPriceCount: number;
@@ -14,11 +14,10 @@ type AdminOrdersSummaryProps = {
 
 export function AdminOrdersSummary({
   ordersCount,
-  paidCount,
-  pendingPaymentCount,
+  paymentCounts,
+  paymentTotals,
   totalQuantity,
   totalPrice,
-  paidTotalPrice,
   totalOriginalPrice,
   totalDiscountAmount,
   customPriceCount,
@@ -46,13 +45,20 @@ export function AdminOrdersSummary({
           </p>
 
           <p className="mt-2 text-2xl font-bold text-[#3E0F28]">
-            {paidCount} / {ordersCount}
+            {ordersCount - paymentCounts.pending} / {ordersCount}
           </p>
 
           <div className="mt-1 space-y-0.5 text-sm font-medium text-[#3E0F28]/60">
-            <p>Zaplatené {paidCount}</p>
+            <p>Prevodom {paymentCounts.bank_transfer}</p>
+            <p>Hotovosť {paymentCounts.cash}</p>
 
-            {pendingPaymentCount > 0 && <p>Čaká {pendingPaymentCount}</p>}
+            {paymentCounts.online > 0 && (
+              <p>Zaplatené online (staršie) {paymentCounts.online}</p>
+            )}
+
+            {paymentCounts.pending > 0 && (
+              <p>Nedokončené online (staršie) {paymentCounts.pending}</p>
+            )}
           </div>
         </div>
 
@@ -88,7 +94,12 @@ export function AdminOrdersSummary({
           </div>
 
           <div className="mt-1 space-y-0.5 text-sm font-medium text-[#3E0F28]/60">
-            <p>Zaplatené {formatPrice(paidTotalPrice)}</p>
+            <p>Prevodom {formatPrice(paymentTotals.bank_transfer)}</p>
+            <p>Hotovosť {formatPrice(paymentTotals.cash)}</p>
+
+            {paymentTotals.online > 0 && (
+              <p>Zaplatené online (staršie) {formatPrice(paymentTotals.online)}</p>
+            )}
 
             {totalDiscountAmount > 0 && (
               <p>Zľavy {formatPrice(totalDiscountAmount)}</p>

@@ -17,14 +17,10 @@ Code is split by *where it may run*, not by layer folders. Respect these boundar
 **Server-only modules.** Never import these from a `"use client"` file or from anything a client file imports:
 
 - `lib/supabase/admin.ts` (service-role client)
-- `lib/stripe.ts`
 - `lib/resend.ts`
 - `lib/order-emails.ts`
-- `lib/order-payments.ts`
-- `lib/order-checkout.ts`
+- `lib/order-notifications.ts`
 - `lib/order-export.ts`
-- `lib/packeta.ts`
-- `lib/order-payment-token.ts`
 - `lib/upload-finalize-token.ts`
 - `lib/rate-limit.ts`
 - `lib/health-checks.ts`
@@ -50,6 +46,7 @@ Code is split by *where it may run*, not by layer folders. Respect these boundar
 - `lib/order/delivery-waves.ts`
 - `helpers/discount-codes.ts`
 - `helpers/delivery.ts`
+- `helpers/payment-method.ts`
 - `helpers/phone.ts`
 - `helpers/calendar-date.ts`
 - `lib/seo.ts`
@@ -64,14 +61,13 @@ Reuse these. Never re-implement them.
 | Concern | Owner |
 | --- | --- |
 | Calendar price per variant and quantity | `getCalendarPrice` in `app/types/types.ts` |
-| Delivery price (`packeta` 3.90 €, `pickup` 0 €) | `getDeliveryPrice` in `helpers/delivery.ts` |
-| Discount math and the pickup permission | `getDiscountAmount` / `discountAllowsPickup` in `helpers/discount-codes.ts` |
+| Delivery price (personal pickup, 0 €; the only method) | `getDeliveryPrice` in `helpers/delivery.ts` |
+| Discount math (code `ANNUM20`) | `getDiscountAmount` in `helpers/discount-codes.ts` |
+| Payment methods, `offline` status, which orders admin may fulfil | `helpers/payment-method.ts` |
 | Order code and storage folder format | `helpers/order-code.ts` |
 | Photo and dedication limits, Memory set prices | `lib/order/config.ts` |
 | Delivery batches ("várky") | `lib/order/delivery-waves.ts` |
-| Checkout session create or reuse | `getOrCreateOrderCheckoutSession` in `lib/order-checkout.ts` |
-| Marking an order paid | `markOrderPaidFromCheckoutSession` in `lib/order-payments.ts` |
-| Payment links | `lib/order-payment-token.ts` |
+| Order emails (send missing, record sent) | `resendMissingOrderEmails` in `lib/order-notifications.ts` |
 | Operator and legal identity | `lib/legal.ts` |
 | Canonical site origin | `SITE_URL` in `lib/seo.ts` (must equal the `NEXT_PUBLIC_APP_URL` env value; roadmap M-10) |
 
@@ -79,17 +75,15 @@ Reuse these. Never re-implement them.
 
 Extend the existing adapter instead of creating a parallel one:
 
-- Stripe: `lib/stripe.ts`
 - Supabase: `lib/supabase/*`
 - Resend: `getResend()` in `lib/resend.ts` (lazy) + `lib/order-emails.ts`
-- Packeta: `lib/packeta.ts`
 - Turnstile: inline verification in `app/api/uploads/sign/route.ts`
 
 Do not add new third-party SDKs or services without explicit approval.
 
 ## Import-time side effects
 
-`lib/stripe.ts` throws at import if `STRIPE_SECRET_KEY` is missing. The Resend client is created lazily by `getResend()` so a missing `RESEND_API_KEY` only breaks email (review N-9). Do **not** add import-time throws to modules on the order or payment path. Prefer lazy construction inside the function that needs the client. Startup env problems are reported by `instrumentation.ts` → `lib/env.ts` (log `ENV_CONFIG_ERROR` + `/admin` banner); add new required server env vars to `REQUIRED_SERVER_ENV` there.
+The Resend client is created lazily by `getResend()` so a missing `RESEND_API_KEY` only breaks email (review N-9). Do **not** add import-time throws to modules on the order path. Prefer lazy construction inside the function that needs the client. Startup env problems are reported by `instrumentation.ts` → `lib/env.ts` (log `ENV_CONFIG_ERROR` + `/admin` banner); add new required server env vars to `REQUIRED_SERVER_ENV` there.
 
 ## Rendering model (Next.js 16, no Cache Components)
 

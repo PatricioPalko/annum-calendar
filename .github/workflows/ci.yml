@@ -27,12 +27,8 @@ jobs:
       NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder
       SUPABASE_SECRET_KEY: ci-placeholder
-      STRIPE_SECRET_KEY: ci-placeholder
-      STRIPE_WEBHOOK_SECRET: ci-placeholder
-      ORDER_PAYMENT_SIGNING_SECRET: ci-placeholder
       UPLOAD_SIGNING_SECRET: ci-placeholder
       NEXT_PUBLIC_TURNSTILE_SITE_KEY: ci-placeholder
-      NEXT_PUBLIC_PACKETA_API_KEY: ci-placeholder
 
     steps:
       - uses: actions/checkout@v4

@@ -40,7 +40,7 @@ type AdminOrdersFiltersProps = {
   currentYear?: string;
   currentMonth?: string;
   currentCalendar?: string;
-  currentDelivery?: string;
+  currentPayment?: string;
   currentWave?: string;
   undownloadedCount: number;
 };
@@ -50,7 +50,7 @@ export function AdminOrdersFilters({
   currentYear = "all",
   currentMonth = "all",
   currentCalendar = "all",
-  currentDelivery = "all",
+  currentPayment = "all",
   currentWave = "all",
   undownloadedCount,
 }: AdminOrdersFiltersProps) {
@@ -59,14 +59,14 @@ export function AdminOrdersFilters({
   const waveOptions = getAllDeliveryWaveFilterOptions();
 
   function updateFilter(
-    key: "year" | "month" | "calendar" | "delivery" | "wave",
+    key: "year" | "month" | "calendar" | "payment" | "wave",
     value: string,
   ) {
     const next = {
       year: key === "year" ? value : currentYear,
       month: key === "month" ? value : currentMonth,
       calendar: key === "calendar" ? value : currentCalendar,
-      delivery: key === "delivery" ? value : currentDelivery,
+      payment: key === "payment" ? value : currentPayment,
       wave: key === "wave" ? value : currentWave,
     };
 
@@ -152,24 +152,24 @@ export function AdminOrdersFilters({
         </Select>
 
         <Select
-          value={currentDelivery}
-          onValueChange={(value) => updateFilter("delivery", value)}
+          value={currentPayment}
+          onValueChange={(value) => updateFilter("payment", value)}
         >
           <SelectTrigger
             size="sm"
             className={cn(
               "w-full sm:w-48",
-              currentDelivery !== "all" && activeFilterClassName,
+              currentPayment !== "all" && activeFilterClassName,
             )}
-            aria-label="Filter podľa doručenia"
+            aria-label="Filter podľa spôsobu platby"
           >
-            <SelectValue placeholder="Doručenie" />
+            <SelectValue placeholder="Platba" />
           </SelectTrigger>
 
           <SelectContent>
-            <SelectItem value="all">Všetky spôsoby</SelectItem>
-            <SelectItem value="pickup">Odber</SelectItem>
-            <SelectItem value="packeta">Doručenie</SelectItem>
+            <SelectItem value="all">Všetky platby</SelectItem>
+            <SelectItem value="bank_transfer">Prevodom</SelectItem>
+            <SelectItem value="cash">Hotovosť</SelectItem>
           </SelectContent>
         </Select>
 
