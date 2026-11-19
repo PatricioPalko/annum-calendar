@@ -6,7 +6,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Next.js Development Rules
 
-- Always use APIs compatible with the installed Next.js version (16.4.3).
+- Always use APIs compatible with the installed Next.js version (16.4.6).
 - Check the installed Next.js documentation before implementing unfamiliar APIs.
 - Prefer Server Components by default.
 - Use Client Components only when interactivity or browser APIs require them.
