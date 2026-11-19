@@ -13,7 +13,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = createPageMetadata({
   title: "Obchodné podmienky",
   description:
-    "Obchodné podmienky nákupu personalizovaného A3 fotokalendára Annum: cena, platba, dodanie, odstúpenie od zmluvy a reklamácie.",
+    "Obchodné podmienky nákupu personalizovaného A3 fotokalendára Annum: cena, platba, osobný odber, odstúpenie od zmluvy a reklamácie.",
   path: "/obchodne-podmienky",
 });
 
@@ -80,8 +80,8 @@ export default function TermsPage() {
               <LegalText>
                 Nahrať môžete 14 až 52 fotografií vo formáte JPG, PNG alebo
                 WEBP. Jedna fotografia môže mať najviac 10 MB. V cene
-                kalendára je príprava, tlač a zabalenie. Doručenie cez Packetu
-                je v súhrne uvedené osobitne.
+                kalendára je príprava, tlač a zabalenie. Osobný odber v
+                Košiciach je zdarma.
               </LegalText>
             </>
           ),
@@ -93,22 +93,14 @@ export default function TermsPage() {
             <>
               <LegalText>
                 Objednávku odošlete formulárom na stránke Objednávka. Pred
-                odoslaním vidíte variant, počet kusov, cenu, doručenie a
+                odoslaním vidíte variant, počet kusov, cenu, spôsob platby a
                 očakávaný termín várky. Odoslaním návrhu potvrdzujete, že ste
                 si prečítali tieto podmienky.
               </LegalText>
               <LegalText>
-                Po odoslaní objednávku uložíme a presmerujeme vás na platbu.
-                E-mailom dostanete číslo objednávky a odkaz na dokončenie
-                platby. Kúpnou zmluvou sa objednávka stáva až potvrdením
-                úspešnej platby. Do zaplatenia s výrobou nezačíname.
-              </LegalText>
-              <LegalText>
-                Ak platbu nedokončíte, objednávka zostane uložená a fotografie
-                nemusíte nahrávať znova. Zaplatíte odkazom z e-mailu alebo zo
-                stránky po návrate zo zrušenej platby. Nezaplatenú objednávku
-                nie sme povinní držať neobmedzene; kým ju nevymažeme, odkaz na
-                platbu môžete použiť.
+                Po odoslaní objednávku uložíme a e-mailom vám pošleme jej
+                potvrdenie s číslom objednávky, súhrnom a pokynmi k platbe.
+                Kúpna zmluva je uzavretá doručením tohto potvrdenia.
               </LegalText>
               <LegalText>
                 Zmluvu uzatvárame v slovenčine. Znenie podmienok platné v deň
@@ -120,24 +112,21 @@ export default function TermsPage() {
         },
         {
           id: "cena",
-          title: "Cena, doprava a platba",
+          title: "Cena a platba",
           body: (
             <>
               <LegalText>
                 Cena závisí od variantu a počtu kusov. Pri väčšom počte
                 rovnakých kalendárov je cena za kus nižšia. Zľavový kód, ak je
-                platný, znižuje cenu produktu. Cenu doručenia neznižuje, ak to
-                súhrn pred platbou výslovne neukáže.
+                platný, znižuje cenu produktu. Iné poplatky, ktoré by neboli v
+                súhrne objednávky, neúčtujeme.
               </LegalText>
               <LegalText>
-                Doručenie cez Packetu na výdajné miesto alebo Z-BOX na
-                Slovensku sa účtuje sumou zobrazenou v súhrne pred platbou.
-                Iné poplatky, ktoré by neboli v súhrne, neúčtujeme.
-              </LegalText>
-              <LegalText>
-                Platíte online cez Stripe spôsobom, ktorý platobná stránka
-                ponúkne. Objednávka je uhradená, keď Stripe potvrdí úspešnú
-                platbu. Potom dostanete potvrdzujúci e-mail.
+                Pri objednávke si vyberiete platbu prevodom na účet alebo v
+                hotovosti pri osobnom odbere. Pri prevode vám číslo účtu,
+                variabilný symbol a správu pre prijímateľa pošleme v
+                potvrdení objednávky; prosíme o úhradu pred odberom
+                kalendára. Online platbu kartou neponúkame.
               </LegalText>
             </>
           ),
@@ -172,24 +161,24 @@ export default function TermsPage() {
           body: (
             <>
               <LegalText>
-                Výrobu zaradíme po zaplatení do várky, ktorú formulár ukáže v
-                súhrne pred platbou. Termín odoslania je termín tejto várky.
-                Aktuálne várky sú aj na úvodnej stránke v časti Termíny
-                doručenia. Ak pre daný deň nie je vypísaná osobitná várka,
-                platí odhad zobrazený vo formulári, inak orientačne do štyroch
-                týždňov od zaplatenia.
+                Výrobu zaradíme do várky, ktorú formulár ukáže v súhrne pred
+                odoslaním objednávky. Termín, keď bude kalendár pripravený na
+                odber, je termín tejto várky. Aktuálne várky sú aj na úvodnej
+                stránke v časti Termíny odberu. Ak pre daný deň nie je
+                vypísaná osobitná várka, platí odhad zobrazený vo formulári,
+                inak orientačne do štyroch týždňov od objednávky.
               </LegalText>
               <LegalText>
                 Lehota sa predlžuje o čas, kým nedodáte podklady, o ktoré vás
-                po zaplatení požiadame. O odoslaní cez Packetu píšeme e-mail.
-                Ak je k dispozícii sledovacie číslo, pošleme ho v ňom.
+                po objednaní požiadame. Keď bude kalendár pripravený na odber,
+                napíšeme vám e-mail.
               </LegalText>
               <LegalText>
                 Ak kalendár nedodáme v dohodnutej lehote, napíšte nám. Pri
                 omeškaní máte práva podľa § 613 Občianskeho zákonníka, vrátane
                 odstúpenia od zmluvy v prípadoch, ktoré toto ustanovenie
                 vymenúva. Dohodnutá lehota je lehota várky zobrazenej pred
-                platbou, nie všeobecná lehota 30 dní, pretože sa na inom
+                odoslaním objednávky, nie všeobecná lehota 30 dní, pretože sa na inom
                 termíne pred odoslaním objednávky dohodneme.
               </LegalText>
             </>
@@ -197,23 +186,20 @@ export default function TermsPage() {
         },
         {
           id: "dorucenie",
-          title: "Packeta a osobný odber",
+          title: "Osobný odber",
           body: (
             <>
               <LegalText>
-                Bežná objednávka ide cez Packetu na výdajné miesto alebo
-                Z-BOX, ktoré vo formulári vyberiete. Osobný odber v Košiciach
-                ponúkame len vtedy, keď ho formulár pri danej objednávke
-                zobrazí. Miesto a čas odberu dohodneme e-mailom. Samostatnú
-                predajňu s úradnými hodinami neuverejňujeme.
+                Kalendáre odovzdávame len osobným odberom v Košiciach, zdarma.
+                Zásielky neposielame. Miesto a čas odberu dohodneme e-mailom.
+                Samostatnú predajňu s úradnými hodinami neuverejňujeme.
               </LegalText>
               <LegalText>
-                Všetky kusy z objednávky posielame v jednom balíku.
+                Všetky kusy z objednávky odovzdáme naraz.
               </LegalText>
               <LegalText>
-                Nebezpečenstvo poškodenia prechádza odovzdaním zásielky vám
-                alebo osobe, ktorá ju za vás prevezme na výdajnom mieste. Pri
-                osobnom odbere prechádza prevzatím.
+                Nebezpečenstvo poškodenia prechádza prevzatím kalendára vami
+                alebo osobou, ktorá ho za vás prevezme.
               </LegalText>
             </>
           ),
@@ -224,15 +210,15 @@ export default function TermsPage() {
           body: (
             <>
               <LegalText>
-                Údaje, doručenie alebo podklady vieme upraviť len dovtedy, kým
-                nezačneme kalendár vyrábať. Napíšte čo najskôr na{" "}
+                Údaje, spôsob platby alebo podklady vieme upraviť len
+                dovtedy, kým nezačneme kalendár vyrábať. Napíšte čo najskôr na{" "}
                 <LegalMailLink /> a uveďte číslo objednávky.
               </LegalText>
               <LegalText>
                 Ak o zrušenie požiadate e-mailom skôr, ako začneme výrobu,
                 potvrdíme vám e-mailom, či objednávku ešte vieme zrušiť. Ak
-                zrušenie potvrdíme, prijatú platbu vrátime rovnakým spôsobom,
-                akým bola zaplatená. Výrobou sa rozumie zaradenie podkladov do
+                zrušenie potvrdíme a platbu ste už uhradili, vrátime ju
+                prevodom na účet alebo v hotovosti. Výrobou sa rozumie zaradenie podkladov do
                 prípravy tlače, nie samotné uloženie objednávky.
               </LegalText>
             </>
@@ -320,9 +306,9 @@ export default function TermsPage() {
             <>
               <LegalText>
                 Vy ste povinní uviesť pravdivé kontaktné údaje, zaplatiť cenu
-                zobrazenú pred platbou a poskytnúť podklady, ktoré smiete
-                použiť. My sme povinní vyrobiť kalendár podľa zaplateného
-                variantu a podkladov, dodať ho dohodnutým spôsobom a vybaviť
+                zobrazenú pred odoslaním objednávky a poskytnúť podklady,
+                ktoré smiete použiť. My sme povinní vyrobiť kalendár podľa
+                objednaného variantu a podkladov, dodať ho dohodnutým spôsobom a vybaviť
                 vadu podľa zákona.
               </LegalText>
               <LegalText>
@@ -355,7 +341,7 @@ export default function TermsPage() {
               <LegalText>
                 Ak formulár pre jednotlivcov objednávku na 10 a viac kusov
                 technicky prijme, uzavrie sa zmluva podľa týchto podmienok a
-                ceny zobrazenej pred platbou.
+                ceny zobrazenej pred odoslaním objednávky.
               </LegalText>
             </>
           ),

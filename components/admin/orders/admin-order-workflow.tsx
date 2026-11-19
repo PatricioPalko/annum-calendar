@@ -7,7 +7,6 @@ import { useState } from "react";
 import { OrderRow } from "@/app/types/types";
 import {
   completeOrder,
-  createPacketaLabel,
   downloadOrderPhotos,
   notifyOrderFulfillment,
 } from "@/helpers/admin-order-actions";
@@ -30,7 +29,7 @@ export function AdminOrderWorkflow({
   const router = useRouter();
   const [activeStepId, setActiveStepId] = useState<WorkflowStepId | null>(null);
 
-  const { isPaid, isPacketa, steps } = getWorkflowSteps(order);
+  const { isPaid, steps } = getWorkflowSteps(order);
 
   async function runStep(stepId: WorkflowStepId, isRepeat: boolean) {
     const isUncompleting =
@@ -50,20 +49,9 @@ export function AdminOrderWorkflow({
         case "download":
           await downloadOrderPhotos(order.id, order.order_code ?? order.id);
           break;
-        case "packeta":
-          await createPacketaLabel(order.id);
+        case "notify":
+          await notifyOrderFulfillment(order.id);
           break;
-        case "notify": {
-          const trackingNumberInput =
-            isPacketa && !order.tracking_number
-              ? window
-                  .prompt("Zadaj tracking číslo Packety, ak ho máš:", "")
-                  ?.trim()
-              : order.tracking_number ?? undefined;
-
-          await notifyOrderFulfillment(order.id, trackingNumberInput);
-          break;
-        }
         case "complete":
           await completeOrder(order.id);
           break;
@@ -83,7 +71,7 @@ export function AdminOrderWorkflow({
     <div className={cn(align === "end" ? "text-right" : "text-left")}>
       {!isPaid ? (
         <p className="text-[12px] font-bold uppercase tracking-wide text-[#3E0F28]/40">
-          Čaká na platbu
+          Nedokončená platba
         </p>
       ) : (
         <div

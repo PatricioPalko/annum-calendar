@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { isAdminEmail, isAdminMutationOriginAllowed } from "@/lib/auth/admin";
-import { resendMissingPaidOrderEmails } from "@/lib/order-payments";
+import { resendMissingOrderEmails } from "@/lib/order-notifications";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type RouteParams = {
@@ -28,7 +28,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await resendMissingPaidOrderEmails(orderId);
+  const result = await resendMissingOrderEmails(orderId);
 
   switch (result.status) {
     case "not_found":
@@ -37,16 +37,16 @@ export async function POST(request: Request, { params }: RouteParams) {
         { status: 404 },
       );
 
-    case "not_paid":
+    case "not_eligible":
       return NextResponse.json(
-        { message: "Objednávka ešte nie je zaplatená." },
+        { message: "K tejto objednávke sa potvrdenie neposiela." },
         { status: 403 },
       );
 
     case "nothing_to_send":
       return NextResponse.json({
         ok: true,
-        message: "Všetky e-maily k platbe už boli odoslané.",
+        message: "Všetky e-maily k objednávke už boli odoslané.",
       });
 
     case "error":

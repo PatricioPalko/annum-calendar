@@ -1,4 +1,4 @@
-export const LEGAL_UPDATED_ON = "8. októbra 2026";
+export const LEGAL_UPDATED_ON = "19. novembra 2026";
 
 export const OPERATOR = {
   brand: "Annum",

@@ -7,11 +7,9 @@ const mocks = await vi.hoisted(async () => {
   return {
     supabase: createFakeSupabase(),
     currentUserEmail: "admin@example.com" as string | null,
-    createPacketaPacket: hoistedVi.fn(),
     sendOrderFulfillmentEmail: hoistedVi.fn(),
-    sendOrderPaidEmail: hoistedVi.fn(),
+    sendOrderReceivedEmails: hoistedVi.fn(),
     sendAdminAlertEmail: hoistedVi.fn(),
-    sessionsRetrieve: hoistedVi.fn(),
   };
 });
 
@@ -30,24 +28,13 @@ vi.mock("@/lib/supabase/server", () => ({
   }),
 }));
 
-vi.mock("@/lib/packeta", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/packeta")>()),
-  createPacketaPacket: mocks.createPacketaPacket,
-  isPacketaConfigured: () => true,
-}));
-
 vi.mock("@/lib/order-emails", () => ({
   sendOrderFulfillmentEmail: mocks.sendOrderFulfillmentEmail,
-  sendOrderPaidEmail: mocks.sendOrderPaidEmail,
+  sendOrderReceivedEmails: mocks.sendOrderReceivedEmails,
   sendAdminAlertEmail: mocks.sendAdminAlertEmail,
 }));
 
-vi.mock("@/lib/stripe", () => ({
-  stripe: { checkout: { sessions: { retrieve: mocks.sessionsRetrieve } } },
-}));
-
 const completeRoute = await import("@/app/api/admin/orders/[orderId]/complete/route");
-const packetaRoute = await import("@/app/api/admin/orders/[orderId]/create-packeta-packet/route");
 const downloadRoute = await import("@/app/api/admin/orders/[orderId]/download/route");
 const notifyRoute = await import("@/app/api/admin/orders/[orderId]/notify-fulfillment/route");
 const resendRoute = await import("@/app/api/admin/orders/[orderId]/resend-paid-emails/route");
@@ -62,7 +49,6 @@ const ORDER_URL = "https://www.annum.sk/api/admin/orders/order-1";
 /** Every order-scoped admin route, with the status it returns for an unpaid order. */
 const orderRoutes: Array<{ name: string; method: string; handler: Handler; unpaidStatus: number | null }> = [
   { name: "complete", method: "POST", handler: completeRoute.POST, unpaidStatus: 403 },
-  { name: "create-packeta-packet", method: "POST", handler: packetaRoute.POST, unpaidStatus: 400 },
   { name: "download", method: "GET", handler: downloadRoute.GET, unpaidStatus: 403 },
   { name: "notify-fulfillment", method: "POST", handler: notifyRoute.POST, unpaidStatus: 403 },
   { name: "resend-paid-emails", method: "POST", handler: resendRoute.POST, unpaidStatus: 403 },
@@ -89,10 +75,8 @@ function callBulkDownload(origin = "https://www.annum.sk") {
 }
 
 function expectNoSideEffects() {
-  expect(mocks.createPacketaPacket).not.toHaveBeenCalled();
   expect(mocks.sendOrderFulfillmentEmail).not.toHaveBeenCalled();
-  expect(mocks.sendOrderPaidEmail).not.toHaveBeenCalled();
-  expect(mocks.sessionsRetrieve).not.toHaveBeenCalled();
+  expect(mocks.sendOrderReceivedEmails).not.toHaveBeenCalled();
   expect(mocks.supabase.tables.orders).toHaveLength(1);
   expect(mocks.supabase.tables.orders![0]).toMatchObject({ status: "new", downloaded_at: null });
 }
@@ -111,20 +95,15 @@ beforeEach(() => {
     email: "test@example.com",
     payment_status: "pending",
     status: "new",
-    delivery_method: "packeta",
-    packeta_point_id: "123",
-    tracking_number: null,
+    delivery_method: "pickup",
     downloaded_at: null,
     photos: [],
-    stripe_checkout_session_id: null,
   });
 
   for (const mock of [
-    mocks.createPacketaPacket,
     mocks.sendOrderFulfillmentEmail,
-    mocks.sendOrderPaidEmail,
+    mocks.sendOrderReceivedEmails,
     mocks.sendAdminAlertEmail,
-    mocks.sessionsRetrieve,
   ]) {
     mock.mockReset();
   }
@@ -177,6 +156,32 @@ describe.each(orderRoutes.filter((route) => route.unpaidStatus !== null))(
     });
   },
 );
+
+describe("admin actions on offline-payment orders", () => {
+  beforeEach(() => {
+    Object.assign(mocks.supabase.tables.orders![0]!, {
+      payment_status: "offline",
+      payment_method: "cash",
+    });
+    mocks.sendOrderFulfillmentEmail.mockResolvedValue(undefined);
+  });
+
+  it("lets the operator send the ready-for-pickup email", async () => {
+    const notify = orderRoutes.find((route) => route.name === "notify-fulfillment")!;
+
+    expect((await callOrderRoute(notify)).status).toBe(200);
+    expect(mocks.sendOrderFulfillmentEmail).toHaveBeenCalledOnce();
+    expect(mocks.supabase.tables.orders![0]).toMatchObject({ status: "ready" });
+  });
+
+  it("lets the operator complete the order once it is ready", async () => {
+    mocks.supabase.tables.orders![0]!.status = "ready";
+    const complete = orderRoutes.find((route) => route.name === "complete")!;
+
+    expect((await callOrderRoute(complete)).status).toBe(200);
+    expect(mocks.supabase.tables.orders![0]).toMatchObject({ status: "completed" });
+  });
+});
 
 describe("admin bulk download authorization (H-6)", () => {
   it("rejects a cross-site request with 403", async () => {

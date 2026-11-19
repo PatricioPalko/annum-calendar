@@ -36,7 +36,7 @@ export function DeliveryWaveNotice({
           <p className="mt-0.5 font-medium leading-5 text-primary/60">
             {isStandard
               ? wave.customerDetail
-              : `Objednávka do ${formatWaveDeadline(wave)} · doručenie do ${formatWaveDeliveryBy(wave)}`}
+              : `Objednávka do ${formatWaveDeadline(wave)} · na odber do ${formatWaveDeliveryBy(wave)}`}
           </p>
         </div>
       </div>
@@ -56,7 +56,7 @@ export function DeliveryWaveNotice({
         </div>
         <div className="min-w-0">
           <p className="text-sm font-extrabold uppercase tracking-wide text-secondary">
-            Termín doručenia
+            Termín odberu
           </p>
           <p className="mt-1 text-base font-bold text-primary">
             {wave.customerHeadline}
@@ -73,7 +73,7 @@ export function DeliveryWaveNotice({
                 </dd>
               </div>
               <div>
-                <dt className="font-medium text-primary/50">Doručenie do</dt>
+                <dt className="font-medium text-primary/50">Na odber do</dt>
                 <dd className="font-bold text-primary">
                   {formatWaveDeliveryBy(wave)}
                 </dd>

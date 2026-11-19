@@ -70,16 +70,11 @@ export const metadata: Metadata = {
     images: [OG_IMAGE.url],
   },
 
+  // The shop takes orders from family and friends only, so it stays out of
+  // search results (next.config.ts also sends X-Robots-Tag for every route).
   robots: {
-    index: true,
-    follow: true,
-    googleBot: {
-      index: true,
-      follow: true,
-      "max-image-preview": "large",
-      "max-snippet": -1,
-      "max-video-preview": -1,
-    },
+    index: false,
+    follow: false,
   },
 
   category: "personalizované fotoprodukty",

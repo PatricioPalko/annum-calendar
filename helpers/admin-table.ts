@@ -1,4 +1,5 @@
 import { OrderRow, SortKey } from "@/app/types/types";
+import { getOrderPaymentGroup } from "@/helpers/admin-orders";
 import { MEMORY_SET_LABEL } from "@/lib/order/config";
 
 export function getCalendarTypeBadgeClass(type: string) {
@@ -63,7 +64,7 @@ export type AdminOrdersFilterParams = {
   year?: string;
   month?: string;
   calendar?: string;
-  delivery?: string;
+  payment?: string;
   wave?: string;
 };
 
@@ -90,8 +91,8 @@ export function buildAdminHref(params: AdminOrdersFilterParams) {
     searchParams.set("calendar", params.calendar);
   }
 
-  if (params.delivery && params.delivery !== "all") {
-    searchParams.set("delivery", params.delivery);
+  if (params.payment && params.payment !== "all") {
+    searchParams.set("payment", params.payment);
   }
 
   if (params.wave && params.wave !== "all") {
@@ -109,7 +110,7 @@ export function getSortHref(
   currentDir: "asc" | "desc",
   filters?: Pick<
     AdminOrdersFilterParams,
-    "year" | "month" | "calendar" | "delivery" | "wave"
+    "year" | "month" | "calendar" | "payment" | "wave"
   >,
 ) {
   const nextDir = currentSort === sort && currentDir === "asc" ? "desc" : "asc";
@@ -120,7 +121,7 @@ export function getSortHref(
     year: filters?.year,
     month: filters?.month,
     calendar: filters?.calendar,
-    delivery: filters?.delivery,
+    payment: filters?.payment,
     wave: filters?.wave,
   });
 }
@@ -153,7 +154,7 @@ export function filterAdminOrders(
   orders: OrderRow[],
   filters: Pick<
     AdminOrdersFilterParams,
-    "year" | "month" | "calendar" | "delivery" | "wave"
+    "year" | "month" | "calendar" | "payment" | "wave"
   >,
 ) {
   return orders.filter((order) => {
@@ -184,9 +185,9 @@ export function filterAdminOrders(
     }
 
     if (
-      filters.delivery &&
-      filters.delivery !== "all" &&
-      order.delivery_method !== filters.delivery
+      filters.payment &&
+      filters.payment !== "all" &&
+      getOrderPaymentGroup(order) !== filters.payment
     ) {
       return false;
     }

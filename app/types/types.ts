@@ -330,7 +330,7 @@ export type SearchParams = Promise<{
   year?: string;
   month?: string;
   calendar?: string;
-  delivery?: string;
+  payment?: string;
   wave?: string;
 }>;
 
@@ -375,20 +375,14 @@ export type OrderRow = {
   discount_amount: number | string | null;
 
   payment_status: string | null;
+  /** Undefined until the payment-method migration is applied. */
+  payment_method?: string | null;
   paid_at: string | null;
   /** Undefined until the email-tracking migration is applied. */
   customer_confirmed_at?: string | null;
   admin_notified_at?: string | null;
-  stripe_checkout_session_id: string | null;
-  stripe_payment_intent_id: string | null;
-  delivery_method: "pickup" | "packeta" | string | null;
+  delivery_method: string | null;
   delivery_price: number | string | null;
-
-  packeta_point_id: string | null;
-  packeta_point_name: string | null;
-  packeta_point_address: string | null;
-
-  tracking_number: string | null;
 
   marketing_consent_at: string | null;
   terms_accepted_at: string | null;

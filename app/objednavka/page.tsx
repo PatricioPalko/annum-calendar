@@ -44,7 +44,7 @@ export default function KalendarPage() {
                 className="mt-3 text-sm leading-relaxed sm:text-base"
               >
                 Objednajte personalizovaný A3 fotokalendár z vlastných fotiek.
-                Vyberte variant, nahrajte fotky a doplňte doručenie. Pri Premium
+                Vyberte variant, nahrajte fotky a zvoľte platbu. Pri Premium
                 a Memory set doplníte aj dôležité dátumy.
               </Text>
             </div>

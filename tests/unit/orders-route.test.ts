@@ -12,8 +12,9 @@ const mocks = await vi.hoisted(async () => {
   return {
     supabase: createFakeSupabase(),
     consumeRateLimit: hoistedVi.fn(),
-    getOrCreateOrderCheckoutSession: hoistedVi.fn(),
-    sendOrderCreatedEmail: hoistedVi.fn(),
+    resendMissingOrderEmails: hoistedVi.fn(),
+    sendAdminAlertEmail: hoistedVi.fn(),
+    afterTasks: [] as Array<() => Promise<void>>,
   };
 });
 
@@ -24,12 +25,19 @@ vi.mock("@/lib/rate-limit", async (importOriginal) => ({
   consumeRateLimit: mocks.consumeRateLimit,
 }));
 
-vi.mock("@/lib/order-checkout", () => ({
-  getOrCreateOrderCheckoutSession: mocks.getOrCreateOrderCheckoutSession,
+vi.mock("@/lib/order-emails", () => ({
+  sendAdminAlertEmail: mocks.sendAdminAlertEmail,
 }));
 
-vi.mock("@/lib/order-emails", () => ({
-  sendOrderCreatedEmail: mocks.sendOrderCreatedEmail,
+vi.mock("@/lib/order-notifications", () => ({
+  resendMissingOrderEmails: mocks.resendMissingOrderEmails,
+}));
+
+vi.mock("next/server", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("next/server")>()),
+  after: (task: () => Promise<void>) => {
+    mocks.afterTasks.push(task);
+  },
 }));
 
 const { POST } = await import("@/app/api/orders/route");
@@ -69,8 +77,7 @@ function payload(overrides: Record<string, unknown> = {}) {
     photos: paths.map((path) => ({ name: "photo.jpg", type: "image/jpeg", size: 1000, path })),
     birthdays: [],
     namedays: [],
-    deliveryMethod: "packeta",
-    packetaPoint: { id: "123", name: "Z-BOX Test", address: "Testovacia 1, Košice" },
+    paymentMethod: "bank_transfer",
     termsAccepted: true,
     ...overrides,
   };
@@ -100,47 +107,101 @@ async function expectRejected(body: unknown, field: string) {
   expect(response.status).toBe(400);
   expect(json.errors?.fieldErrors?.[field]).toBeDefined();
   expect(mocks.supabase.tables.orders).toHaveLength(0);
-  expect(mocks.getOrCreateOrderCheckoutSession).not.toHaveBeenCalled();
+  expect(mocks.afterTasks).toHaveLength(0);
 }
 
-function expectedTotal(type: "basic" | "premium" | "memory", quantity: 1 | 3 | 5, delivery: "packeta" | "pickup", code?: string) {
+function expectedTotal(type: "basic" | "premium" | "memory", quantity: 1 | 3 | 5, code?: string) {
   const goods = getCalendarPrice({ type, quantityOption: quantity }).totalPrice;
   const discounted = getDiscountAmount(goods, code).finalPrice;
 
-  return discounted === null ? null : discounted + getDeliveryPrice(delivery);
+  return discounted === null ? null : discounted + getDeliveryPrice();
+}
+
+async function flushAfterTasks() {
+  const tasks = mocks.afterTasks.splice(0);
+
+  for (const task of tasks) {
+    await task();
+  }
 }
 
 beforeEach(() => {
   mocks.supabase.reset();
+  mocks.afterTasks.length = 0;
   mocks.consumeRateLimit.mockReset().mockResolvedValue({ ok: true, remaining: 4, retryAfterMs: 0 });
-  mocks.getOrCreateOrderCheckoutSession
-    .mockReset()
-    .mockResolvedValue({ status: "ok", url: "https://checkout.stripe.com/c/pay/cs_test_1" });
-  mocks.sendOrderCreatedEmail.mockReset().mockResolvedValue(undefined);
+  mocks.sendAdminAlertEmail.mockReset().mockResolvedValue(undefined);
+  mocks.resendMissingOrderEmails.mockReset().mockResolvedValue({
+    status: "sent",
+    customerRequested: true,
+    adminRequested: true,
+    customerSent: true,
+    adminSent: true,
+  });
 });
 
 describe("POST /api/orders (H-6)", () => {
-  it("accepts the canonical payload and inserts a pending order with the server total", async () => {
+  it("accepts the canonical payload and inserts an offline-payment pickup order with the server total", async () => {
     const response = await createOrder(payload());
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
       orderId: "generated-1",
       orderCode: ORDER_CODE,
-      storageFolder: STORAGE_FOLDER,
-      checkoutUrl: "https://checkout.stripe.com/c/pay/cs_test_1",
     });
 
     const [order] = mocks.supabase.tables.orders!;
     expect(order).toMatchObject({
-      payment_status: "pending",
-      total_price: expectedTotal("basic", 1, "packeta"),
-      delivery_price: getDeliveryPrice("packeta"),
-      packeta_point_id: "123",
+      payment_status: "offline",
+      payment_method: "bank_transfer",
+      total_price: expectedTotal("basic", 1),
+      delivery_method: "pickup",
+      delivery_price: 0,
       phone: "+421900123456",
     });
-    expect(mocks.getOrCreateOrderCheckoutSession).toHaveBeenCalledOnce();
-    expect(mocks.sendOrderCreatedEmail).toHaveBeenCalledOnce();
+    expect(order).not.toHaveProperty("packeta_point_id");
+  });
+
+  it("sends the order emails after the response", async () => {
+    await createOrder(payload());
+
+    expect(mocks.resendMissingOrderEmails).not.toHaveBeenCalled();
+
+    await flushAfterTasks();
+
+    expect(mocks.resendMissingOrderEmails).toHaveBeenCalledExactlyOnceWith("generated-1", {
+      idempotencyKeyPrefix: "order-created/generated-1",
+    });
+  });
+
+  it("stores cash as the payment method", async () => {
+    const response = await createOrder(payload({ paymentMethod: "cash" }));
+
+    expect(response.status).toBe(200);
+    expect(mocks.supabase.tables.orders![0]).toMatchObject({
+      payment_status: "offline",
+      payment_method: "cash",
+    });
+  });
+
+  it("rejects a missing or unknown payment method", async () => {
+    await expectRejected(payload({ paymentMethod: undefined }), "paymentMethod");
+    await expectRejected(payload({ paymentMethod: "card" }), "paymentMethod");
+  });
+
+  it("ignores Packeta fields sent by an outdated client and stores pickup", async () => {
+    const response = await createOrder(
+      payload({
+        deliveryMethod: "packeta",
+        packetaPoint: { id: "123", name: "Z-BOX Test", address: "Testovacia 1, Košice" },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.supabase.tables.orders![0]).toMatchObject({
+      delivery_method: "pickup",
+      delivery_price: 0,
+    });
+    expect(mocks.supabase.tables.orders![0]).not.toHaveProperty("packeta_point_id");
   });
 
   it("accepts the payload the form sends without a discount code or note (regression)", async () => {
@@ -159,24 +220,35 @@ describe("POST /api/orders (H-6)", () => {
 
   it("ignores client-sent prices", async () => {
     const response = await createOrder(
-      payload({ type: "premium", quantity: 3, totalPrice: 0.01, deliveryPrice: 0, discountAmount: 999 }),
+      payload({ type: "premium", quantity: 3, totalPrice: 0.01, deliveryPrice: 5, discountAmount: 999 }),
     );
 
     expect(response.status).toBe(200);
     expect(mocks.supabase.tables.orders![0]).toMatchObject({
-      total_price: expectedTotal("premium", 3, "packeta"),
-      delivery_price: getDeliveryPrice("packeta"),
+      total_price: expectedTotal("premium", 3),
+      delivery_price: 0,
       discount_amount: 0,
     });
   });
 
   it("applies a valid discount code on the server", async () => {
-    const response = await createOrder(payload({ quantity: 5, discountCode: "annum10" }));
+    const response = await createOrder(payload({ quantity: 5, discountCode: "annum20" }));
 
     expect(response.status).toBe(200);
     expect(mocks.supabase.tables.orders![0]).toMatchObject({
-      total_price: expectedTotal("basic", 5, "packeta", "ANNUM10"),
-      discount_code: "ANNUM10",
+      total_price: expectedTotal("basic", 5, "ANNUM20"),
+      discount_code: "ANNUM20",
+    });
+  });
+
+  it("ignores retired discount codes", async () => {
+    const response = await createOrder(payload({ discountCode: "RODINA15" }));
+
+    expect(response.status).toBe(200);
+    expect(mocks.supabase.tables.orders![0]).toMatchObject({
+      total_price: expectedTotal("basic", 1),
+      discount_code: null,
+      discount_amount: 0,
     });
   });
 
@@ -212,31 +284,6 @@ describe("POST /api/orders (H-6)", () => {
     await expectRejected(payload(withPhotos(photoPaths(13))), "photos");
   });
 
-  it("rejects pickup without a code that allows it", async () => {
-    await expectRejected(payload({ deliveryMethod: "pickup", packetaPoint: undefined }), "deliveryMethod");
-    await expectRejected(
-      payload({ deliveryMethod: "pickup", packetaPoint: undefined, discountCode: "ANNUM10" }),
-      "deliveryMethod",
-    );
-  });
-
-  it("accepts pickup with RODINA15 and charges no delivery", async () => {
-    const response = await createOrder(
-      payload({ deliveryMethod: "pickup", packetaPoint: undefined, discountCode: "RODINA15" }),
-    );
-
-    expect(response.status).toBe(200);
-    expect(mocks.supabase.tables.orders![0]).toMatchObject({
-      delivery_method: "pickup",
-      delivery_price: 0,
-      total_price: expectedTotal("basic", 1, "pickup", "RODINA15"),
-    });
-  });
-
-  it("rejects Packeta delivery without a pickup point", async () => {
-    await expectRejected(payload({ packetaPoint: undefined }), "packetaPoint");
-  });
-
   it("rejects dedications on a non-Memory order", async () => {
     await expectRejected(payload({ dedications: ["Pre babku"] }), "dedications");
   });
@@ -252,7 +299,7 @@ describe("POST /api/orders (H-6)", () => {
     expect(mocks.supabase.tables.orders![0]).toMatchObject({
       memory_set_enabled: true,
       dedications: ["A", "", "C"],
-      total_price: expectedTotal("memory", 3, "packeta"),
+      total_price: expectedTotal("memory", 3),
     });
   });
 
@@ -266,22 +313,38 @@ describe("POST /api/orders (H-6)", () => {
     expect(mocks.supabase.tables.orders).toHaveLength(0);
   });
 
-  it("deletes the pending order when the checkout session cannot be created", async () => {
-    mocks.getOrCreateOrderCheckoutSession.mockResolvedValue({ status: "error", message: "stripe down" });
+  it("keeps the order and alerts the operator when the email lookup fails", async () => {
+    mocks.resendMissingOrderEmails.mockResolvedValue({ status: "error", message: "column does not exist" });
 
     const response = await createOrder(payload());
-
-    expect(response.status).toBe(500);
-    expect(mocks.supabase.tables.orders).toHaveLength(0);
-    expect(mocks.sendOrderCreatedEmail).not.toHaveBeenCalled();
-  });
-
-  it("still succeeds when the awaiting-payment email fails", async () => {
-    mocks.sendOrderCreatedEmail.mockRejectedValue(new Error("resend down"));
-
-    const response = await createOrder(payload());
+    await flushAfterTasks();
 
     expect(response.status).toBe(200);
     expect(mocks.supabase.tables.orders).toHaveLength(1);
+    expect(mocks.sendAdminAlertEmail).toHaveBeenCalledExactlyOnceWith(
+      expect.objectContaining({ code: "ORDER_CREATED_EMAIL_FAILED", orderId: "generated-1" }),
+    );
+  });
+
+  it("alerts the operator when the customer email was not sent", async () => {
+    mocks.resendMissingOrderEmails.mockResolvedValue({
+      status: "sent",
+      customerRequested: true,
+      adminRequested: true,
+      customerSent: false,
+      adminSent: true,
+    });
+
+    await createOrder(payload());
+    await flushAfterTasks();
+
+    expect(mocks.sendAdminAlertEmail).toHaveBeenCalledOnce();
+  });
+
+  it("does not alert when both emails were sent", async () => {
+    await createOrder(payload());
+    await flushAfterTasks();
+
+    expect(mocks.sendAdminAlertEmail).not.toHaveBeenCalled();
   });
 });

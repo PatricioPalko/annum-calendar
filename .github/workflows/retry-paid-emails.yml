@@ -1,6 +1,6 @@
-name: Retry paid-order emails
+name: Retry order emails
 
-# Calls the shop's retry endpoint, which resends paid-order emails that were
+# Calls the shop's retry endpoint, which resends order confirmation emails that were
 # not recorded as sent (see app/api/cron/retry-paid-emails/route.ts).
 # Requires the repository secret CRON_SECRET (same value as the CRON_SECRET
 # env var in Vercel Production). Skips quietly until it is set.
@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   retry:
-    name: Retry paid-order emails
+    name: Retry order emails
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

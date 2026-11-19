@@ -3,7 +3,6 @@ export type HealthCheckStatus = "ok" | "error" | "missing";
 export type HealthChecks = {
   database: HealthCheckStatus;
   storage: HealthCheckStatus;
-  stripe: HealthCheckStatus;
   resend: HealthCheckStatus;
 };
 
@@ -16,27 +15,21 @@ function hasSupabaseConfig() {
 }
 
 export async function runHealthChecks(): Promise<HealthChecks> {
-  const [database, storage, stripe, resend] = await Promise.all([
+  const [database, storage, resend] = await Promise.all([
     checkDatabase(),
     checkStorage(),
-    checkStripe(),
     Promise.resolve(checkResendConfig()),
   ]);
 
   return {
     database,
     storage,
-    stripe,
     resend,
   };
 }
 
 export function isOrderFlowHealthy(checks: HealthChecks) {
-  return (
-    checks.database === "ok" &&
-    checks.storage === "ok" &&
-    checks.stripe === "ok"
-  );
+  return checks.database === "ok" && checks.storage === "ok";
 }
 
 async function checkDatabase(): Promise<HealthCheckStatus> {
@@ -66,24 +59,6 @@ async function checkStorage(): Promise<HealthCheckStatus> {
       .list("", { limit: 1 });
 
     return error ? "error" : "ok";
-  } catch {
-    return "error";
-  }
-}
-
-async function checkStripe(): Promise<HealthCheckStatus> {
-  const secretKey = process.env.STRIPE_SECRET_KEY;
-
-  if (!secretKey) {
-    return "missing";
-  }
-
-  try {
-    const Stripe = (await import("stripe")).default;
-    const stripe = new Stripe(secretKey);
-    await stripe.balance.retrieve();
-
-    return "ok";
   } catch {
     return "error";
   }

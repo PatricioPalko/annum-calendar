@@ -25,16 +25,15 @@ paths:
 ## Conventions
 
 - Call route handlers directly: `POST(new Request(url, init), { params: Promise.resolve({...}) })`.
-- Mock at the module boundary with `vi.mock`: `@/lib/supabase/admin` (use the in-memory `createFakeSupabase()` from `tests/unit/helpers/fake-supabase.ts`, which applies conditional updates like Postgres), `@/lib/stripe`, `@/lib/order-emails`, `@/lib/supabase/server`. Share state with mocks via `await vi.hoisted(async () => …)`.
-- `after()` from `next/server`: mock it to collect tasks, then flush them in the test (see `tests/unit/order-payments.test.ts`), so post-response work is asserted explicitly.
-- Stripe signatures: use a real `new Stripe("sk_test_vitest").webhooks.generateTestHeaderString(...)` with the test secret `whsec_vitest`. That is local crypto, not a network call. Always mock `refunds`, `checkout.sessions` and any other API method.
-- Tests must never reach live Stripe, Supabase, Resend, Packeta or Cloudflare.
+- Mock at the module boundary with `vi.mock`: `@/lib/supabase/admin` (use the in-memory `createFakeSupabase()` from `tests/unit/helpers/fake-supabase.ts`, which applies conditional updates like Postgres), `@/lib/order-emails` (or `@/lib/resend` to render real templates), `@/lib/order-notifications`, `@/lib/supabase/server`. Share state with mocks via `await vi.hoisted(async () => …)`.
+- `after()` from `next/server`: mock it to collect tasks, then flush them in the test (see `tests/unit/orders-route.test.ts`), so post-response work is asserted explicitly.
+- Tests must never reach live Supabase, Resend or Cloudflare.
 - Fixtures are synthetic: fake names like `Test Testovací`, `@example.com` emails, generated images. **Never** use real customer data or photos.
-- E2E (proposed, not installed): Playwright against `npm run build && npm run start` with Stripe test keys, the Turnstile test site key and a non-production Supabase project, in `tests/e2e/**/*.spec.ts`.
+- E2E (proposed, not installed): Playwright against `npm run build && npm run start` with the Turnstile test site key and a non-production Supabase project, in `tests/e2e/**/*.spec.ts`.
 
-## Priority coverage (P0 before taking money; from both audits)
+## Priority coverage (P0; from both audits)
 
-All P0 unit tests are implemented: pricing (`pricing.test.ts`), webhook and mark-paid including concurrency (`order-payments.test.ts`), admin delete guard (`admin-delete-order.test.ts`), `POST /api/orders` (`orders-route.test.ts`), admin authorization for every `app/api/admin/**` route (`admin-routes-auth.test.ts`, table-driven: add new admin routes to `orderRoutes`), delivery waves and the N-1 `revalidate` check (`delivery-waves.test.ts`), plus the paid-email retry job (`retry-paid-emails.test.ts`) and error alerts (`error-reporting.test.ts`). Still missing: E2E (needs approval).
+All P0 unit tests are implemented: pricing (`pricing.test.ts`), order form schema (`order-schema.test.ts`), order emails and their recording (`order-emails.test.ts`, `order-notifications.test.ts`), env checks (`env.test.ts`), admin delete guard (`admin-delete-order.test.ts`), `POST /api/orders` (`orders-route.test.ts`), admin authorization for every `app/api/admin/**` route (`admin-routes-auth.test.ts`, table-driven: add new admin routes to `orderRoutes`), delivery waves and the N-1 `revalidate` check (`delivery-waves.test.ts`), plus the order-email retry job (`retry-paid-emails.test.ts`) and error alerts (`error-reporting.test.ts`). Still missing: E2E (needs approval).
 
 The fake Supabase client supports select / insert / update / delete, eq / neq / is / lt / gt / or (`col.is.null`, `col.eq.value`), order and limit. Mock `@/lib/rate-limit`'s `consumeRateLimit` (keep the rest via `importOriginal`) instead of faking the RPC.
 
@@ -42,14 +41,13 @@ Auth tests must make the guard under test the **only** reason to reject (e.g. a 
 
 | Area | Must assert |
 | --- | --- |
-| Pricing | `getCalendarPrice` × variants × quantities {1,2,3,4,5,6,10,200} × codes {none, ANNUM10, RODINA15} × delivery. Plus a property test that `Math.round(total*100)` equals the cents of the `numeric(10,2)`-rounded total for all 3 600 combinations. |
-| `POST /api/orders` | Rejects a tampered photo path, a foreign storage folder, a bad finalize token, pickup without an allowed code, dedications on non-Memory orders, a dedication count ≠ quantity, and Packeta without a point. Accepts the canonical payload, inserting `pending` with the server-computed total. |
-| Webhook | A bad signature returns 400. `completed`+`paid` marks paid once and sends emails once. A replay returns `already_paid` with no emails. A second paid session triggers a refund with the idempotency key. Amount or currency mismatch doesn't mark paid. A stale `expired` event makes no change. |
-| Concurrency | Two concurrent `markOrderPaidFromCheckoutSession` calls yield exactly one `marked`. |
-| Admin authorization | Every `app/api/admin/**` route: no session → 401, non-allowlisted → 401, wrong Origin → 403, unpaid → 403 where applicable. |
+| Pricing | `getCalendarPrice` × variants × quantities {1,2,3,4,5,6,10,200}, codes {none, ANNUM20}, retired codes rejected. Plus a property test that `Math.round(total*100)` equals the cents of the `numeric(10,2)`-rounded total for all 1 200 pickup combinations. |
+| `POST /api/orders` | Rejects a tampered photo path, a foreign storage folder, a bad finalize token, a missing or unknown payment method, dedications on non-Memory orders, and a dedication count ≠ quantity. Accepts the canonical payload, inserting `offline` + `payment_method` + `pickup` with the server-computed total, and queues the order emails in `after()`. |
+| Order emails | Bank transfer (IBAN, variable symbol, payment note), cash, admin notification, escaping (`order-emails.test.ts`). Only offline orders are eligible; only sent emails are recorded (`order-notifications.test.ts`). |
+| Admin authorization | Every `app/api/admin/**` route: no session → 401, non-allowlisted → 401, wrong Origin → 403, unfinished older online order → 403 where applicable; offline orders pass. |
 | Delivery waves | Boundary dates in the shop timezone, and the static-page freeze (N-1). |
 
-P1 covers uploads (sign, finalize, token forgery), payment-link tokens, email HTML snapshots with XSS payloads, Packeta XML, rate-limit 429s, and mobile E2E at 375/390/768/1024/1440 with axe checks.
+P1 covers uploads (sign, finalize, token forgery), rate-limit 429s, and mobile E2E at 375/390/768/1024/1440 with axe checks.
 
 ## Writing tests
 

@@ -17,7 +17,7 @@ export type DeliveryWave = {
   batchLabel: string;
   /** Posledný deň prijatia objednávky (vrátane), ISO YYYY-MM-DD */
   orderDeadline: string;
-  /** Odhad doručenia do (ISO YYYY-MM-DD), prázdne = individuálne */
+  /** Odhad, dokedy bude kalendár pripravený na odber (ISO YYYY-MM-DD), prázdne = individuálne */
   estimatedDeliveryBy: string;
   customerHeadline: string;
   customerDetail: string;
@@ -35,7 +35,7 @@ export const DELIVERY_WAVES: DeliveryWave[] = [
     estimatedDeliveryBy: "2026-11-22",
     customerHeadline: "Jesenná várka",
     customerDetail:
-      "Objednávky prijaté a zaplatené do 31. 10. 2026 doručíme do 22. 11. 2026.",
+      "Objednávky prijaté do 31. 10. 2026 budú pripravené na odber do 22. 11. 2026.",
   },
   {
     key: "batch-2026-november",
@@ -45,7 +45,7 @@ export const DELIVERY_WAVES: DeliveryWave[] = [
     estimatedDeliveryBy: "2026-12-18",
     customerHeadline: "Novemberová várka",
     customerDetail:
-      "Objednávky prijaté a zaplatené do 30. 11. 2026 doručíme do 18. 12. 2026.",
+      "Objednávky prijaté do 30. 11. 2026 budú pripravené na odber do 18. 12. 2026.",
   },
   {
     key: "batch-2026-december",
@@ -55,7 +55,7 @@ export const DELIVERY_WAVES: DeliveryWave[] = [
     estimatedDeliveryBy: "2026-12-22",
     customerHeadline: "Vianočná várka",
     customerDetail:
-      "Objednávky prijaté a zaplatené do 13. 12. 2026 doručíme do 22. 12. 2026 — vhodné na darček pod stromček.",
+      "Objednávky prijaté do 13. 12. 2026 budú pripravené na odber do 22. 12. 2026 — vhodné na darček pod stromček.",
   },
   {
     key: "batch-2027-january",
@@ -65,7 +65,7 @@ export const DELIVERY_WAVES: DeliveryWave[] = [
     estimatedDeliveryBy: "2027-01-28",
     customerHeadline: "Januárová várka",
     customerDetail:
-      "Objednávky prijaté a zaplatené do 10. 1. 2027 doručíme do 28. 1. 2027.",
+      "Objednávky prijaté do 10. 1. 2027 budú pripravené na odber do 28. 1. 2027.",
   },
 ];
 
@@ -77,7 +77,7 @@ export const STANDARD_DELIVERY_WAVE: DeliveryWave = {
   estimatedDeliveryBy: "",
   customerHeadline: "Bežná výroba",
   customerDetail:
-    "Odhadované doručenie približne do 4 týždňov od zaplatenia objednávky. Presný termín potvrdíme e-mailom.",
+    "Kalendár bude pripravený na odber približne do 4 týždňov od objednávky. Presný termín potvrdíme e-mailom.",
 };
 
 type DateParts = {

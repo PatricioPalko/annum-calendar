@@ -1,6 +1,5 @@
-import { MapPin, Package } from "lucide-react";
+import { MapPin } from "lucide-react";
 
-import { getDeliveryLabel } from "@/helpers/admin-orders";
 import {
   formatWaveDeadline,
   formatWaveDeliveryBy,
@@ -14,46 +13,14 @@ type AdminOrderDeliveryProps = {
 };
 
 export function AdminOrderDelivery({ order }: AdminOrderDeliveryProps) {
-  const isPacketa = order.delivery_method === "packeta";
   const deliveryWave = getDeliveryWaveByKey(order.delivery_wave_key);
 
   return (
     <div className="max-w-52 space-y-1.5 text-xs font-semibold text-[#3E0F28]/70">
       <div className="inline-flex items-center gap-1.5 py-1 font-bold text-[#3E0F28]">
-        {isPacketa ? (
-          <Package className="size-3.5" />
-        ) : (
-          <MapPin className="size-3.5" />
-        )}
-
-        {getDeliveryLabel(order.delivery_method)}
+        <MapPin className="size-3.5" />
+        Osobný odber
       </div>
-
-      {isPacketa && (
-        <div className="space-y-0.5">
-          <p className="font-bold text-[#3E0F28]">
-            {order.packeta_point_name ?? "Výdajné miesto neuvedené"}
-          </p>
-
-          {order.packeta_point_address && (
-            <p className="leading-5 text-[#3E0F28]/55">
-              {order.packeta_point_address}
-            </p>
-          )}
-
-          {order.packeta_point_id && (
-            <p className="text-[11px] text-[#3E0F28]/40">
-              ID: {order.packeta_point_id}
-            </p>
-          )}
-
-          {order.tracking_number && (
-            <p className="text-[11px] font-bold text-[#3E0F28]/70">
-              Štítok: {order.tracking_number}
-            </p>
-          )}
-        </div>
-      )}
 
       {deliveryWave && (
         <div className="space-y-0.5 rounded-md border border-[#EAD6DE] bg-white/70 px-2 py-1.5">
@@ -63,7 +30,7 @@ export function AdminOrderDelivery({ order }: AdminOrderDeliveryProps) {
           <p className="font-bold text-[#3E0F28]">{deliveryWave.batchLabel}</p>
           {deliveryWave.key !== "standard" && (
             <p className="leading-5 text-[#3E0F28]/55">
-              Do {formatWaveDeadline(deliveryWave)} · doručenie do{" "}
+              Do {formatWaveDeadline(deliveryWave)} · na odber do{" "}
               {formatWaveDeliveryBy(deliveryWave)}
             </p>
           )}

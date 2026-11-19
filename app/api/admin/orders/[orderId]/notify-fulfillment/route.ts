@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { isFulfillablePaymentStatus } from "@/helpers/payment-method";
 import { isAdminEmail, isAdminMutationOriginAllowed } from "@/lib/auth/admin";
 import { sendOrderFulfillmentEmail } from "@/lib/order-emails";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -29,12 +30,6 @@ export async function POST(request: Request, { params }: RouteParams) {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const body = (await request.json().catch(() => ({}))) as {
-    trackingNumber?: string;
-  };
-
-  const trackingNumber = body.trackingNumber?.trim() || null;
-
   const { data: order, error: orderError } = await supabaseAdmin
     .from("orders")
     .select(
@@ -43,13 +38,7 @@ export async function POST(request: Request, { params }: RouteParams) {
         order_code,
         first_name,
         email,
-        payment_status,
-        delivery_method,
-        delivery_price,
-        packeta_point_id,
-        packeta_point_name,
-        packeta_point_address,
-        tracking_number
+        payment_status
       `,
     )
     .eq("id", orderId)
@@ -62,26 +51,19 @@ export async function POST(request: Request, { params }: RouteParams) {
     );
   }
 
-  if (order.payment_status !== "paid") {
+  if (!isFulfillablePaymentStatus(order.payment_status)) {
     return NextResponse.json(
       { message: "Objednávka ešte nie je zaplatená." },
       { status: 403 },
     );
   }
 
-  const isPacketa = order.delivery_method === "packeta";
-  const resolvedTrackingNumber = isPacketa
-    ? trackingNumber ?? order.tracking_number
-    : null;
-  const now = new Date().toISOString();
-
+  // Personal pickup is the only delivery method: the order becomes "ready".
   const { error: updateError } = await supabaseAdmin
     .from("orders")
     .update({
-      status: isPacketa ? "shipped" : "ready",
-      ready_at: isPacketa ? null : now,
-      shipped_at: isPacketa ? now : null,
-      tracking_number: isPacketa ? resolvedTrackingNumber : null,
+      status: "ready",
+      ready_at: new Date().toISOString(),
     })
     .eq("id", order.id);
 
@@ -99,19 +81,6 @@ export async function POST(request: Request, { params }: RouteParams) {
       orderCode: order.order_code,
       firstName: order.first_name,
       email: order.email,
-      trackingNumber: resolvedTrackingNumber,
-      delivery: {
-        method: isPacketa ? "packeta" : "pickup",
-        price: Number(order.delivery_price ?? 0),
-        packetaPoint:
-          isPacketa && order.packeta_point_id
-            ? {
-                id: order.packeta_point_id,
-                name: order.packeta_point_name ?? "",
-                address: order.packeta_point_address ?? "",
-              }
-            : null,
-      },
     });
   } catch (emailError) {
     console.error("ORDER_FULFILLMENT_EMAIL_ERROR:", emailError);

@@ -18,9 +18,9 @@ const steps = [
   },
   {
     icon: MailCheck,
-    title: "My pripravíme a pošleme",
+    title: "My pripravíme a odovzdáme",
     description:
-      "Objednávku skontrolujeme, kalendár pripravíme z vašich podkladov, zabalíme a ozveme sa, keď bude pripravený na odoslanie alebo odber.",
+      "Objednávku skontrolujeme, kalendár pripravíme z vašich podkladov, zabalíme a ozveme sa, keď bude pripravený na odber.",
   },
 ];
 

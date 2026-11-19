@@ -22,16 +22,16 @@ export function DeliveryWavesSection() {
     >
       <div className="mx-auto max-w-6xl">
         <div className="mx-auto max-w-2xl text-center">
-          <SectionLabel className="text-lime">Termíny doručenia</SectionLabel>
+          <SectionLabel className="text-lime">Termíny odberu</SectionLabel>
 
           <Heading as="h2" className="mt-2 text-white">
-            Kedy môže byť kalendár u vás
+            Kedy bude kalendár pripravený
           </Heading>
 
           <Text variant="lead" className="mx-auto mt-3 text-[#FFF7F4]/85">
-            Objednávky pripravujeme v spoločných várkach tlače. Ak objednáte a
-            zaplatíte do uvedeného termínu, kalendár doručíme v príslušnom
-            doručovacom okne.
+            Objednávky pripravujeme v spoločných várkach tlače. Ak objednáte do
+            uvedeného termínu, kalendár bude pripravený na osobný odber
+            v Košiciach do dátumu pri várke.
           </Text>
         </div>
 
@@ -40,7 +40,7 @@ export function DeliveryWavesSection() {
             <div className="hidden grid-cols-[1.4fr_0.9fr_0.9fr] gap-3 border-b border-white/10 bg-white/5 px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-[#FFF7F4]/55 sm:grid sm:px-5 sm:text-sm">
               <span>Várka</span>
               <span>Objednávka do</span>
-              <span>Odoslanie do</span>
+              <span>Na odber do</span>
             </div>
 
             <ul className="divide-y divide-white/10">
@@ -85,7 +85,7 @@ export function DeliveryWavesSection() {
 
                       <p className="text-sm leading-5 sm:text-[15px]">
                         <span className="font-medium text-[#FFF7F4]/45 sm:hidden">
-                          Odoslanie do{" "}
+                          Na odber do{" "}
                         </span>
                         <span className="font-bold text-white">
                           {formatWaveDeliveryBy(wave)}

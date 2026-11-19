@@ -16,7 +16,7 @@ export function AdminOrdersFilterPersistence() {
       searchParams.get("year") ||
       searchParams.get("month") ||
       searchParams.get("calendar") ||
-      searchParams.get("delivery") ||
+      searchParams.get("payment") ||
       searchParams.get("wave");
 
     if (hasUrlFilters) {
@@ -33,7 +33,7 @@ export function AdminOrdersFilterPersistence() {
       stored.year === "all" &&
       stored.month === "all" &&
       stored.calendar === "all" &&
-      stored.delivery === "all" &&
+      stored.payment === "all" &&
       stored.wave === "all"
     ) {
       return;
@@ -46,7 +46,7 @@ export function AdminOrdersFilterPersistence() {
         year: stored.year,
         month: stored.month,
         calendar: stored.calendar,
-        delivery: stored.delivery,
+        payment: stored.payment,
         wave: stored.wave,
       }),
     );

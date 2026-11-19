@@ -12,7 +12,7 @@ alwaysApply: true
 - Tailwind CSS 4 + existing tokens/utilities in `app/globals.css`
 - UI: shadcn / Radix (`components/ui`) + `lucide-react` icons + `cn()` from `@/lib/utils`
 - Forms: `react-hook-form` + Zod (`zod` / `@hookform/resolvers`)
-- Backend integrations already in repo: Supabase, Stripe, Resend, Packeta
+- Backend integrations already in repo: Supabase, Resend, Cloudflare Turnstile (no payment provider or carrier)
 
 Do not introduce alternate UI kits, state libraries, CSS frameworks, ORMs, or form libraries.
 

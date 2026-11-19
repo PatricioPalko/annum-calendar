@@ -15,7 +15,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = createPageMetadata({
   title: "Ochrana osobných údajov",
   description:
-    "Ako Annum spracúva osobné údaje pri objednávke fotokalendára, nahratých fotografiách, platbe, doručení a cookies.",
+    "Ako Annum spracúva osobné údaje pri objednávke fotokalendára, nahratých fotografiách, platbe, osobnom odbere a cookies.",
   path: "/ochrana-osobnych-udajov",
 });
 
@@ -59,7 +59,7 @@ export default function PrivacyPolicyPage() {
                   "meno, priezvisko, e-mail a telefón,",
                   "poznámka k objednávke, ak ju vyplníte,",
                   "variant kalendára, počet kusov, zľavový kód a cena,",
-                  "spôsob doručenia a pri Packete identifikátor, názov a adresa výdajného miesta alebo Z-BOXu,",
+                  "zvolený spôsob platby (prevod na účet alebo hotovosť pri odbere),",
                   "pri variante Premium a Memory set mená a dátumy narodenín a vybrané mená k meninám,",
                   "pri Memory sete text venovania,",
                   "číslo a kód objednávky, čas odoslania a stav vybavenia,",
@@ -76,10 +76,11 @@ export default function PrivacyPolicyPage() {
               </LegalText>
               <LegalSubheading>Platba</LegalSubheading>
               <LegalText>
-                Platbu spracúva Stripe. Celé číslo platobnej karty v našej
-                aplikácii neukladáme. Ukladáme stav platby, identifikátor
-                platobnej relácie a identifikátor platby, aby sme vedeli, či
-                je objednávka zaplatená.
+                Platíte prevodom na účet alebo v hotovosti pri odbere. Online
+                platbu kartou neponúkame a platobné údaje karty nespracúvame.
+                Pri prevode vidíme v banke údaje, ktoré k platbe uvediete
+                (meno platiteľa, číslo účtu, variabilný symbol a správu pre
+                prijímateľa).
               </LegalText>
               <LegalSubheading>Technické údaje</LegalSubheading>
               <LegalText>
@@ -114,7 +115,7 @@ export default function PrivacyPolicyPage() {
               </LegalText>
               <LegalList
                 items={[
-                  "Vybavenie objednávky, výroba kalendára, platba, doručenie a súvisiaca komunikácia: plnenie zmluvy a kroky pred jej uzavretím, článok 6 ods. 1 písm. b) GDPR.",
+                  "Vybavenie objednávky, výroba kalendára, platba, osobný odber a súvisiaca komunikácia: plnenie zmluvy a kroky pred jej uzavretím, článok 6 ods. 1 písm. b) GDPR.",
                   "Účtovné a daňové povinnosti k prijatým platbám: plnenie zákonnej povinnosti, článok 6 ods. 1 písm. c) GDPR.",
                   "Ochrana formulára pred zneužitím, obmedzenie počtu požiadaviek a zabezpečenie neverejného úložiska: oprávnený záujem, článok 6 ods. 1 písm. f) GDPR.",
                   "E-mailové novinky o produktoch Annum: iba váš súhlas, článok 6 ods. 1 písm. a) GDPR. Súhlas nie je podmienkou objednávky.",
@@ -132,24 +133,18 @@ export default function PrivacyPolicyPage() {
         },
         {
           id: "objednavka",
-          title: "Objednávka, platba, doručenie a reklamácia",
+          title: "Objednávka, platba, odber a reklamácia",
           body: (
             <>
               <LegalText>
                 Údaje z formulára použijeme na uloženie objednávky, výpočet
-                ceny, spustenie platby a e-maily o prijatí objednávky, odkaze
-                na platbu, potvrdení platby a odoslaní alebo osobnom odbere.
+                ceny a e-maily o prijatí objednávky s pokynmi k platbe a o
+                pripravení kalendára na osobný odber.
               </LegalText>
               <LegalText>
-                Pri doručení cez Packetu odovzdáme Packete meno, priezvisko,
-                e-mail alebo telefón, identifikátor vybraného výdajného miesta
-                a údaje o zásielke potrebné na jej podanie. Fotografie Packete
-                neposielame.
-              </LegalText>
-              <LegalText>
-                Osobný odber v Košiciach sa vo formulári zobrazí len pri
-                zľavovom kóde, ktorý ho umožňuje. Inak je spôsobom doručenia
-                Packeta.
+                Kalendáre odovzdávame len osobným odberom v Košiciach.
+                Zásielky neposielame, preto údaje neodovzdávame žiadnemu
+                prepravcovi.
               </LegalText>
               <LegalText>
                 Pri reklamácii spracúvame e-mail, číslo objednávky, popis vady
@@ -211,8 +206,6 @@ export default function PrivacyPolicyPage() {
               <LegalList
                 items={[
                   "Supabase: databáza objednávok a neverejné úložisko fotografií.",
-                  "Stripe: online platba. Číslo karty spracúva Stripe, nie naša aplikácia.",
-                  "Packeta: podanie zásielky na vybrané výdajné miesto alebo Z-BOX.",
                   "Resend: odoslanie transakčných e-mailov k objednávke a firemnému dopytu.",
                   "Cloudflare Turnstile: overenie, že formulár neodoslal automatizovaný program.",
                   "Cookiebot: lišta súhlasu s cookies, ak je v produkcii nastavené Cookiebot ID.",
@@ -233,12 +226,11 @@ export default function PrivacyPolicyPage() {
           body: (
             <>
               <LegalText>
-                Packeta pôsobí v Európskom hospodárskom priestore. Cookiebot
-                prevádzkuje poskytovateľ so sídlom v Európskom hospodárskom
-                priestore.
+                Cookiebot prevádzkuje poskytovateľ so sídlom v Európskom
+                hospodárskom priestore.
               </LegalText>
               <LegalText>
-                Stripe, Resend, Cloudflare a Google môžu údaje spracúvať aj
+                Resend, Cloudflare a Google môžu údaje spracúvať aj
                 mimo Európskeho hospodárskeho priestoru. Taký prenos sa opiera
                 o záruky podľa kapitoly V GDPR, ktoré títo poskytovatelia
                 používajú. Databázu a úložisko fotografií prevádzkuje Supabase.
@@ -253,7 +245,7 @@ export default function PrivacyPolicyPage() {
           body: (
             <>
               <LegalText>
-                Objednávku, kontakt, zvolený variant, doručenie a stav platby
+                Objednávku, kontakt, zvolený variant a spôsob platby
                 uchovávame po dobu vybavenia objednávky, reklamácie a po dobu,
                 ktorú vyžadujú účtovné a daňové predpisy. Presný počet rokov
                 pre každý druh dokladu závisí od toho, či ide o účtovný záznam.
@@ -313,15 +305,15 @@ export default function PrivacyPolicyPage() {
               <LegalText>
                 Fotografie nie sú verejné. Nahrávajú sa cez časovo obmedzené
                 odkazy a k objednávkam pristupuje prihlásený administrátor.
-                Platobné údaje karty do našej databázy neukladáme. Web
+                Platobné karty nespracúvame. Web
                 používa zabezpečené pripojenie. Neuvádzame certifikácie ani
                 šifrovanie, ktoré projekt sám neprevádzkuje.
               </LegalText>
               <LegalText>
                 Objednávku neschvaľujeme automatizovaným rozhodnutím s
                 právnym účinkom. Cenu počíta objednávkový formulár podľa
-                variantu, počtu kusov, zľavy a doručenia, aby ste ju videli
-                pred platbou. Profil na reklamné cielenie nezakladáme.
+                variantu, počtu kusov a zľavy, aby ste ju videli pred
+                odoslaním objednávky. Profil na reklamné cielenie nezakladáme.
               </LegalText>
             </>
           ),

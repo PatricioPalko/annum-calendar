@@ -21,9 +21,9 @@ export function AdminResendPaidEmailsButton({
 
   const warning =
     customerMissing && adminMissing
-      ? "E-maily o platbe neodoslané"
+      ? "E-maily k objednávke neodoslané"
       : customerMissing
-        ? "Zákazník nedostal potvrdenie platby"
+        ? "Zákazník nedostal potvrdenie"
         : "Notifikácia adminovi neodoslaná";
 
   async function handleClick() {

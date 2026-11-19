@@ -2,6 +2,10 @@ import {
   formatWaveDeliveryBy,
   getDeliveryWaveByKey,
 } from "@/lib/order/delivery-waves";
+import {
+  getPaymentMethodLabel,
+  type PaymentMethod,
+} from "@/helpers/payment-method";
 import { MEMORY_SET_LABEL } from "@/lib/order/config";
 import { OPERATOR } from "@/lib/legal";
 import { getResend } from "@/lib/resend";
@@ -17,18 +21,10 @@ export function getAdminEmailRecipients() {
     .filter((item) => item.length > 0);
 }
 
-type DeliveryMethod = "pickup" | "packeta";
 type CalendarType = "basic" | "premium" | "memory" | "business";
 
-type DeliveryInfo = {
-  method: DeliveryMethod;
-  price: number;
-  packetaPoint?: {
-    id: string;
-    name: string;
-    address: string;
-  } | null;
-};
+/** Personal pickup is the only delivery method. */
+const PICKUP_LABEL = "Osobný odber v Košiciach";
 
 type OrderSummary = {
   orderCode: string;
@@ -38,8 +34,8 @@ type OrderSummary = {
   goodsPrice?: number | null;
   discountCode?: string | null;
   discountAmount?: number | null;
-  delivery: DeliveryInfo;
   deliveryWaveKey?: string | null;
+  paymentMethod: PaymentMethod;
   photoCount?: number;
   birthdaysCount?: number;
   namedaysCount?: number;
@@ -54,19 +50,16 @@ type CustomerInfo = {
   phone?: string | null;
 };
 
-type SendOrderCreatedEmailParams = CustomerInfo &
+type SendOrderReceivedEmailsParams = CustomerInfo &
   OrderSummary & {
-    paymentUrl: string;
+    /** Variable symbol for bank transfers. */
+    orderNumber?: number | null;
   };
-
-type SendOrderPaidEmailParams = CustomerInfo & OrderSummary;
 
 type SendOrderFulfillmentEmailParams = {
   orderCode: string;
   firstName: string;
   email: string;
-  delivery: DeliveryInfo;
-  trackingNumber?: string | null;
 };
 
 type SendEmailPayload = Parameters<Resend["emails"]["send"]>[0];
@@ -114,16 +107,6 @@ function getCalendarTypeLabel(type: CalendarType | string) {
   }
 }
 
-function getDeliveryLabel(method: DeliveryMethod) {
-  switch (method) {
-    case "packeta":
-      return "Packeta";
-    case "pickup":
-    default:
-      return "Osobný odber v Košiciach";
-  }
-}
-
 function renderEmailShell(title: string, body: string) {
   return `
     <div style="font-family: Arial, sans-serif; color: #3E0F28; line-height: 1.6; max-width: 560px; margin: 0 auto;">
@@ -161,29 +144,6 @@ function renderDetailRow(label: string, value: string) {
   `;
 }
 
-function renderDeliveryHtml(delivery: DeliveryInfo) {
-  const safeDeliveryLabel = escapeHtml(getDeliveryLabel(delivery.method));
-  const deliveryPrice =
-    delivery.price > 0 ? ` · ${formatPrice(delivery.price)}` : "";
-
-  if (delivery.method === "packeta" && delivery.packetaPoint) {
-    return `
-      ${renderDetailRow("Doručenie", `${safeDeliveryLabel}${deliveryPrice}`)}
-      <div style="padding: 0 0 10px; border-bottom: 1px solid #EAD6DE;">
-        <p style="margin: 0; font-size: 13px; color: rgba(62, 15, 40, 0.72);">
-          ${escapeHtml(delivery.packetaPoint.name)}<br />
-          ${escapeHtml(delivery.packetaPoint.address)}
-        </p>
-        <p style="margin: 4px 0 0; font-size: 12px; color: rgba(62, 15, 40, 0.45);">
-          ID výdajného miesta: ${escapeHtml(delivery.packetaPoint.id)}
-        </p>
-      </div>
-    `;
-  }
-
-  return renderDetailRow("Doručenie", `${safeDeliveryLabel}${deliveryPrice}`);
-}
-
 function renderDeliveryWaveHtml(deliveryWaveKey?: string | null) {
   const wave = getDeliveryWaveByKey(deliveryWaveKey);
 
@@ -193,7 +153,7 @@ function renderDeliveryWaveHtml(deliveryWaveKey?: string | null) {
 
   return `
     ${renderDetailRow("Výrobná várka", escapeHtml(wave.customerHeadline))}
-    ${renderDetailRow("Odoslanie do", escapeHtml(formatWaveDeliveryBy(wave)))}
+    ${renderDetailRow("Na odber do", escapeHtml(formatWaveDeliveryBy(wave)))}
   `;
 }
 
@@ -221,7 +181,11 @@ function renderOrderSummaryHtml(summary: OrderSummary) {
             )
           : ""
       }
-      ${renderDeliveryHtml(summary.delivery)}
+      ${renderDetailRow("Odber", escapeHtml(PICKUP_LABEL))}
+      ${renderDetailRow(
+        "Spôsob platby",
+        escapeHtml(getPaymentMethodLabel(summary.paymentMethod)),
+      )}
       ${renderDeliveryWaveHtml(summary.deliveryWaveKey)}
       ${
         summary.totalPrice !== null
@@ -313,6 +277,63 @@ function renderCustomerHtml(customer: CustomerInfo) {
   `;
 }
 
+function renderPaymentInstructionsHtml({
+  paymentMethod,
+  totalPrice,
+  orderCode,
+  orderNumber,
+}: {
+  paymentMethod: PaymentMethod;
+  totalPrice: number | null;
+  orderCode: string;
+  orderNumber?: number | null;
+}) {
+  const amount =
+    totalPrice !== null ? formatPrice(totalPrice) : "dohodnutú sumu";
+
+  if (paymentMethod === "cash") {
+    return `
+      <div style="margin: 24px 0; padding: 16px; background: #FFF7F4; border: 1px solid #EAD6DE; border-radius: 12px;">
+        <p style="margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: #FC5A61; font-weight: 700;">
+          Platba
+        </p>
+        <p style="margin: 0;">
+          Sumu <strong>${escapeHtml(amount)}</strong> zaplatíte v hotovosti pri osobnom odbere.
+        </p>
+      </div>
+    `;
+  }
+
+  const iban = process.env.BANK_ACCOUNT_IBAN?.trim();
+
+  if (!iban) {
+    console.error("BANK_ACCOUNT_CONFIG_ERROR:", { missing: "BANK_ACCOUNT_IBAN" });
+  }
+
+  return `
+    <div style="margin: 24px 0; padding: 16px; background: #FFF7F4; border: 1px solid #EAD6DE; border-radius: 12px;">
+      <p style="margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em; color: #FC5A61; font-weight: 700;">
+        Platba prevodom na účet
+      </p>
+      ${renderDetailRow("Suma", escapeHtml(amount))}
+      ${
+        iban
+          ? renderDetailRow("IBAN", escapeHtml(iban))
+          : renderDetailRow("IBAN", "Číslo účtu Vám pošleme v samostatnom e-maile.")
+      }
+      ${
+        orderNumber
+          ? renderDetailRow("Variabilný symbol", escapeHtml(String(orderNumber)))
+          : ""
+      }
+      ${renderDetailRow("Správa pre prijímateľa", escapeHtml(orderCode))}
+      <p style="margin: 12px 0 0; font-size: 14px; color: rgba(62, 15, 40, 0.72);">
+        Prosíme o úhradu pred odberom kalendára.
+      </p>
+    </div>
+  `;
+}
+
 function renderSignature() {
   const logoUrl = `${SITE_URL}/icon-512.png`;
   const termsUrl = `${SITE_URL}/obchodne-podmienky`;
@@ -356,88 +377,7 @@ function renderSignature() {
   `;
 }
 
-export async function sendOrderCreatedEmail({
-  orderCode,
-  firstName,
-  email,
-  totalPrice,
-  paymentUrl,
-  calendarType,
-  quantity,
-  goodsPrice,
-  discountCode,
-  discountAmount,
-  delivery,
-  deliveryWaveKey,
-  photoCount,
-  birthdaysCount,
-  namedaysCount,
-  dedications,
-  note,
-}: SendOrderCreatedEmailParams) {
-  const safeFirstName = escapeHtml(firstName);
-  const safePaymentUrl = escapeHtml(paymentUrl);
-  const summary: OrderSummary = {
-    orderCode,
-    calendarType,
-    quantity,
-    totalPrice,
-    goodsPrice,
-    discountCode,
-    discountAmount,
-    delivery,
-    deliveryWaveKey,
-    photoCount,
-    birthdaysCount,
-    namedaysCount,
-    dedications,
-    note,
-  };
-
-  await sendEmail({
-    from: emailFrom,
-    to: email,
-    subject: `Objednávka ${orderCode} čaká na platbu`,
-    html: renderEmailShell(
-      "Objednávka čaká na platbu",
-      `
-        <p>Dobrý deň, ${safeFirstName},</p>
-
-        <p>
-          ďakujeme za objednávku kalendára spomienok. Objednávku sme prijali
-          a na prípravu ju zaradíme hneď po úspešnej platbe.
-        </p>
-
-        ${renderOrderCodeBlock(orderCode)}
-        ${renderOrderSummaryHtml(summary)}
-
-        <p>
-          Dokončite prosím platbu cez tento odkaz:
-        </p>
-
-        <p style="margin: 24px 0;">
-          <a href="${safePaymentUrl}" style="display: inline-block; background: #3E0F28; color: #ffffff; text-decoration: none; padding: 12px 18px; border-radius: 8px; font-weight: 700;">
-            Zaplatiť objednávku
-          </a>
-        </p>
-
-        <p style="font-size: 13px; color: rgba(62, 15, 40, 0.65);">
-          Ak tlačidlo nefunguje, skopírujte tento odkaz do prehliadača:<br />
-          ${safePaymentUrl}
-        </p>
-
-        <p style="margin-top: 20px; font-size: 14px; color: rgba(62, 15, 40, 0.72);">
-          Po prijatí platby Vám pošleme potvrdenie. Keď bude kalendár pripravený
-          alebo odoslaný, dáme Vám vedieť e-mailom.
-        </p>
-
-        ${renderSignature()}
-      `,
-    ),
-  });
-}
-
-export type SendOrderPaidEmailOptions = {
+export type SendOrderReceivedEmailsOptions = {
   /** Which of the two emails to send. Defaults to both. */
   customer?: boolean;
   admin?: boolean;
@@ -448,16 +388,22 @@ export type SendOrderPaidEmailOptions = {
   idempotencyKeyPrefix?: string;
 };
 
-export type OrderPaidEmailResult = {
+export type OrderReceivedEmailsResult = {
   customerSent: boolean;
   adminSent: boolean;
   customerError?: unknown;
   adminError?: unknown;
 };
 
-export async function sendOrderPaidEmail(
+/**
+ * Customer confirmation with payment instructions and the admin notification
+ * for a new order. The site never confirms payments; the operator checks
+ * bank transfers and cash outside the site.
+ */
+export async function sendOrderReceivedEmails(
   {
     orderCode,
+    orderNumber,
     firstName,
     lastName,
     email,
@@ -468,16 +414,16 @@ export async function sendOrderPaidEmail(
     goodsPrice,
     discountCode,
     discountAmount,
-    delivery,
     deliveryWaveKey,
+    paymentMethod,
     photoCount,
     birthdaysCount,
     namedaysCount,
     dedications,
     note,
-  }: SendOrderPaidEmailParams,
-  options: SendOrderPaidEmailOptions = {},
-): Promise<OrderPaidEmailResult> {
+  }: SendOrderReceivedEmailsParams,
+  options: SendOrderReceivedEmailsOptions = {},
+): Promise<OrderReceivedEmailsResult> {
   const sendToCustomer = options.customer ?? true;
   const sendToAdmin = options.admin ?? true;
   const idempotencyKey = (recipient: "customer" | "admin") =>
@@ -494,8 +440,8 @@ export async function sendOrderPaidEmail(
     goodsPrice,
     discountCode,
     discountAmount,
-    delivery,
     deliveryWaveKey,
+    paymentMethod,
     photoCount,
     birthdaysCount,
     namedaysCount,
@@ -513,24 +459,30 @@ export async function sendOrderPaidEmail(
     sendEmail({
       from: emailFrom,
       to: email,
-      subject: `Platba prijatá — objednávka ${orderCode}`,
+      subject: `Objednávka ${orderCode} bola prijatá`,
       html: renderEmailShell(
-        "Platba bola prijatá",
+        "Objednávka bola prijatá",
         `
           <p>Dobrý deň, ${safeFirstName},</p>
 
           <p>
-            ďakujeme — platbu k objednávke <strong>${escapeHtml(orderCode)}</strong> sme prijali
-            a objednávku tým potvrdzujeme. Zaradíme ju do výrobnej várky: rozloženie
-            fotiek, tlač a darčekové zabalenie.
+            ďakujeme za objednávku kalendára spomienok. Objednávku sme prijali
+            a zaradíme ju do výrobnej várky: rozloženie fotiek, tlač a darčekové
+            zabalenie.
           </p>
 
           ${renderOrderCodeBlock(orderCode)}
+          ${renderPaymentInstructionsHtml({
+            paymentMethod,
+            totalPrice,
+            orderCode,
+            orderNumber,
+          })}
           ${renderOrderSummaryHtml(summary)}
 
           <p>
-            Keď bude kalendár hotový, dáme Vám vedieť e-mailom — pri Packete
-            aj so sledovacím číslom, pri osobnom odbere s informáciou o prevzatí.
+            Keď bude kalendár pripravený na osobný odber v Košiciach, dáme Vám
+            vedieť e-mailom a dohodneme sa na čase odberu.
           </p>
 
           <p>
@@ -549,17 +501,20 @@ export async function sendOrderPaidEmail(
       throw new Error("Missing ADMIN_EMAIL");
     }
 
+    const title = `Nová objednávka ${orderCode}`;
+
     return sendEmail({
       from: emailFrom,
       to: adminRecipients,
       replyTo: email,
-      subject: `Zaplatená objednávka ${orderCode}`,
+      subject: title,
       html: renderEmailShell(
-        `Zaplatená objednávka ${escapeHtml(orderCode)}`,
+        escapeHtml(title),
         `
           <p>
-            Objednávka <strong>${escapeHtml(orderCode)}</strong> bola úspešne zaplatená
-            a je pripravená na spracovanie.
+            Prišla nová objednávka <strong>${escapeHtml(orderCode)}</strong>.
+            Platba: ${escapeHtml(getPaymentMethodLabel(paymentMethod).toLowerCase())}
+            (web ju neoveruje).
           </p>
 
           ${renderOrderCodeBlock(orderCode)}
@@ -592,23 +547,21 @@ export async function sendOrderPaidEmail(
 }
 
 type SendAdminAlertEmailParams = {
-  /** Log code, e.g. PAYMENT_AMOUNT_MISMATCH. */
+  /** Log code, e.g. SERVER_ERROR. */
   code: string;
   /** Short operator-facing explanation in Slovak. No customer personal data. */
   summary: string;
   orderId?: string | null;
-  checkoutSessionId?: string | null;
-  paymentIntentId?: string | null;
   /** Extra label/value rows (no customer data). */
   details?: Array<[label: string, value: string]>;
-  /** Overrides the default dedupe id (session, order or payment intent). */
+  /** Overrides the default dedupe id (the order id). */
   dedupeId?: string;
   title?: string;
   footer?: string;
 };
 
 /**
- * Operator alert for payment anomalies and server errors. Contains ids only
+ * Operator alert for failed order emails and server errors. Contains ids only
  * (no customer data) and is deduplicated by Resend for 24 h per code and
  * dedupe id.
  */
@@ -616,12 +569,10 @@ export async function sendAdminAlertEmail({
   code,
   summary,
   orderId,
-  checkoutSessionId,
-  paymentIntentId,
   details = [],
   dedupeId,
-  title = "Upozornenie na platbu",
-  footer = "Skontrolujte platbu v Stripe a objednávku v admin paneli.",
+  title = "Upozornenie",
+  footer = "Skontrolujte objednávku v admin paneli.",
 }: SendAdminAlertEmailParams) {
   const adminRecipients = getAdminEmailRecipients();
 
@@ -629,8 +580,7 @@ export async function sendAdminAlertEmail({
     throw new Error("Missing ADMIN_EMAIL");
   }
 
-  const resolvedDedupeId =
-    dedupeId ?? checkoutSessionId ?? orderId ?? paymentIntentId ?? "none";
+  const resolvedDedupeId = dedupeId ?? orderId ?? "none";
 
   await sendEmail(
     {
@@ -645,8 +595,6 @@ export async function sendAdminAlertEmail({
           <div style="margin: 24px 0;">
             ${renderDetailRow("Kód", escapeHtml(code))}
             ${orderId ? renderDetailRow("ID objednávky", escapeHtml(orderId)) : ""}
-            ${checkoutSessionId ? renderDetailRow("Stripe Checkout session", escapeHtml(checkoutSessionId)) : ""}
-            ${paymentIntentId ? renderDetailRow("Stripe PaymentIntent", escapeHtml(paymentIntentId)) : ""}
             ${details.map(([label, value]) => renderDetailRow(label, escapeHtml(value))).join("")}
           </div>
 
@@ -660,81 +608,33 @@ export async function sendAdminAlertEmail({
   );
 }
 
-/** @deprecated Use sendOrderCreatedEmail */
-export async function sendPendingPaymentEmail(
-  params: SendOrderCreatedEmailParams,
-) {
-  return sendOrderCreatedEmail(params);
-}
-
-/** @deprecated Use sendOrderPaidEmail */
-export async function sendPaidOrderEmail(params: SendOrderPaidEmailParams) {
-  return sendOrderPaidEmail(params);
-}
-
 export async function sendOrderFulfillmentEmail({
   orderCode,
   firstName,
   email,
-  delivery,
-  trackingNumber,
 }: SendOrderFulfillmentEmailParams) {
   const safeFirstName = escapeHtml(firstName);
-  const safeTrackingNumber = trackingNumber ? escapeHtml(trackingNumber) : null;
-
-  const isPacketa = delivery.method === "packeta";
 
   await sendEmail({
     from: emailFrom,
     to: email,
-    subject: isPacketa
-      ? `Kalendár spomienok ${orderCode} je na ceste`
-      : `Kalendár spomienok ${orderCode} je pripravený na odber`,
+    subject: `Kalendár spomienok ${orderCode} je pripravený na odber`,
     html: renderEmailShell(
-      isPacketa
-        ? "Kalendár je na ceste"
-        : "Kalendár je pripravený na odber",
+      "Kalendár je pripravený na odber",
       `
         <p>Dobrý deň, ${safeFirstName},</p>
 
-        ${
-          isPacketa
-            ? `
-              <p>
-                Váš kalendár spomienok sme odoslali cez Packetu. Je darčekovo
-                zabalený a pripravený robiť radosť.
-              </p>
-            `
-            : `
-              <p>
-                Váš kalendár spomienok je pripravený na osobný odber v Košiciach.
-                Je darčekovo zabalený.
-              </p>
-              <p>
-                Pre presný čas odberu Vás budeme kontaktovať, alebo sa môžete
-                ozvať odpoveďou na tento e-mail.
-              </p>
-            `
-        }
+        <p>
+          Váš kalendár spomienok je pripravený na osobný odber v Košiciach.
+          Je darčekovo zabalený.
+        </p>
+        <p>
+          Pre presný čas odberu Vás budeme kontaktovať, alebo sa môžete
+          ozvať odpoveďou na tento e-mail.
+        </p>
 
         ${renderOrderCodeBlock(orderCode)}
-        ${renderDeliveryHtml(delivery)}
-
-        ${
-          isPacketa && safeTrackingNumber
-            ? `
-              <p style="margin-top: 20px;">
-                Sledovacie číslo zásielky: <strong>${safeTrackingNumber}</strong>
-              </p>
-            `
-            : isPacketa
-              ? `
-              <p style="margin-top: 20px; font-size: 14px; color: rgba(62, 15, 40, 0.72);">
-                Informácie k zásielke Vám pošle aj Packeta, ak budú dostupné.
-              </p>
-            `
-              : ""
-        }
+        ${renderDetailRow("Odber", escapeHtml(PICKUP_LABEL))}
 
         ${renderSignature()}
       `,

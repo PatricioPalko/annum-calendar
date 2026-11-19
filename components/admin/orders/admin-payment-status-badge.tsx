@@ -1,5 +1,14 @@
 import type { LucideIcon } from "lucide-react";
-import { CheckCircle2, Clock3, RotateCcw, XCircle } from "lucide-react";
+import {
+  Banknote,
+  CheckCircle2,
+  Clock3,
+  Landmark,
+  RotateCcw,
+  XCircle,
+} from "lucide-react";
+
+import { OFFLINE_PAYMENT_STATUS } from "@/helpers/payment-method";
 
 type BadgeConfig = {
   label: string;
@@ -30,14 +39,34 @@ const PAYMENT_CONFIG: Record<string, BadgeConfig> = {
   },
 };
 
+// Offline payments are not verified on the site: the badge shows the method
+// the customer chose, not a confirmed payment.
+const OFFLINE_METHOD_CONFIG: Record<string, BadgeConfig> = {
+  bank_transfer: {
+    label: "Prevodom",
+    icon: Landmark,
+    className: "border-sky-300 bg-sky-50 text-sky-900",
+  },
+  cash: {
+    label: "Hotovosť",
+    icon: Banknote,
+    className: "border-sky-300 bg-sky-50 text-sky-900",
+  },
+};
+
 type AdminPaymentStatusBadgeProps = {
   status?: string | null;
+  method?: string | null;
 };
 
 export function AdminPaymentStatusBadge({
   status,
+  method,
 }: AdminPaymentStatusBadgeProps) {
-  const config = PAYMENT_CONFIG[status ?? ""] ?? PAYMENT_CONFIG.pending!;
+  const config =
+    status === OFFLINE_PAYMENT_STATUS
+      ? (OFFLINE_METHOD_CONFIG[method ?? ""] ?? OFFLINE_METHOD_CONFIG.bank_transfer!)
+      : (PAYMENT_CONFIG[status ?? ""] ?? PAYMENT_CONFIG.pending!);
   const { label, icon: Icon, className } = config;
 
   return (

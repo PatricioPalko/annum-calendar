@@ -2,6 +2,7 @@ import JSZip from "jszip";
 import { NextResponse } from "next/server";
 import sharp from "sharp";
 
+import { isFulfillablePaymentStatus } from "@/helpers/payment-method";
 import { isAdminEmail, isAdminMutationOriginAllowed } from "@/lib/auth/admin";
 import { buildOrderExportData } from "@/lib/order-export";
 import { supabaseAdmin } from "@/lib/supabase/admin";
@@ -120,7 +121,7 @@ export async function GET(request: Request, { params }: RouteParams) {
     );
   }
 
-  if (order.payment_status !== "paid") {
+  if (!isFulfillablePaymentStatus(order.payment_status)) {
     return NextResponse.json(
       { message: "Objednávka ešte nie je zaplatená." },
       { status: 403 },

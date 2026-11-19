@@ -1,76 +1,19 @@
 import Link from "next/link";
 
 import { ClearOrderFormDraft } from "@/components/order/clear-order-form-draft";
-import { markOrderPaidFromCheckoutSession } from "@/lib/order-payments";
-import { stripe } from "@/lib/stripe";
-import { supabaseAdmin } from "@/lib/supabase/admin";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Ďakujeme za objednávku",
   description:
-    "Objednávka bola prijatá. Stav platby a ďalšie informácie k objednávke vám pošleme e-mailom.",
+    "Objednávka bola prijatá. Potvrdenie s pokynmi k platbe vám pošleme e-mailom.",
   robots: {
     index: false,
     follow: false,
   },
 };
 
-type PageProps = {
-  searchParams: Promise<{
-    session_id?: string;
-    order?: string;
-  }>;
-};
-
-export default async function OrderThankYouPage({ searchParams }: PageProps) {
-  const params = await searchParams;
-
-  let orderCode: string | null = null;
-  let isPaid = false;
-
-  if (params.session_id) {
-    try {
-      const session = await stripe.checkout.sessions.retrieve(params.session_id);
-
-      orderCode = session.metadata?.orderCode ?? null;
-      isPaid = session.payment_status === "paid";
-
-      if (isPaid) {
-        const result = await markOrderPaidFromCheckoutSession(session);
-
-        if (result.status === "error") {
-          console.error("THANK_YOU_MARK_PAID_ERROR:", result.message);
-        }
-      }
-    } catch (error) {
-      console.error("THANK_YOU_SESSION_RETRIEVE_ERROR:", error);
-    }
-  }
-
-  if (!orderCode && params.order) {
-    const { data: order } = await supabaseAdmin
-      .from("orders")
-      .select("order_code, payment_status")
-      .eq("order_code", params.order)
-      .maybeSingle();
-
-    if (order) {
-      orderCode = order.order_code;
-      isPaid = order.payment_status === "paid";
-    }
-  }
-
-  if (orderCode && !isPaid) {
-    const { data: order } = await supabaseAdmin
-      .from("orders")
-      .select("payment_status")
-      .eq("order_code", orderCode)
-      .maybeSingle();
-
-    isPaid = order?.payment_status === "paid";
-  }
-
+export default function OrderThankYouPage() {
   return (
     <main
       id="main-content"
@@ -86,16 +29,10 @@ export default async function OrderThankYouPage({ searchParams }: PageProps) {
           Objednávka bola prijatá
         </h1>
 
-        {orderCode && (
-          <p className="mt-4 text-sm font-semibold text-[#3E0F28]/65">
-            Číslo objednávky: {orderCode}
-          </p>
-        )}
-
         <p className="mt-4 text-base font-medium leading-7 text-[#3E0F28]/70">
-          {isPaid
-            ? "Platba prebehla úspešne. Začíname pripravovať váš kalendár."
-            : "Platbu ešte spracovávame. Potvrdenie vám pošleme e-mailom."}
+          Potvrdenie so súhrnom objednávky a pokynmi k platbe vám o chvíľu
+          príde e-mailom. Keď bude kalendár pripravený na osobný odber,
+          ozveme sa.
         </p>
 
         <Link
